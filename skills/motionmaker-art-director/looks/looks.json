@@ -1,69 +1,197 @@
 {
-  "_about": "Starting visual directions. Each look = palette (bg/fg/accent), a system-safe type stack, and a motion personality. Fonts are system stacks so renders work offline; for brand-exact type, ship the font file and override font. Every palette was checked with scripts/palette.mjs (text >= 4.5:1, accent >= 3:1).",
+  "_about": "Starting visual directions. Each look = palette (bg/fg/accent), a system-safe type stack, and a motion personality. Fonts are system stacks so renders work offline; for brand-exact type, ship the font file and override font. Every palette was checked with scripts/palette.mjs (text >= 4.5:1, accent >= 3:1). glyphWidth = average advance of a character in em (bold weight), used to size one-line headlines so they fit; measure a new font by rendering text and dividing width by (characters x font size).",
   "looks": {
     "editorial-calm": {
       "name": "Editorial Calm",
-      "feel": ["calm", "thoughtful", "premium"],
+      "feel": [
+        "calm",
+        "thoughtful",
+        "premium"
+      ],
       "good_for": "essays, reports, thought-leadership, wellness, books",
-      "bg": "#F4EFE6", "fg": "#1E1B18", "accent": "#B5532F",
-      "font": "Georgia, 'Times New Roman', serif", "weight": 700, "tracking": -0.01,
-      "motion": { "personality": "unhurried", "enterFrames": 22, "staggerFrames": 3, "springRatio": 1.0, "holdFactor": 1.3, "cut": "slow dissolve or push, no hard cuts" }
+      "bg": "#F4EFE6",
+      "fg": "#1E1B18",
+      "accent": "#B5532F",
+      "font": "Georgia, 'Times New Roman', serif",
+      "weight": 700,
+      "tracking": -0.01,
+      "motion": {
+        "personality": "unhurried",
+        "enterFrames": 22,
+        "staggerFrames": 3,
+        "springRatio": 1.0,
+        "holdFactor": 1.3,
+        "cut": "slow dissolve or push, no hard cuts"
+      },
+      "glyphWidth": 0.56
     },
     "swiss-minimal": {
       "name": "Swiss Minimal",
-      "feel": ["precise", "confident", "clean"],
+      "feel": [
+        "precise",
+        "confident",
+        "clean"
+      ],
       "good_for": "B2B/SaaS, data, finance, infrastructure, anything that must feel trustworthy",
-      "bg": "#FFFFFF", "fg": "#111111", "accent": "#DB2F10",
-      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif", "weight": 700, "tracking": -0.03,
-      "motion": { "personality": "exact", "enterFrames": 14, "staggerFrames": 2, "springRatio": 1.0, "holdFactor": 1.0, "cut": "hard cuts on the beat, no overshoot" }
+      "bg": "#FFFFFF",
+      "fg": "#111111",
+      "accent": "#DB2F10",
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "weight": 700,
+      "tracking": -0.03,
+      "motion": {
+        "personality": "exact",
+        "enterFrames": 14,
+        "staggerFrames": 2,
+        "springRatio": 1.0,
+        "holdFactor": 1.0,
+        "cut": "hard cuts on the beat, no overshoot"
+      },
+      "glyphWidth": 0.55
     },
     "night-cinema": {
       "name": "Night Cinema",
-      "feel": ["dramatic", "premium", "moody"],
+      "feel": [
+        "dramatic",
+        "premium",
+        "moody"
+      ],
       "good_for": "trailers, hardware, automotive, film, anything that needs gravity",
-      "bg": "#0B0D12", "fg": "#F2F0EA", "accent": "#D9A441",
-      "font": "'Palatino Linotype', Palatino, Georgia, serif", "weight": 600, "tracking": 0.02,
-      "motion": { "personality": "slow and heavy", "enterFrames": 26, "staggerFrames": 3, "springRatio": 1.0, "holdFactor": 1.5, "cut": "long holds, slow push-in, cut on a sound hit" }
+      "bg": "#0B0D12",
+      "fg": "#F2F0EA",
+      "accent": "#D9A441",
+      "font": "'Palatino Linotype', Palatino, Georgia, serif",
+      "weight": 600,
+      "tracking": 0.02,
+      "motion": {
+        "personality": "slow and heavy",
+        "enterFrames": 26,
+        "staggerFrames": 3,
+        "springRatio": 1.0,
+        "holdFactor": 1.5,
+        "cut": "long holds, slow push-in, cut on a sound hit"
+      },
+      "glyphWidth": 0.54
     },
     "bold-launch": {
       "name": "Bold Launch",
-      "feel": ["confident", "energetic", "modern"],
+      "feel": [
+        "confident",
+        "energetic",
+        "modern"
+      ],
       "good_for": "product launches, app features, startup announcements, social ads",
-      "bg": "#101318", "fg": "#F5F7FA", "accent": "#8AD8B0",
-      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif", "weight": 800, "tracking": -0.04,
-      "motion": { "personality": "snappy", "enterFrames": 14, "staggerFrames": 2, "springRatio": 0.8, "holdFactor": 1.0, "cut": "hard cuts on the beat, one orchestrated moment per shot" }
+      "bg": "#101318",
+      "fg": "#F5F7FA",
+      "accent": "#8AD8B0",
+      "font": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      "weight": 800,
+      "tracking": -0.04,
+      "motion": {
+        "personality": "snappy",
+        "enterFrames": 14,
+        "staggerFrames": 2,
+        "springRatio": 0.8,
+        "holdFactor": 1.0,
+        "cut": "hard cuts on the beat, one orchestrated moment per shot"
+      },
+      "glyphWidth": 0.56
     },
     "playful-pop": {
       "name": "Playful Pop",
-      "feel": ["friendly", "fun", "bouncy"],
+      "feel": [
+        "friendly",
+        "fun",
+        "bouncy"
+      ],
       "good_for": "consumer apps, kids, community, casual social content",
-      "bg": "#FFF1CC", "fg": "#1F1B4D", "accent": "#E8344A",
-      "font": "'Trebuchet MS', Verdana, sans-serif", "weight": 800, "tracking": -0.02,
-      "motion": { "personality": "bouncy", "enterFrames": 12, "staggerFrames": 1, "springRatio": 0.5, "holdFactor": 0.9, "cut": "quick cuts, squash and stretch, overshoot on shapes (never on text)" }
+      "bg": "#FFF1CC",
+      "fg": "#1F1B4D",
+      "accent": "#E8344A",
+      "font": "'Trebuchet MS', Verdana, sans-serif",
+      "weight": 800,
+      "tracking": -0.02,
+      "motion": {
+        "personality": "bouncy",
+        "enterFrames": 12,
+        "staggerFrames": 1,
+        "springRatio": 0.5,
+        "holdFactor": 0.9,
+        "cut": "quick cuts, squash and stretch, overshoot on shapes (never on text)"
+      },
+      "glyphWidth": 0.58
     },
     "tech-mono": {
       "name": "Tech Mono",
-      "feel": ["technical", "developer", "no-nonsense"],
+      "feel": [
+        "technical",
+        "developer",
+        "no-nonsense"
+      ],
       "good_for": "developer tools, APIs, CLIs, security, changelogs",
-      "bg": "#0D1117", "fg": "#E6EDF3", "accent": "#3FB950",
-      "font": "'Courier New', Courier, monospace", "weight": 700, "tracking": 0,
-      "motion": { "personality": "mechanical", "enterFrames": 8, "staggerFrames": 1, "springRatio": 1.0, "holdFactor": 0.9, "cut": "hard cuts, typewriter or stepped reveals, no easing flourish" }
+      "bg": "#0D1117",
+      "fg": "#E6EDF3",
+      "accent": "#3FB950",
+      "font": "'Courier New', Courier, monospace",
+      "weight": 700,
+      "tracking": 0,
+      "motion": {
+        "personality": "mechanical",
+        "enterFrames": 8,
+        "staggerFrames": 1,
+        "springRatio": 1.0,
+        "holdFactor": 0.9,
+        "cut": "hard cuts, typewriter or stepped reveals, no easing flourish"
+      },
+      "glyphWidth": 0.62
     },
     "luxe-black-gold": {
       "name": "Luxe Black & Gold",
-      "feel": ["luxurious", "restrained", "timeless"],
+      "feel": [
+        "luxurious",
+        "restrained",
+        "timeless"
+      ],
       "good_for": "luxury, fashion, jewellery, high-end hospitality, awards",
-      "bg": "#0A0A0A", "fg": "#F5F0E6", "accent": "#C8A951",
-      "font": "Didot, 'Bodoni MT', 'Palatino Linotype', Georgia, serif", "weight": 400, "tracking": 0.08,
-      "motion": { "personality": "slow and hushed", "enterFrames": 28, "staggerFrames": 4, "springRatio": 1.0, "holdFactor": 1.6, "cut": "dissolves and slow fades, almost nothing moves at once" }
+      "bg": "#0A0A0A",
+      "fg": "#F5F0E6",
+      "accent": "#C8A951",
+      "font": "Didot, 'Bodoni MT', 'Palatino Linotype', Georgia, serif",
+      "weight": 400,
+      "tracking": 0.08,
+      "motion": {
+        "personality": "slow and hushed",
+        "enterFrames": 28,
+        "staggerFrames": 4,
+        "springRatio": 1.0,
+        "holdFactor": 1.6,
+        "cut": "dissolves and slow fades, almost nothing moves at once"
+      },
+      "glyphWidth": 0.52
     },
     "warm-craft": {
       "name": "Warm Craft",
-      "feel": ["human", "warm", "handmade"],
+      "feel": [
+        "human",
+        "warm",
+        "handmade"
+      ],
       "good_for": "food, coffee, makers, local business, sustainability, education",
-      "bg": "#EADBC8", "fg": "#3B2A20", "accent": "#2F6F5E",
-      "font": "'Palatino Linotype', Palatino, Georgia, serif", "weight": 700, "tracking": 0,
-      "motion": { "personality": "gentle", "enterFrames": 18, "staggerFrames": 2, "springRatio": 0.8, "holdFactor": 1.2, "cut": "soft cuts, slight overshoot on shapes, organic drift" }
+      "bg": "#EADBC8",
+      "fg": "#3B2A20",
+      "accent": "#2F6F5E",
+      "font": "'Palatino Linotype', Palatino, Georgia, serif",
+      "weight": 700,
+      "tracking": 0,
+      "motion": {
+        "personality": "gentle",
+        "enterFrames": 18,
+        "staggerFrames": 2,
+        "springRatio": 0.8,
+        "holdFactor": 1.2,
+        "cut": "soft cuts, slight overshoot on shapes, organic drift"
+      },
+      "glyphWidth": 0.55
     }
   }
 }

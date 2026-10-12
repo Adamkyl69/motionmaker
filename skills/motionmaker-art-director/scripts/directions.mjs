@@ -11,13 +11,14 @@ import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { contrast } from "./palette.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), SK = path.resolve(HERE, "../.."), LOOKS = JSON.parse(readFileSync(path.join(HERE, "../looks/looks.json"), "utf8")).looks;
 const a = process.argv.slice(2), opt = (k, d) => { const i = a.indexOf(k); return i > -1 ? a[i + 1] : d; };
 const text = a[0] && !a[0].startsWith("--") ? a[0] : null;
 if (!text) { console.error('usage: directions.mjs "<headline>" [--tone "calm premium"] [--looks a,b,c] [--n 3] [--size 540x540] [--out dir] [--accent "#hex"]'); process.exit(1); }
 const n = +opt("--n", 3), [W, H] = opt("--size", "540x540").split("x").map(Number), out = path.resolve(opt("--out", "ad/directions")), tpl = opt("--template", "title-loop"), accent = opt("--accent", "-");
-const FPS = 24, SECS = 4, HOLD = Math.round(FPS * SECS * 0.55);        // a frame inside the settled hold: the "poster" of the shot
+const FPS = 24, SECS = 6, HOLD = Math.round(FPS * SECS * 0.55);        // a frame inside the settled hold: the "poster" of the shot
 
 function pick() {
   if (opt("--looks")) return opt("--looks").split(",").map(s => s.trim());
@@ -47,9 +48,12 @@ for (const [i, k] of chosen.entries()) {
   const label = `${letter}  ${L.name}`;
   execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", path.join(dir, "hero.png"), "-vf", `drawbox=x=0:y=0:w=iw:h=34:color=black@0.55:t=fill,drawtext=text='${label}':x=12:y=8:fontsize=18:fontcolor=white`, path.join(dir, "tile.png")]);
   tiles.push(path.join(dir, "tile.png"));
-  meta.push({ option: letter, look: k, name: L.name, feel: L.feel, good_for: L.good_for, bg: L.bg, fg: L.fg, accent: accent === "-" ? L.accent : accent, font: L.font, weight: L.weight, motion: L.motion });
+  const warnings = []; if (accent !== "-") { const k = contrast(L.bg, accent); if (k < 3) warnings.push(`brand accent ${accent} on this look's background ${L.bg} is only ${k.toFixed(2)}:1 (needs 3:1 for shapes, 4.5:1 for text): use a lighter tint of the brand colour, or a light look`); }
+  meta.push({ option: letter, look: k, name: L.name, feel: L.feel, good_for: L.good_for, bg: L.bg, fg: L.fg, accent: accent === "-" ? L.accent : accent, font: L.font, weight: L.weight, motion: L.motion, warnings });
 }
-execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...tiles.flatMap(t => ["-i", t]), "-filter_complex", `${tiles.map((_, i) => `[${i}]`).join("")}hstack=inputs=${tiles.length}`, path.join(out, "directions.png")]);
+if (tiles.length === 1) execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", tiles[0], path.join(out, "directions.png")]);
+else execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...tiles.flatMap(t => ["-i", t]), "-filter_complex", `${tiles.map((_, i) => `[${i}]`).join("")}hstack=inputs=${tiles.length}`, path.join(out, "directions.png")]);
 writeFileSync(path.join(out, "directions.json"), JSON.stringify(meta, null, 1));
 console.log(`${path.join(out, "directions.png")}  (${tiles.length} directions, same words, real template at frame ${HOLD})`);
 for (const m of meta) console.log(`  ${m.option}  ${m.name.padEnd(18)} ${m.feel.join(", ").padEnd(30)} ${m.bg} / ${m.fg} / ${m.accent}   motion: ${m.motion.personality}`);
+for (const m of meta) for (const w of m.warnings) console.log(`  WARN ${m.option}: ${w}`);

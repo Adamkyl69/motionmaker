@@ -4,7 +4,7 @@ Frame-exact motion graphics with Claude Code: one `/motionmaker` command that in
 
 ## Motionmaker: install
 
-Pick one. All three give you the same eight skills; then start Claude Code and type **`/motionmaker`**.
+Pick one. All three give you the same nine skills; then start Claude Code and type **`/motionmaker`**.
 
 **A. Claude Code plugin (one step, auto-updatable)**
 ```
@@ -29,11 +29,12 @@ Other commands: `update`, `uninstall`, `list`, `doctor` (checks node, ffmpeg, Ch
 ## Motion skill set (`skills/`)
 Make frame-exact motion graphics with Claude. The method is distilled from public write-ups listed under Credits.
 
-**Start with `/motionmaker`.** One command that checks your toolchain, interviews you (what, where it is posted, length/loop, sound, words, look, feel), shows a brief for your OK, then builds, reviews (render-look-fix, `check.mjs`), exports MP4/GIF and writes `PROMPT.md` + `RECEIPTS.md` to `motion-out/<slug>/`. It drives the seven skills below.
+**Start with `/motionmaker`.** One command that checks your toolchain, interviews you (what, where it is posted, length/loop, sound, words, look, feel), shows a brief for your OK, then builds, reviews (render-look-fix, `check.mjs`), exports MP4/GIF and writes `PROMPT.md` + `RECEIPTS.md` to `motion-out/<slug>/`. It runs a small creative team: you talk to one command, and an **art director** (`motionmaker-art-director`) asks the creative-brief questions, shows three directions on real pixels, locks a visual system and critiques every round. It drives the eight skills below.
 
 | Skill | Stage | Ships |
 |---|---|---|
 | `motion` | **the command**: preflight, guided intake, brief gate, build, review, sound, export, deliver | `scripts/preflight.sh`, `scripts/scaffold.sh`, 6 templates: `title-loop`, `logo-reveal`, `data-chart`, `product-demo` (20 s launch clip), `three-product` (Three.js), `gsap-kinetic` (seeked GSAP timeline) |
+| `motionmaker-art-director` | **art direction**: creative-brief questions in onboarding, 3 directions as real style frames to choose from, visual system + motion language (AD-BRIEF.md), per-round critique, poster-frame sign-off | `looks/looks.json` (8 looks), `scripts/directions.mjs`, `critique.mjs` (contrast, margins, negative space, focal point, competing elements), `palette.mjs`, `type-scale.mjs`, `looktests.sh` (grayscale / squint / thumbnail), `craft/principles.md`, `craft/critique-checklist.md`, `AD-BRIEF-template.md` |
 | `motionmaker-reference` | analyze a reference video: probe, 2/s overview, frames around events, REFERENCE.md (measured / estimated / proposed) | `analyze-reference.sh`, `around.sh`, `reference-template.md` |
 | `motionmaker-catalog` | match a described motion to a named technique (awesome-ai-motion: 637 cards, 11 recipes) and run its examples through our pipeline | `catalog.mjs` (search, show, recipes, adopt), `sweep.mjs` (catalog-wide health check) |
 | `motionmaker-brief` | directed prompt + frame-locked BRIEF.md, feelings -> numbers, ban list | `timeline.mjs` (seconds <-> frames, global <-> scene-local, reading-hold check), `BRIEF-template.md` |

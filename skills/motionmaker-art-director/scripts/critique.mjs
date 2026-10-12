@@ -59,7 +59,7 @@ function analyze(file) {
   const bal = Math.min(left, right) / Math.max(left, right); res.balance = bal;
   if (bal < 0.25 && dC > 0.15) note("INFO", `weight sits mostly ${left > right ? "left" : "right"} (${(bal * 100).toFixed(0)}% balance): fine for an asymmetric layout if the other side is deliberate negative space`);
   // hierarchy: merge things that read as one unit (dilate), then compare the two biggest
-  const dil = new Uint8Array(N), R = 7; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (ink[y * W + x]) for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && xx < W && yy >= 0 && yy < H) dil[yy * W + xx] = 1; }
+  const dil = new Uint8Array(N), RX = 14, RY = 6; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (ink[y * W + x]) for (let dy = -RY; dy <= RY; dy++) for (let dx = -RX; dx <= RX; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && xx < W && yy >= 0 && yy < H) dil[yy * W + xx] = 1; }
   const seen = new Uint8Array(N), areas = [], stack = [];
   for (let s0 = 0; s0 < N; s0++) { if (!dil[s0] || seen[s0]) continue; let a = 0; stack.push(s0); seen[s0] = 1; while (stack.length) { const i = stack.pop(); a++; const x = i % W, y = (i / W) | 0; for (const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1]) if (j >= 0 && dil[j] && !seen[j]) { seen[j] = 1; stack.push(j); } } areas.push(a); }
   areas.sort((p, q) => q - p); const big = areas.filter(a => a > N * 0.001); res.groups = big.length;
@@ -68,7 +68,12 @@ function analyze(file) {
   if (big.length > 6) note("WARN", `${big.length} separate elements: reduce to what the viewer needs in 3 seconds`);
   // contrast of the dominant ink colours vs bg
   const inkc = new Map(); for (let i = 0; i < N; i++) if (ink[i] && dist(i) > 90) { const c = px(i), k = c.map(v => v >> 4).join(","); const e = inkc.get(k) || { n: 0, s: [0, 0, 0] }; e.n++; e.s = e.s.map((v, j) => v + c[j]); inkc.set(k, e); }
-  const cols = [...inkc.values()].sort((a, b) => b.n - a.n).slice(0, 3).map(e => ({ c: e.s.map(v => v / e.n), n: e.n }));
+  // Anti-aliased edges of thin shapes and small type are blends of the background and a real colour; they are not colours the design uses.
+  // Drop any candidate that lies on the line between the background and a bigger candidate.
+  const cand = [...inkc.values()].sort((a, b) => b.n - a.n).map(e => ({ c: e.s.map(v => v / e.n), n: e.n }));
+  const isBlend = (x, others) => others.some(o => { const u = o.c.map((v, j) => v - bg[j]), w = x.c.map((v, j) => v - bg[j]), uu = u[0] ** 2 + u[1] ** 2 + u[2] ** 2; if (!uu) return false;
+    const t = (u[0] * w[0] + u[1] * w[1] + u[2] * w[2]) / uu, r = Math.hypot(w[0] - t * u[0], w[1] - t * u[1], w[2] - t * u[2]); return t > 0.12 && t < 0.92 && r < 28; });
+  const cols = cand.filter((x, i) => !isBlend(x, cand.filter((o, j) => j !== i && o.n >= x.n * 0.5))).slice(0, 3);
   res.ink = cols.map(({ c }) => ({ color: hex(c), contrast: contrast(c, bg) }));
   if (!cols.length) note("WARN", "no strongly contrasting content: everything is close to the background colour");
   else for (const { c, n } of cols) { const k = contrast(c, bg); if (n > inkN * 0.04) note(k < 3 ? "WARN" : k < 4.5 ? "INFO" : "OK", `${hex(c)} on ${hex(bg)}: ${k.toFixed(2)}:1${k < 3 ? " (too faint to read)" : k < 4.5 ? " (large text and shapes only)" : ""}`); }

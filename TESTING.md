@@ -37,6 +37,7 @@ npx github:Adamkyl69/motionmaker doctor
 Start `claude` inside `mm-test` and type `/motionmaker` (if the command does not autocomplete, try `/motionmaker:motionmaker`, or just say "make a 4 second title loop that says Hello": it should trigger from the description).
 
 Checklist, in this order:
+0. **Art direction (new)**: when `/motionmaker` onboards you it should ask creative-brief questions (objective, audience, one message, tone, brand, references), then show a `directions.png` with **three directions (A/B/C) of your own headline** and ask you to pick. Check: does the picture open for you (path is printed), do the three differ, is your headline fully visible and inside the frame, does it write `AD-BRIEF.md`, and do the review rounds quote frame numbers with critique notes. Samples: `examples/art-director-*.png`.
 1. **Title loop**: "a 4 second square title loop that says Hello". Expect: a few multiple-choice questions, a brief you must approve, review stills, then `motion-out/<name>/out/*.mp4` and `.gif`.
 2. **Reference-free product demo**: "20 second launch clip: a cursor presses Export and a report.md file appears". Expect the 600-frame product-demo template, ~1-2 min render.
 3. **Sound**: ask for sound on #1. Expect a sync report (each hit ~+1 frame) and a loudness line.
@@ -50,4 +51,5 @@ Checklist, in this order:
 - the files in `motion-out/<name>/` if the output looked wrong (`anim.html`, `out/contact.png`)
 
 ## Known gaps
+Art-director critique tools measure craft (contrast, margins, hierarchy), not taste; the three directions share one layout (the title template) and use system fonts, so they look different on machines with different fonts installed; 
 Windows/macOS untested; Remotion and HyperFrames untested; sparse sound mixes can't reach -14 LUFS (the tool says so); the `/plugin` command may be namespaced; no licence file yet.

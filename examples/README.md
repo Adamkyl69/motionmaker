@@ -8,3 +8,6 @@
 | `logo-reveal-720x406-24fps-4s-with-sound.mp4` | 4 s logo reveal with synthesized sound | `logo-reveal` template |
 
 These are test renders with placeholder content, not finished work. Your own output goes to `motion-out/<slug>/` in the folder where you run `/motion`.
+
+| `art-director-three-directions.png` | The art director's three directions (Editorial Calm, Night Cinema, Swiss Minimal) for the same headline, from `directions.mjs` on the real template | `skills/motionmaker-art-director/scripts/directions.mjs --tone "calm premium"` |
+| `art-director-look-tests.png` | Look tests on a launch-clip frame: original / grayscale / squint / phone thumbnail (after the card-contrast fix) | `looktests.sh` |
