@@ -1,4 +1,6 @@
-# my-good-resources
+# Motionmaker
+
+Frame-exact motion graphics with Claude Code: one `/motionmaker` command that interviews you, confirms a frame-locked brief, renders, reviews, adds synthesized sound and exports MP4/GIF.
 
 ## Motionmaker: install
 
@@ -8,7 +10,7 @@ Pick one. All three give you the same eight skills; then start Claude Code and t
 ```
 /plugin install motionmaker --marketplace Adamkyl69/motionmaker
 ```
-(or in a terminal: `claude plugin marketplace add Adamkyl69/motionmaker` then `claude plugin install motionmaker@my-good-resources`). Needs a Claude Code version with plugin support; the manifests pass `claude plugin validate --strict`.
+(or in a terminal: `claude plugin marketplace add Adamkyl69/motionmaker` then `claude plugin install motionmaker@motionmaker`). Needs a Claude Code version with plugin support; the manifests pass `claude plugin validate --strict`.
 
 **B. CLI installer (copies the skills into `~/.claude/skills` or your project)**
 ```
