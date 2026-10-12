@@ -6,21 +6,21 @@ Pick one. All three give you the same eight skills; then start Claude Code and t
 
 **A. Claude Code plugin (one step, auto-updatable)**
 ```
-/plugin install motionmaker --marketplace ErdemKlyc/motionmaker
+/plugin install motionmaker --marketplace Adamkyl69/motionmaker
 ```
-(or in a terminal: `claude plugin marketplace add ErdemKlyc/motionmaker` then `claude plugin install motionmaker@my-good-resources`). Needs a Claude Code version with plugin support; the manifests pass `claude plugin validate --strict`.
+(or in a terminal: `claude plugin marketplace add Adamkyl69/motionmaker` then `claude plugin install motionmaker@my-good-resources`). Needs a Claude Code version with plugin support; the manifests pass `claude plugin validate --strict`.
 
 **B. CLI installer (copies the skills into `~/.claude/skills` or your project)**
 ```
-npx github:ErdemKlyc/motionmaker install            # global: ~/.claude/skills (or $CLAUDE_CONFIG_DIR/skills)
-npx github:ErdemKlyc/motionmaker install --project  # this project only: ./.claude/skills
-npx github:ErdemKlyc/motionmaker install --dry-run  # show what would happen, change nothing
+npx github:Adamkyl69/motionmaker install            # global: ~/.claude/skills (or $CLAUDE_CONFIG_DIR/skills)
+npx github:Adamkyl69/motionmaker install --project  # this project only: ./.claude/skills
+npx github:Adamkyl69/motionmaker install --dry-run  # show what would happen, change nothing
 ```
 Other commands: `update`, `uninstall`, `list`, `doctor` (checks node, ffmpeg, Chromium, Playwright; never installs), and `setup [dir] [--3d] [--browser]` (npm-installs Playwright into your working folder, plus `three` and `gsap` with `--3d`, and downloads Playwright's Chromium with `--browser`). It only ever touches the skill folders it ships; a folder it did not install, or one you edited, is skipped unless you pass `--force`, and then the old one is kept as `<name>.bak-<timestamp>`. `uninstall` removes only what it installed. (From a clone: `node bin/cli.mjs install`.)
 
 **C. Manual:** copy the folders in `skills/` into `~/.claude/skills/` (keep them together; they call each other's scripts).
 
-**Then, once per working folder:** `npx github:ErdemKlyc/motionmaker setup --3d --browser` (or `npm i playwright` yourself; `three@0.160.0 gsap@3.12.5` only for the 3D and GSAP templates), and make sure `ffmpeg` is on your PATH. `/motionmaker` runs a preflight and tells you what is missing; it never installs anything on its own.
+**Then, once per working folder:** `npx github:Adamkyl69/motionmaker setup --3d --browser` (or `npm i playwright` yourself; `three@0.160.0 gsap@3.12.5` only for the 3D and GSAP templates), and make sure `ffmpeg` is on your PATH. `/motionmaker` runs a preflight and tells you what is missing; it never installs anything on its own.
 
 ## Motion skill set (`skills/`)
 Make frame-exact motion graphics with Claude. The method is distilled from public write-ups listed under Credits.

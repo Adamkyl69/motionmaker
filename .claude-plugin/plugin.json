@@ -2,8 +2,8 @@
   "name": "motionmaker",
   "description": "Make frame-exact motion graphics with Claude: one /motionmaker command that interviews you, confirms a frame-locked brief, renders, reviews, adds synthesized sound and exports MP4/GIF. Includes reference-video analysis, a motion-technique catalog matcher, six templates and verification tools.",
   "version": "0.1.0",
-  "author": { "name": "ErdemKlyc" },
-  "homepage": "https://github.com/ErdemKlyc/motionmaker",
-  "repository": "https://github.com/ErdemKlyc/motionmaker",
+  "author": { "name": "Adamkyl69" },
+  "homepage": "https://github.com/Adamkyl69/motionmaker",
+  "repository": "https://github.com/Adamkyl69/motionmaker",
   "keywords": ["motion-design", "animation", "video", "gsap", "threejs", "claude-code", "skills"]
 }

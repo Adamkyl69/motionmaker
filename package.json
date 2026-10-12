@@ -6,6 +6,6 @@
   "bin": { "motionmaker": "bin/cli.mjs" },
   "files": ["bin", "skills", ".claude-plugin", "README.md"],
   "engines": { "node": ">=20" },
-  "repository": { "type": "git", "url": "git+https://github.com/ErdemKlyc/motionmaker.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/Adamkyl69/motionmaker.git" },
   "keywords": ["claude-code", "skills", "motion-design", "animation", "video"]
 }

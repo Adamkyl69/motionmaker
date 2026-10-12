@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // motionmaker: install and manage the Motionmaker skills for Claude Code.
 //
-//   npx github:ErdemKlyc/motionmaker install [--global | --project | --dir <skills-dir>] [--force] [--dry-run]
+//   npx github:Adamkyl69/motionmaker install [--global | --project | --dir <skills-dir>] [--force] [--dry-run]
 //   motionmaker update      [same target flags]     re-copy from this package (keeps backups of anything you edited)
 //   motionmaker uninstall   [same target flags]     remove what this tool installed (and only that)
 //   motionmaker doctor                              check node, ffmpeg, Chromium, Playwright (never installs)
