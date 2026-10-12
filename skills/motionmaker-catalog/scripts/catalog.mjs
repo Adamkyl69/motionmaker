@@ -12,6 +12,7 @@
 import { readFileSync, existsSync, mkdirSync, cpSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { fileURLToPath } from "node:url";
 
 const a = process.argv.slice(2), cmd = a[0];
 const flag = (k, d) => { const i = a.indexOf(k); return i > -1 ? a[i + 1] : d; }, has = k => a.includes(k);
@@ -70,7 +71,7 @@ function adopt() {
   mkdirSync(dest, { recursive: true });
   const html = readFileSync(src, "utf8").replace(/\.\.\/\.\.\/lib\//g, "./lib/");
   writeFileSync(path.join(dest, "anim.html"), html); cpSync(path.join(repo, "lib"), path.join(dest, "lib"), { recursive: true });
-  const renderer = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../../motionmaker-build/scripts/render.mjs");
+  const renderer = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../motionmaker-build/scripts/render.mjs");
   const dur = (html.match(/data-dur="([\d.]+)"/) || [])[1] || "3", size = (html.match(/data-size="([^"]+)"/) || [])[1] || "1280x720";
   writeFileSync(path.join(dest, "SOURCE.md"), `Adopted from awesome-ai-motion (${isRecipe ? "recipe" : "effect"} '${slug}', MIT; GSAP and bundled fonts keep their own licences; see its ATTRIBUTIONS.md).\nCopied unmodified except lib paths (../../lib -> ./lib). Edit text/images/data in anim.html and keep the timeline.\n`);
   console.log(`${dest}/anim.html (+ lib/, SOURCE.md)\nduration ${dur}s, size ${size}, 30 fps\nrender through our pipeline (a third-party page: run it only with the user's OK):\n  node ${renderer} ${dest}/anim.html ${dur} 30 --size auto --out ${dest}/out/frames`);

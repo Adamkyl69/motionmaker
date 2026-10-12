@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { existsSync } from "node:fs";
 const { chromium } = createRequire(process.cwd() + "/")("playwright");
 const MIME = { ".html":"text/html", ".js":"text/javascript", ".mjs":"text/javascript", ".json":"application/json", ".css":"text/css",
   ".png":"image/png", ".jpg":"image/jpeg", ".svg":"image/svg+xml", ".woff2":"font/woff2", ".woff":"font/woff", ".wasm":"application/wasm", ".glb":"model/gltf-binary", ".hdr":"application/octet-stream" };
@@ -19,9 +20,13 @@ export function serve(root) {
   });
   return new Promise(r => srv.listen(0, "127.0.0.1", () => r({ url: `http://127.0.0.1:${srv.address().port}`, close: () => srv.close() })));
 }
+// Browser: $CHROMIUM if set, else the container's /opt/pw-browsers/chromium if it exists, else Playwright's own downloaded Chromium
+// (`npx playwright install chromium`, or `motionmaker setup --browser`). Software WebGL (SwiftShader) keeps 3D renders reproducible
+// without a GPU; set MOTIONMAKER_GPU=1 to use the real GPU instead (faster, may differ slightly between machines).
+const chromePath = () => process.env.CHROMIUM || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
 export const launch = () => chromium.launch({
-  executablePath: process.env.CHROMIUM || "/opt/pw-browsers/chromium",
-  args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"],
+  ...(chromePath() ? { executablePath: chromePath() } : {}),
+  args: [...(process.env.MOTIONMAKER_GPU ? [] : ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]), "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"],
 });
 // Open anim.html frozen at t=0 and wait for fonts, window.renderFrame and (optionally) window.ready.
 // Pages that expose a seekable timeline instead (awesome-ai-motion style: window.__seek(sec) + window.__ready) are adapted:

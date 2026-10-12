@@ -90,7 +90,7 @@ function doctor() {
   row(nodeMajor >= 20, "node", `v${process.versions.node}`, "install Node.js 20 or newer");
   const ff = run("ffmpeg", ["-version"]); row(!!ff, "ffmpeg", ff ? ff.split("\n")[0].slice(0, 40) : "not found", "install ffmpeg (brew install ffmpeg | apt install ffmpeg | winget install ffmpeg); ffprobe comes with it");
   const fp = run("ffprobe", ["-version"]); row(!!fp, "ffprobe", fp ? "found" : "not found", "ships with ffmpeg");
-  const pw = path.join(os.homedir(), ".cache", "ms-playwright"), chromes = [process.env.CHROMIUM, "/opt/pw-browsers/chromium", run("which", ["chromium"]), run("which", ["google-chrome"]), run("which", ["chromium-browser"])].filter(Boolean);
+  const pwDirs = [path.join(os.homedir(), ".cache", "ms-playwright"), path.join(os.homedir(), "Library", "Caches", "ms-playwright"), path.join(process.env.LOCALAPPDATA || "/nonexistent", "ms-playwright")], pw = pwDirs.find(d => existsSync(d) && readdirSync(d).some(x => x.startsWith("chromium"))) || pwDirs[0], chromes = [process.env.CHROMIUM, "/opt/pw-browsers/chromium", run("which", ["chromium"]), run("which", ["google-chrome"]), run("which", ["chromium-browser"])].filter(Boolean);
   const found = chromes.find(p => existsSync(p)) || (existsSync(pw) && readdirSync(pw).find(d => d.startsWith("chromium")) && `${pw}/chromium-*`);
   row(!!found, "chromium", found || "not found", "run `motionmaker setup --browser` (downloads Playwright's Chromium), or set CHROMIUM=<path to chrome/chromium>");
   const pwOk = hasPkg("playwright");

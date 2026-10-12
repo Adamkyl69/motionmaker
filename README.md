@@ -22,6 +22,8 @@ Other commands: `update`, `uninstall`, `list`, `doctor` (checks node, ffmpeg, Ch
 
 **C. Manual:** copy the folders in `skills/` into `~/.claude/skills/` (keep them together; they call each other's scripts).
 
+**Want to test it on your machine? See [TESTING.md](TESTING.md).**
+
 **Then, once per working folder:** `npx github:Adamkyl69/motionmaker setup --3d --browser` (or `npm i playwright` yourself; `three@0.160.0 gsap@3.12.5` only for the 3D and GSAP templates), and make sure `ffmpeg` is on your PATH. `/motionmaker` runs a preflight and tells you what is missing; it never installs anything on its own.
 
 ## Motion skill set (`skills/`)
