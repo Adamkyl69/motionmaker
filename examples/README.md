@@ -13,3 +13,5 @@ These are test renders with placeholder content, not finished work. Your own out
 | `art-director-look-tests.png` | Look tests on a launch-clip frame: original / grayscale / squint / phone thumbnail (after the card-contrast fix) | `looktests.sh` |
 
 - `assets-illustration-scene.png`: `illustration-scene` with an Open Peeps bust (left, night-cinema look) and a Humaaans figure (right, playful-pop look), both built locally with `kit.mjs`. Art: Pablo Stanley, CC0.
+- `libs-templates.png`: the six new templates (code-reveal, equation-scene, map-scene, annotate-scene, icon-features, footage-scene with an ffmpeg test pattern), each rendered by `motionmaker-libs/scripts/smoke.sh`.
+- `looks-bundled-fonts.png`: the eight looks, each in its own bundled open-licence font (Fraunces, Inter, Cormorant Garamond, Archivo Black, Fredoka, JetBrains Mono, Playfair Display, DM Serif Display).

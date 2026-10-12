@@ -1,5 +1,5 @@
 {
-  "_about": "Starting visual directions. Each look = palette (bg/fg/accent), a system-safe type stack, and a motion personality. Fonts are system stacks so renders work offline; for brand-exact type, ship the font file and override font. Every palette was checked with scripts/palette.mjs (text >= 4.5:1, accent >= 3:1). glyphWidth = average advance of a character in em (bold weight), used to size one-line headlines so they fit; measure a new font by rendering text and dividing width by (characters x font size).",
+  "_about": "Starting visual directions. Each look = palette (bg/fg/accent), a system-safe type stack, and a motion personality. font is a system stack (the fallback); bundledFont is the open-licence font each look ships when motionmaker-libs fonts are installed (scaffold.sh copies it into the project), with its own measured glyphWidth. Every palette was checked with scripts/palette.mjs (text >= 4.5:1, accent >= 3:1). glyphWidth = average advance of a character in em (bold weight), used to size one-line headlines so they fit; measure a new font by rendering text and dividing width by (characters x font size).",
   "looks": {
     "editorial-calm": {
       "name": "Editorial Calm",
@@ -23,7 +23,14 @@
         "holdFactor": 1.3,
         "cut": "slow dissolve or push, no hard cuts"
       },
-      "glyphWidth": 0.56
+      "glyphWidth": 0.56,
+      "bundledFont": {
+        "package": "@fontsource/fraunces",
+        "family": "Fraunces",
+        "fileWeight": 700,
+        "glyphWidth": 0.58,
+        "license": "OFL-1.1"
+      }
     },
     "swiss-minimal": {
       "name": "Swiss Minimal",
@@ -47,7 +54,14 @@
         "holdFactor": 1.0,
         "cut": "hard cuts on the beat, no overshoot"
       },
-      "glyphWidth": 0.55
+      "glyphWidth": 0.55,
+      "bundledFont": {
+        "package": "@fontsource/inter",
+        "family": "Inter",
+        "fileWeight": 700,
+        "glyphWidth": 0.56,
+        "license": "OFL-1.1"
+      }
     },
     "night-cinema": {
       "name": "Night Cinema",
@@ -71,7 +85,14 @@
         "holdFactor": 1.5,
         "cut": "long holds, slow push-in, cut on a sound hit"
       },
-      "glyphWidth": 0.54
+      "glyphWidth": 0.54,
+      "bundledFont": {
+        "package": "@fontsource/cormorant-garamond",
+        "family": "Cormorant Garamond",
+        "fileWeight": 600,
+        "glyphWidth": 0.49,
+        "license": "OFL-1.1"
+      }
     },
     "bold-launch": {
       "name": "Bold Launch",
@@ -95,7 +116,14 @@
         "holdFactor": 1.0,
         "cut": "hard cuts on the beat, one orchestrated moment per shot"
       },
-      "glyphWidth": 0.56
+      "glyphWidth": 0.56,
+      "bundledFont": {
+        "package": "@fontsource/archivo-black",
+        "family": "Archivo Black",
+        "fileWeight": 400,
+        "glyphWidth": 0.63,
+        "license": "OFL-1.1"
+      }
     },
     "playful-pop": {
       "name": "Playful Pop",
@@ -119,7 +147,14 @@
         "holdFactor": 0.9,
         "cut": "quick cuts, squash and stretch, overshoot on shapes (never on text)"
       },
-      "glyphWidth": 0.58
+      "glyphWidth": 0.58,
+      "bundledFont": {
+        "package": "@fontsource/fredoka",
+        "family": "Fredoka",
+        "fileWeight": 700,
+        "glyphWidth": 0.53,
+        "license": "OFL-1.1"
+      }
     },
     "tech-mono": {
       "name": "Tech Mono",
@@ -143,7 +178,14 @@
         "holdFactor": 0.9,
         "cut": "hard cuts, typewriter or stepped reveals, no easing flourish"
       },
-      "glyphWidth": 0.62
+      "glyphWidth": 0.62,
+      "bundledFont": {
+        "package": "@fontsource/jetbrains-mono",
+        "family": "JetBrains Mono",
+        "fileWeight": 700,
+        "glyphWidth": 0.62,
+        "license": "OFL-1.1"
+      }
     },
     "luxe-black-gold": {
       "name": "Luxe Black & Gold",
@@ -167,7 +209,14 @@
         "holdFactor": 1.6,
         "cut": "dissolves and slow fades, almost nothing moves at once"
       },
-      "glyphWidth": 0.52
+      "glyphWidth": 0.52,
+      "bundledFont": {
+        "package": "@fontsource/playfair-display",
+        "family": "Playfair Display",
+        "fileWeight": 400,
+        "glyphWidth": 0.52,
+        "license": "OFL-1.1"
+      }
     },
     "warm-craft": {
       "name": "Warm Craft",
@@ -191,7 +240,14 @@
         "holdFactor": 1.2,
         "cut": "soft cuts, slight overshoot on shapes, organic drift"
       },
-      "glyphWidth": 0.55
+      "glyphWidth": 0.55,
+      "bundledFont": {
+        "package": "@fontsource/dm-serif-display",
+        "family": "DM Serif Display",
+        "fileWeight": 400,
+        "glyphWidth": 0.5,
+        "license": "OFL-1.1"
+      }
     }
   }
 }

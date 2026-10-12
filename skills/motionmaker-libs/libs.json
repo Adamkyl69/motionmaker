@@ -1,0 +1,98 @@
+{
+ "_about": "Libraries and data Motionmaker can install on request (pinned). Licences read from each package's npm metadata on checkedOn. Nothing here is bundled in Motionmaker: `lib.mjs setup <group>` installs into the kit cache ($MOTIONMAKER_KITS or ~/.cache/motionmaker/kits).",
+ "checkedOn": "2026-10-12",
+ "groups": {
+  "fonts": {
+   "what": "open-licence fonts, one per look, so type no longer depends on the machine",
+   "packages": {
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/inter": "5.3.0",
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/archivo-black": "5.3.0",
+    "@fontsource/fredoka": "5.3.0",
+    "@fontsource/jetbrains-mono": "5.3.0",
+    "@fontsource/playfair-display": "5.3.0",
+    "@fontsource/dm-serif-display": "5.3.0"
+   },
+   "license": "OFL-1.1",
+   "credit": "none required; the licence travels with the font files (fonts/FONTS.md)",
+   "approxMB": 15
+  },
+  "code": {
+   "what": "syntax highlighting for code reveals (rendered ahead of time in Node)",
+   "packages": {
+    "shiki": "4.5.0"
+   },
+   "license": "MIT",
+   "credit": "none",
+   "approxMB": 12
+  },
+  "math": {
+   "what": "typeset equations (KaTeX, rendered ahead of time in Node)",
+   "packages": {
+    "katex": "0.19.0"
+   },
+   "license": "MIT",
+   "credit": "none",
+   "approxMB": 4,
+   "licenseNote": "KaTeX fonts are OFL-1.1"
+  },
+  "maps": {
+   "what": "globe and map scenes (d3-geo + Natural Earth country shapes)",
+   "packages": {
+    "d3": "7.9.0",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
+   },
+   "license": "ISC",
+   "credit": "none required; 'Made with Natural Earth' is customary",
+   "approxMB": 10,
+   "licenseNote": "world-atlas shapes are derived from Natural Earth (public domain)"
+  },
+  "sketch": {
+   "what": "hand-drawn circles, underlines, arrows and boxes (Rough.js, fixed seed)",
+   "packages": {
+    "roughjs": "4.6.6"
+   },
+   "license": "MIT",
+   "credit": "none",
+   "approxMB": 1
+  },
+  "icons:lucide": {
+   "what": "Lucide icon set (outline, about 1,600 icons)",
+   "packages": {
+    "lucide-static": "1.55.0"
+   },
+   "license": "ISC",
+   "credit": "none",
+   "approxMB": 51
+  },
+  "icons:phosphor": {
+   "what": "Phosphor icon set (6 weights)",
+   "packages": {
+    "@phosphor-icons/core": "2.1.1"
+   },
+   "license": "MIT",
+   "credit": "none",
+   "approxMB": 7
+  },
+  "icons:tabler": {
+   "what": "Tabler icon set (outline and filled)",
+   "packages": {
+    "@tabler/icons": "3.49.0"
+   },
+   "license": "MIT",
+   "credit": "none",
+   "approxMB": 11
+  },
+  "icons:material": {
+   "what": "Google Material Symbols (outlined, rounded, sharp; weight 400)",
+   "packages": {
+    "@material-symbols/svg-400": "0.48.0"
+   },
+   "license": "Apache-2.0",
+   "credit": "none",
+   "approxMB": 13
+  }
+ }
+}

@@ -1,0 +1,84 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: code reveal. Highlighting is done ahead of time (motionmaker-libs/scripts/code.mjs -> code.json, Shiki), so a frame only shows or hides
+     coloured characters. Modes: "type" (characters typed at a steady rate, caret) or "lines" (lines rise in). Then optional focus on a line range:
+     those lines get an accent bar, the rest dim. Frame-exact: pure function of the frame number. Needs tokens.js and code.json. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  #cap{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
+  #cap span{display:inline-block}
+  #panel{position:absolute;overflow:hidden;box-sizing:border-box}
+  #dots{position:absolute;left:0;top:0;display:flex;gap:.5em}
+  #dots i{display:block;width:.7em;height:.7em;border-radius:50%;opacity:.35}
+  #code{position:absolute;font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:400;white-space:pre;font-variant-ligatures:none}
+  .ln{position:relative;display:block}
+  .ln .hl{position:absolute;left:-0.6em;right:-0.6em;top:0;bottom:0;background:__ACCENT__;opacity:0;border-radius:4px}
+  .ln .tx{position:relative}
+  .ln .tx span{font-style:normal}
+  #caret{position:absolute;width:.12em;background:__ACCENT__}
+</style>
+<div id="stage"><div id="cap"></div><div id="panel"><div id="dots"><i></i><i></i><i></i></div><div id="code"></div><div id="caret"></div></div></div>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, mode:"__MODE__", focus:"__FOCUS__" };
+// type: the typing runs from typeStart to typeEndPct of the clip (rate follows from the amount of code). focus "3-5" lights those lines after the reveal.
+const TOKENS = { panelIn:14, typeStart:16, typeEndPct:0.5, lineStagger:5, lineIn:12, focusAfter:12, focusDim:0.38, hlAlpha:0.16, exitStart:__EXIT__, outF:10,
+                 capDelay:4, capIn:__INF__, capStagger:__STAGGER__, capPct:Math.min(__FONTPCT__, 0.05), capTopPct:0.07, panelTopPct:0.18, panelSidePct:0.07, panelBottomPct:0.07,
+                 padEm:1.4, lineHeight:1.55, radius:14, glyph:0.6, maxFontPct:0.034 };
+const { clamp, EASE } = Motion, N = CONFIG.frames, $ = id => document.getElementById(id);
+const stage = $("stage"), cap = $("cap"), panel = $("panel"), dots = $("dots"), codeEl = $("code"), caret = $("caret");
+cap.style.fontSize = CONFIG.w*TOKENS.capPct+"px"; cap.style.top = CONFIG.h*TOKENS.capTopPct+"px";
+if (CONFIG.text === "-") TOKENS.panelTopPct = TOKENS.panelBottomPct;
+const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; cap.appendChild(s); return s; });
+let C = null, chars = [], lines = [], total = 0, fx = [0, -1];
+window.ready = fetch("code.json").then(r => r.json()).then(c => { C = c; build(); renderFrame(0); });
+function build() {
+  const availW = CONFIG.w*(1-2*TOKENS.panelSidePct), availH = CONFIG.h*(1-TOKENS.panelTopPct-TOKENS.panelBottomPct);
+  const cols = Math.max(C.longest, 20), rows = C.count + 1.2;   // +1.2 rows: the dots bar
+  const font = Math.min(CONFIG.w*TOKENS.maxFontPct, availW / (cols*TOKENS.glyph + 2*TOKENS.padEm), availH / (rows*TOKENS.lineHeight + 2*TOKENS.padEm));
+  const pad = font*TOKENS.padEm, pw = Math.min(availW, cols*TOKENS.glyph*font + 2*pad), ph = (C.count*TOKENS.lineHeight + 1.2*TOKENS.lineHeight)*font + 2*pad;
+  Object.assign(panel.style, { left:(CONFIG.w-pw)/2+"px", top:CONFIG.h*TOKENS.panelTopPct + (availH-ph)/2+"px", width:pw+"px", height:ph+"px", background:C.bg, borderRadius:TOKENS.radius+"px", fontSize:font+"px" });
+  // separate the panel from the stage even when the theme background equals the look's (e.g. tech-mono): nudge it toward the text colour + hairline
+  const lumOf = h => { const n = parseInt(h.slice(1,7),16); return (0.2126*(n>>16) + 0.7152*((n>>8)&255) + 0.0722*(n&255))/255; }, stageBg = getComputedStyle(stage).backgroundColor;
+  const sb = stageBg.match(/\d+/g).map(Number), sl = (0.2126*sb[0] + 0.7152*sb[1] + 0.0722*sb[2])/255;
+  if (Math.abs(lumOf(C.bg) - sl) < 0.04) panel.style.background = `color-mix(in srgb, ${C.bg} ${sl < 0.5 ? 92 : 96}%, ${C.fg})`;
+  panel.style.boxShadow = `inset 0 0 0 1px color-mix(in srgb, ${C.fg} 14%, transparent)`;
+  Object.assign(dots.style, { left:pad+"px", top:pad*0.75+"px" }); [...dots.children].forEach(d => d.style.background = C.fg);
+  Object.assign(codeEl.style, { left:pad+"px", top:pad + 1.2*TOKENS.lineHeight*font+"px", fontSize:font+"px", lineHeight:TOKENS.lineHeight, color:C.fg });
+  C.lines.forEach((toks, li) => { const ln = document.createElement("div"); ln.className = "ln"; const hl = document.createElement("div"); hl.className = "hl"; const tx = document.createElement("span"); tx.className = "tx";
+    ln.append(hl, tx); if (!toks.length) tx.textContent = " ";
+    toks.forEach(t => [...t.t].forEach(ch => { const s = document.createElement("span"); s.textContent = ch; s.style.color = t.c; if (t.b) s.style.fontWeight = 700; if (t.i) s.style.fontStyle = "italic"; s.dataset.line = li; tx.appendChild(s); chars.push(s); }));
+    codeEl.appendChild(ln); lines.push({ ln, hl, tx, first: chars.length - toks.reduce((n, t) => n + [...t.t].length, 0), n: toks.reduce((n, t) => n + [...t.t].length, 0) }); });
+  total = chars.length; Object.assign(caret.style, { height:font*1.15+"px" });
+  const m = CONFIG.focus.match(/^(\d+)(?:-(\d+))?$/); if (m) fx = [+m[1]-1, +(m[2]||m[1])-1];
+}
+function renderFrame(f) {
+  const pIn = EASE.out(clamp(f/TOKENS.panelIn)), out = EASE.in(clamp((f-TOKENS.exitStart)/TOKENS.outF));
+  panel.style.opacity = Math.min(0.999, pIn*(1-out)); panel.style.transform = `translateY(${((1-pIn)+out*0.5)*CONFIG.h*0.03}px)`;
+  letters.forEach((el, i) => { const a = EASE.out(clamp((f-TOKENS.capDelay-i*TOKENS.capStagger)/TOKENS.capIn)), b = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));
+    el.style.transform = `translateY(${((1-a)-b)*CONFIG.h*0.03}px)`; el.style.opacity = (a>0 && b<1) ? 1 : 0; });
+  if (!C) return;
+  const typeEnd = Math.max(TOKENS.typeStart + 10, Math.round(N*TOKENS.typeEndPct));
+  let revealDone;
+  if (CONFIG.mode === "lines") {
+    lines.forEach((L, i) => { const p = EASE.out(clamp((f - TOKENS.typeStart - i*TOKENS.lineStagger)/TOKENS.lineIn)); L.tx.style.opacity = p; L.tx.style.transform = `translateY(${(1-p)*0.5}em)`; });
+    chars.forEach(s => s.style.visibility = "visible"); caret.style.opacity = 0; revealDone = TOKENS.typeStart + (lines.length-1)*TOKENS.lineStagger + TOKENS.lineIn;
+  } else {
+    const shown = Math.floor(clamp((f - TOKENS.typeStart)/(typeEnd - TOKENS.typeStart)) * total);
+    chars.forEach((s, i) => s.style.visibility = i < shown ? "visible" : "hidden"); lines.forEach(L => { L.tx.style.opacity = 1; L.tx.style.transform = "none"; });
+    // caret after the last typed character; blinks (8 frames on, 8 off) only once typing has finished
+    const last = shown > 0 ? chars[shown-1] : null, li = last ? +last.dataset.line : 0, L = lines[li];
+    const x = last ? last.offsetLeft + last.offsetWidth : 0, y = L.ln.offsetTop;
+    Object.assign(caret.style, { left: codeEl.offsetLeft + x + "px", top: codeEl.offsetTop + y + (L.ln.offsetHeight - caret.offsetHeight)/2 + "px" });
+    caret.style.opacity = f < TOKENS.typeStart || out > 0 ? 0 : (shown < total || Math.floor((f - typeEnd)/8) % 2 === 0) ? 1 : 0; revealDone = typeEnd;
+  }
+  const fp = fx[1] >= 0 ? EASE.out(clamp((f - revealDone - TOKENS.focusAfter)/12)) : 0;
+  lines.forEach((L, i) => { const inF = i >= fx[0] && i <= fx[1]; L.hl.style.opacity = inF ? TOKENS.hlAlpha*fp : 0; L.ln.style.opacity = inF ? 1 : 1 - (1-TOKENS.focusDim)*fp; });
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

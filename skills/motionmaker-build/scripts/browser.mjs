@@ -49,5 +49,8 @@ export async function openAnim(file, W, H, opts = {}) {
   if (auto) { const sz = await page.evaluate(() => window.__size || [1280, 720]); await page.setViewportSize({ width: sz[0], height: sz[1] }); }
   await page.evaluate(() => (window.ready ? window.ready : Promise.resolve()));
   await page.evaluate(() => document.fonts.ready);
+  // Load every declared font face (bundled fonts in fonts/fonts.css). Text drawn on a canvas does not request a font by itself, so without this
+  // the first frames could be captured in a fallback font.
+  await page.evaluate(() => Promise.all([...document.fonts].map(f => f.status === "unloaded" ? f.load().catch(() => null) : null)));
   return { page, errors, adapted, close: async () => { await browser.close(); srv.close(); } };
 }

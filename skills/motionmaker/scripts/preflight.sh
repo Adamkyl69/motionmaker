@@ -12,4 +12,8 @@ for c in "${CHROMIUM:-}" /opt/pw-browsers/chromium; do [ -n "$c" ] && [ -e "$c" 
 [ -n "$CH" ] && ok "chromium: $CH" || no "chromium (run: npx playwright install chromium, or: npx github:Adamkyl69/motionmaker setup --browser; or set CHROMIUM=<path>)"
 if node -e 'require("module").createRequire(process.cwd()+"/")("playwright")' 2>/dev/null; then ok "playwright resolvable from $(pwd)"
 else no "playwright not resolvable from $(pwd) (npm i playwright, or symlink an existing install into ./node_modules/playwright)"; fi
+if [ -f "$HERE/motionmaker-libs/scripts/lib.mjs" ] && command -v node >/dev/null; then
+  LIBS=$(node "$HERE/motionmaker-libs/scripts/lib.mjs" list 2>/dev/null | awk '/^\[x\]/{i=i" "$2} /^\[ \]/{m=m" "$3} END{print "installed:" (i?i:" none") "  |  not installed:" (m?m:" none")}')
+  echo "libs  $LIBS   (offer: node $HERE/motionmaker-libs/scripts/lib.mjs setup <group>; fonts give each look its real typeface)"
+fi
 echo "mode: $( command -v node >/dev/null && command -v ffmpeg >/dev/null && echo 'full (render + export)' || echo 'authoring-only (write HTML, user records screen)')"

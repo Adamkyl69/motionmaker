@@ -1,0 +1,74 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: real footage (a screen recording or product clip) in a clean window, with camera punch-ins and a caption. Frame-exact: footage frames
+     are extracted once by motionmaker-assets/scripts/footage.mjs and composition frame f shows footage image k. Each image is decoded to an ImageBitmap
+     and drawn on a canvas with an explicit crop (the camera), so resampling never depends on what was drawn before; renderFrame is async and the
+     renderer awaits it. Edit TOKENS.camera to direct the punch-ins (frame, centre x/y as 0..1 of the footage, zoom). -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  #win{position:absolute;overflow:hidden;background:__FG__;box-sizing:border-box}
+  #bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:0.55em;padding-left:0.9em;box-sizing:border-box}
+  #bar i{display:block;width:0.75em;height:0.75em;border-radius:50%;opacity:.55;background:__BG__}
+  #view{position:absolute;left:0;right:0;bottom:0;overflow:hidden;background:#000}
+  #cam{position:absolute;left:0;top:0;width:100%;height:100%}
+  #cap{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
+  #cap span{display:inline-block}
+  #ring{position:absolute;border:3px solid __ACCENT__;border-radius:10px;box-sizing:border-box;pointer-events:none}
+</style>
+<div id="stage"><div id="cap"></div><div id="win"><div id="bar"><i></i><i></i><i></i></div><div id="view"><canvas id="cam"></canvas><div id="ring"></div></div></div></div>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
+// camera: keyframes in composition frames; x/y = point of the footage to centre (0..1), z = zoom (1 = whole frame). Moves ease with EASE.move.
+// ring: optional highlight box in footage coordinates (0..1) shown between two frames, e.g. { from:70, to:130, x:0.62, y:0.18, w:0.2, h:0.1 }.
+const TOKENS = { winIn:16, capDelay:6, capIn:__INF__, capStagger:__STAGGER__, exitStart:__EXIT__, outF:10, footStart:0, holdLast:true,
+                 capPct:Math.min(__FONTPCT__, 0.055), capTopPct:0.06, winTopPct:0.17, winSidePct:0.07, winBottomPct:0.06, radius:14, barPct:0.045,
+                 camera:[ { f:0, x:0.5, y:0.5, z:1 }, { f:Math.round(__N__*0.35), x:0.5, y:0.5, z:1 }, { f:Math.round(__N__*0.5), x:0.35, y:0.35, z:1.8 },
+                          { f:Math.round(__N__*0.75), x:0.35, y:0.35, z:1.8 }, { f:Math.round(__N__*0.88), x:0.5, y:0.5, z:1 } ],
+                 ring:null };
+const { clamp, EASE } = Motion, N = CONFIG.frames;
+const $ = id => document.getElementById(id), stage = $("stage"), win = $("win"), bar = $("bar"), view = $("view"), cam = $("cam"), cap = $("cap"), ring = $("ring");
+let FOOT = null;
+// window box: fits the footage aspect inside the free area under the caption
+function layout() {
+  const top = CONFIG.h*TOKENS.winTopPct, availW = CONFIG.w*(1-2*TOKENS.winSidePct), availH = CONFIG.h*(1-TOKENS.winTopPct-TOKENS.winBottomPct), barH = Math.round(CONFIG.h*TOKENS.barPct);
+  const asp = FOOT ? FOOT.width/FOOT.height : 16/10; let vw = availW, vh = vw/asp; if (vh + barH > availH) { vh = availH - barH; vw = vh*asp; }
+  Object.assign(win.style, { left:(CONFIG.w-vw)/2+"px", top:top+"px", width:vw+"px", height:vh+barH+"px", borderRadius:TOKENS.radius+"px" });
+  Object.assign(bar.style, { height:barH+"px", fontSize:barH*0.5+"px" }); Object.assign(view.style, { top:barH+"px", height:vh+"px" });
+  cam.width = Math.round(vw); cam.height = Math.round(vh);
+  return { vw, vh };
+}
+let box = layout();
+cap.style.fontSize = CONFIG.w*TOKENS.capPct+"px"; cap.style.top = CONFIG.h*TOKENS.capTopPct+"px";
+const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; cap.appendChild(s); return s; });
+window.ready = fetch("footage/footage.json").then(r => r.json()).then(m => { FOOT = m; box = layout(); return renderFrame(0); });
+
+function camAt(f) {   // piecewise, eased between keyframes
+  const K = TOKENS.camera; if (f <= K[0].f) return K[0]; for (let i = 1; i < K.length; i++) if (f <= K[i].f) { const a = K[i-1], b = K[i], t = EASE.move(clamp((f-a.f)/Math.max(1,b.f-a.f))); return { x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, z:a.z+(b.z-a.z)*t }; }
+  return K[K.length-1];
+}
+const ctx = cam.getContext("2d"); let shown = { src:null, bmp:null };
+async function frameBitmap(src) { if (shown.src !== src) { const blob = await (await fetch(src)).blob(); const bmp = await createImageBitmap(blob); if (shown.bmp) shown.bmp.close(); shown = { src, bmp }; } return shown.bmp; }
+async function renderFrame(f) {
+  const c = camAt(f), z = Math.max(1, c.z), tx = clamp(box.vw/2 - c.x*box.vw*z, box.vw*(1-z), 0), ty = clamp(box.vh/2 - c.y*box.vh*z, box.vh*(1-z), 0);
+  if (FOOT) {   // footage frame for composition frame f (same fps: one to one); holds the last frame after the clip ends
+    const k = Math.floor((f - TOKENS.footStart) * FOOT.fps / CONFIG.fps), idx = TOKENS.holdLast ? clamp(k, 0, FOOT.frames-1) : ((k % FOOT.frames) + FOOT.frames) % FOOT.frames;
+    const bmp = await frameBitmap(`footage/f${String(idx+1).padStart(5,"0")}.jpg`);
+    // camera as a source crop: the visible part of the footage is (-tx, -ty) .. (+view size) in zoomed view pixels
+    const sx = -tx / (box.vw*z) * bmp.width, sy = -ty / (box.vh*z) * bmp.height, sw = bmp.width / z, sh = bmp.height / z;
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high"; ctx.drawImage(bmp, sx, sy, sw, sh, 0, 0, cam.width, cam.height);
+  }
+  const R = TOKENS.ring; if (R) { const on = EASE.out(clamp((f-R.from)/8)) * (1 - EASE.in(clamp((f-R.to)/8)));
+    Object.assign(ring.style, { left:tx+R.x*box.vw*z+"px", top:ty+R.y*box.vh*z+"px", width:R.w*box.vw*z+"px", height:R.h*box.vh*z+"px", opacity:on }); } else ring.style.opacity = 0;
+  const wIn = EASE.out(clamp(f/TOKENS.winIn)), wOut = EASE.in(clamp((f-TOKENS.exitStart)/TOKENS.outF));
+  win.style.opacity = Math.min(0.999, wIn*(1-wOut)); win.style.transform = `translateY(${((1-wIn) + wOut*0.5)*CONFIG.h*0.04}px)`;
+  letters.forEach((el, i) => { const inP = EASE.out(clamp((f-TOKENS.capDelay-i*TOKENS.capStagger)/TOKENS.capIn)), outP = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));
+    el.style.transform = `translateY(${((1-inP)-outP)*CONFIG.h*0.03}px)`; el.style.opacity = (inP>0 && outP<1) ? 1 : 0; });
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(async () => { let s=null; const L = async ts => { s??=ts; await renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); }; requestAnimationFrame(L); }); // live preview only
+</script>

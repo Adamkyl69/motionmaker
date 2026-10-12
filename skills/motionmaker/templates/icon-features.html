@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: 2 to 4 features, each an icon (Lucide / Tabler / Phosphor / Material via motionmaker-libs/scripts/icons.mjs) and a short label.
+     Outline icons draw on stroke by stroke (pathLength=1); filled icons pop. Row on landscape, column on tall formats. Frame-exact.
+     Labels come from the text, separated by "|". features.json lists the icon files in assets/. Needs tokens.js. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  .it{position:absolute;display:flex;flex-direction:column;align-items:center}
+  .disc{position:relative;border-radius:50%;background:color-mix(in srgb, __ACCENT__ 16%, __BG__)}
+  .disc svg{position:absolute;left:22%;top:22%;width:56%;height:56%;color:__FG__;overflow:visible}
+  .lb{white-space:nowrap;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1.1;text-align:center}
+</style>
+<div id="stage"></div>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
+const TOKENS = { start:6, stagger:7, discIn:14, drawF:22, labelDelay:8, labelIn:12, exitStart:__EXIT__, outF:10, glyph:__GW__ };
+const { clamp, EASE } = Motion, N = CONFIG.frames, stage = document.getElementById("stage"), items = [];
+window.ready = fetch("features.json").then(r => r.json()).then(async F => {
+  const labels = CONFIG.text.split("|").map(s => s.trim()), n = F.length, tall = CONFIG.h > CONFIG.w*1.2;
+  const cell = tall ? { w: CONFIG.w*0.8, h: CONFIG.h*0.8/n } : { w: CONFIG.w*0.86/n, h: CONFIG.h*0.6 };
+  const disc = Math.min(cell.w*0.5, cell.h*(tall ? 0.55 : 0.5), CONFIG.h*0.26), maxLen = Math.max(...labels.map(l => l.length), 4);
+  const font = Math.min(CONFIG.h*0.065, cell.w*0.9/(maxLen*TOKENS.glyph), disc*0.42);
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement("div"); el.className = "it"; const d = document.createElement("div"); d.className = "disc"; d.style.width = d.style.height = disc+"px";
+    d.innerHTML = await (await fetch(F[i].icon)).text(); const lb = document.createElement("div"); lb.className = "lb"; lb.textContent = labels[i] || ""; lb.style.fontSize = font+"px"; lb.style.marginTop = disc*0.18+"px";
+    el.append(d, lb); stage.appendChild(el);
+    const cx = tall ? CONFIG.w/2 : CONFIG.w*0.07 + cell.w*(i+0.5), cy = tall ? CONFIG.h*0.1 + cell.h*(i+0.5) : CONFIG.h/2;
+    const blockH = disc + disc*0.18 + font*1.1; Object.assign(el.style, { left: cx - cell.w/2+"px", width: cell.w+"px", top: cy - blockH/2+"px" });
+    const svg = d.querySelector("svg"), strokes = [...svg.querySelectorAll("path,line,polyline,polygon,circle,rect,ellipse")].filter(p => (p.getAttribute("stroke") || svg.getAttribute("stroke")) && (p.getAttribute("stroke") || svg.getAttribute("stroke")) !== "none");
+    strokes.forEach(p => { p.setAttribute("pathLength", "1"); p.style.strokeDasharray = "1 1"; });
+    items.push({ el, d, svg, lb, strokes, outline: strokes.length > 0 });
+  }
+  renderFrame(0);
+});
+function renderFrame(f) {
+  const out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
+  items.forEach((it, i) => {
+    const t0 = TOKENS.start + i*TOKENS.stagger, a = EASE.pop(clamp((f - t0)/TOKENS.discIn)), vis = clamp((f - t0)/4) * (1 - out);
+    it.d.style.transform = `scale(${0.6 + 0.4*a})`; it.d.style.opacity = Math.min(0.999, vis);
+    if (it.outline) { const p = EASE.move(clamp((f - t0 - 4)/TOKENS.drawF)); it.strokes.forEach(s => { s.style.strokeDashoffset = 1 - p; s.style.visibility = p > 0 ? "visible" : "hidden"; }); }   // hidden at 0: a round cap would show a dot
+    else it.svg.style.transform = `scale(${EASE.pop(clamp((f - t0 - 4)/TOKENS.discIn))})`;
+    const l = EASE.out(clamp((f - t0 - TOKENS.labelDelay)/TOKENS.labelIn)); it.lb.style.opacity = Math.min(0.999, l*(1 - out)); it.lb.style.transform = `translateY(${(1-l)*CONFIG.h*0.02}px)`;
+  });
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

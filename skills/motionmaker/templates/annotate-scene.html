@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a headline, then a hand-drawn mark on the key word (Rough.js with a fixed seed, so the "hand" is the same on every render):
+     circle | underline | box | highlight | strike | arrow. The mark draws on stroke by stroke like a marker. Frame-exact. Needs tokens.js and vendor/rough.js. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  #title{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1.05}
+  #title span{display:inline-block;white-space:pre}
+  #ink{position:absolute;left:0;top:0;overflow:visible}
+</style>
+<div id="stage"><svg id="ink" width="__W__" height="__H__"></svg><div id="title"></div></div>
+<script src="tokens.js"></script>
+<script src="vendor/rough.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, keyword:"__KEYWORD__", mark:"__MARK__", accent:"__ACCENT__", seed:__SEED__ };
+const TOKENS = { wordIn:__INF__, wordStagger:5, markDelay:10, markDraw:20, exitStart:__EXIT__, outF:10, fontPct:__FONTPCT__, roughness:1.6, strokePct:0.008, bowing:1.2 };
+const { clamp, EASE } = Motion, N = CONFIG.frames, title = document.getElementById("title"), ink = document.getElementById("ink");
+const fontPx = Math.min(CONFIG.w*TOKENS.fontPct*0.9, CONFIG.h*0.22); title.style.fontSize = fontPx+"px"; title.style.top = (CONFIG.h - fontPx*1.05)/2+"px";
+const words = CONFIG.text.split(/(\s+)/).filter(s => s.length).map(w => { const s = document.createElement("span"); s.textContent = w; title.appendChild(s); return s; });
+const real = words.filter(s => s.textContent.trim()), key = real.find(s => s.textContent.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase() === CONFIG.keyword.toLowerCase()) || real[real.length-1];
+let strokes = [], markStart = 0;
+window.ready = document.fonts.ready.then(() => Promise.all([...document.fonts].map(f => f.status === "unloaded" ? f.load().catch(() => 0) : 0))).then(() => {
+  // measure the key word once fonts are in, then build the mark with a fixed seed (same strokes on every render)
+  // a circle or box needs room around the word: open the spacing on both sides (as a designer would) before measuring
+  if (CONFIG.mark === "circle" || CONFIG.mark === "box") key.style.margin = `0 ${CONFIG.mark === "circle" ? 0.3 : 0.18}em`;
+  const st = document.getElementById("stage").getBoundingClientRect(), b = key.getBoundingClientRect(), x = b.left - st.left, y = b.top - st.top, w = b.width, h = b.height;
+  const rc = rough.svg(ink), sw = Math.max(3, CONFIG.h*TOKENS.strokePct), o = { stroke: CONFIG.accent, strokeWidth: sw, roughness: TOKENS.roughness, bowing: TOKENS.bowing, seed: CONFIG.seed, disableMultiStroke: false };
+  // horizontal padding never reaches the neighbouring words: clamp it to the measured gap on each side
+  const margin = parseFloat(getComputedStyle(key).marginLeft) || 0, gapOf = el => el && !el.textContent.trim() ? el.getBoundingClientRect().width + margin : Infinity, gap = Math.min(gapOf(key.previousElementSibling), gapOf(key.nextElementSibling));
+  const padX = Math.max(0, Math.min(h*0.28, gap*0.6 - (CONFIG.mark === "circle" ? w*0.05 : 0))), padY = h*0.18, nodes = [];
+  if (CONFIG.mark === "circle") nodes.push(rc.ellipse(x + w/2, y + h/2, w*1.1 + padX*2, h + padY*2.6, o));
+  else if (CONFIG.mark === "box") nodes.push(rc.rectangle(x - padX, y - padY, w + padX*2, h + padY*2, o));
+  else if (CONFIG.mark === "strike") nodes.push(rc.line(x - padX*0.4, y + h*0.55, x + w + padX*0.4, y + h*0.5, o));
+  else if (CONFIG.mark === "highlight") nodes.push(rc.line(x - padX*0.3, y + h*0.62, x + w + padX*0.3, y + h*0.6, { ...o, strokeWidth: h*0.42, roughness: 0.8, stroke: CONFIG.accent }));
+  else if (CONFIG.mark === "arrow") { const ax = x + w/2, ay = y + h + padY*0.6, tx = ax + w*0.25, ty = ay + h*0.9;
+    nodes.push(rc.curve([[tx + w*0.25, ty + h*0.15], [tx, ty], [ax + w*0.05, ay + h*0.25], [ax, ay]], o), rc.line(ax, ay, ax + h*0.28, ay + h*0.12, o), rc.line(ax, ay, ax + h*0.06, ay + h*0.3, o)); }
+  else nodes.push(rc.curve([[x - padX*0.3, y + h*0.98], [x + w*0.35, y + h*1.04], [x + w*0.7, y + h*0.99], [x + w + padX*0.3, y + h*1.03]], o));   // underline
+  nodes.forEach(n => ink.appendChild(n));
+  if (CONFIG.mark === "highlight") { ink.style.mixBlendMode = "multiply"; ink.style.opacity = 0.45; title.before(ink); }
+  strokes = [...ink.querySelectorAll("path")].filter(p => p.getAttribute("stroke") && p.getAttribute("stroke") !== "none");
+  strokes.forEach(p => { p.setAttribute("pathLength", "1"); p.style.strokeDasharray = "1 1"; });
+  markStart = TOKENS.wordStagger*(real.length - 1) + TOKENS.wordIn + TOKENS.markDelay; renderFrame(0);
+});
+function renderFrame(f) {
+  const out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
+  let k = 0; words.forEach(s => { if (!s.textContent.trim()) return; const p = EASE.out(clamp((f - k*TOKENS.wordStagger)/TOKENS.wordIn)); k++;
+    s.style.opacity = Math.min(0.999, p*(1 - out)); s.style.transform = `translateY(${((1-p) - out*0.4)*fontPx*0.25}px)`; });
+  // strokes draw one after another (a marker has one tip)
+  const n = strokes.length, per = TOKENS.markDraw / Math.max(1, n);
+  strokes.forEach((p, i) => { const t = EASE.move(clamp((f - markStart - i*per*0.8)/per)); p.style.strokeDashoffset = 1 - t; p.style.visibility = t > 0 && out < 1 ? "visible" : "hidden"; p.style.opacity = 1 - out; });
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

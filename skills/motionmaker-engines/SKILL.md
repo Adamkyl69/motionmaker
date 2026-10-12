@@ -20,6 +20,12 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | Celebration bursts | canvas-confetti | catdad/canvas-confetti | uses randomness: seed/replace Math.random for frame-exact renders |
 | React UI springs, gestures, layout | Motion | motiondivision/motion | live UI, no video renderer |
 | Interactive state-machine vector art | Rive | rive-app/rive-runtime | product UI; for video use `rive-scene` (linear animations only, via motionmaker-assets; community files need CC BY credit) |
+| Exact typography per look | Fontsource fonts | fontsource/font-files | OFL; bundled per look by scaffold (`motionmaker-libs`) |
+| Code on screen | Shiki | shikijs/shiki | highlight ahead of time in Node; `code-reveal` |
+| Equations | KaTeX | KaTeX/KaTeX | typeset ahead of time; `equation-scene` |
+| Maps, globes, routes | d3-geo + world-atlas | d3/d3, topojson/world-atlas | offline Natural Earth shapes; `map-scene` |
+| Hand-drawn marks | Rough.js | rough-stuff/rough | fixed seed; `annotate-scene` |
+| Icons | Lucide, Tabler, Phosphor, Material Symbols | lucide-icons/lucide etc. | `icons.mjs`, `icon-features` |
 | Ready-made animated vectors | lottie-web | airbnb/lottie-web | `lottie-scene` via motionmaker-assets; goToAndStop is frame-exact |
 | Video as React components | Remotion | remotion-dev/remotion | free for individuals and companies up to 3 staff; official Agent Skills |
 | Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes | Apache 2.0, CLI renders MP4 (verify repo URL) |

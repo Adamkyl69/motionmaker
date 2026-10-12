@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a globe that travels a route. d3-geo orthographic projection + Natural Earth country shapes (world-atlas, 110m). The camera follows the
+     arc from place to place along great circles, each leg draws on, markers land with a pulse and a label; listed countries take the accent.
+     Frame-exact: every path is recomputed from the frame number. map.json holds the places and highlights; vendor/ holds d3, topojson and the shapes. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  svg{position:absolute;left:0;top:0}
+  .lbl{font-family:__FONT__;font-weight:__WEIGHT__;fill:__FG__;paint-order:stroke;stroke:__BG__;stroke-linejoin:round}
+  #cap{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
+  #cap span{display:inline-block}
+</style>
+<div id="stage"><svg id="map" width="__W__" height="__H__"></svg><div id="cap"></div></div>
+<script src="tokens.js"></script>
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, bg:"__BG__", fg:"__FG__", accent:"__ACCENT__" };
+// travel runs from travelStart to travelEnd (fractions of the clip); legs share it equally. tilt keeps the globe slightly from above.
+const TOKENS = { globeIn:16, travelStart:0.14, travelEnd:0.78, legHoldPct:0.18, tilt:-12, radiusPct:0.37, centerYPct:0.44, markerR:0.012, pulse:18,
+                 capDelay:8, capIn:__INF__, capStagger:__STAGGER__, exitStart:__EXIT__, outF:10, capPct:Math.min(__FONTPCT__, 0.05), capTopPct:0.9, labelPct:0.034 };
+const { clamp, EASE } = Motion, N = CONFIG.frames, svg = d3.select("#map"), cap = document.getElementById("cap");
+const mix = (a, b, t) => d3.interpolateRgb(a, b)(t);
+const COL = { ocean: mix(CONFIG.bg, CONFIG.fg, 0.06), land: mix(CONFIG.bg, CONFIG.fg, 0.2), border: CONFIG.bg, grid: mix(CONFIG.bg, CONFIG.fg, 0.1), hl: mix(CONFIG.bg, CONFIG.accent, 0.85), route: CONFIG.accent };
+if (CONFIG.text === "-") TOKENS.centerYPct = 0.5; else { cap.style.fontSize = CONFIG.w*TOKENS.capPct+"px"; cap.style.top = CONFIG.h*TOKENS.capTopPct - CONFIG.w*TOKENS.capPct/2+"px"; }
+const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; cap.appendChild(s); return s; });
+const R = Math.min(CONFIG.w, CONFIG.h) * TOKENS.radiusPct, C = [CONFIG.w/2, CONFIG.h*TOKENS.centerYPct];
+const proj = d3.geoOrthographic().clipAngle(90).translate(C).precision(0.3), path = d3.geoPath(proj);
+let M = null, countries = null, hlSet = null, legs = [];
+const L = { sphere: svg.append("path"), grid: svg.append("path"), land: svg.append("g"), routes: svg.append("g"), marks: svg.append("g") };
+window.ready = Promise.all([fetch("map.json").then(r => r.json()), fetch("vendor/countries-110m.json").then(r => r.json())]).then(([m, topo]) => {
+  M = m; countries = topojson.feature(topo, topo.objects.countries).features; hlSet = new Set(M.highlight || []);
+  L.land.selectAll("path").data(countries).enter().append("path").attr("stroke", COL.border).attr("stroke-width", 0.6);
+  const P = M.places.map(p => [p.lon, p.lat]); for (let i = 0; i + 1 < P.length; i++) legs.push({ a: P[i], b: P[i+1], interp: d3.geoInterpolate(P[i], P[i+1]) });
+  legs.forEach(() => L.routes.append("path").attr("fill", "none").attr("stroke", COL.route).attr("stroke-linecap", "round"));
+  M.places.forEach(() => { const g = L.marks.append("g"); g.append("circle").attr("class", "ring").attr("fill", "none").attr("stroke", COL.route); g.append("circle").attr("class", "dot").attr("fill", COL.route); g.append("text").attr("class", "lbl"); });
+  renderFrame(0);
+});
+// where the camera looks at frame f, and how far each leg is drawn
+function state(f) {
+  const n = legs.length, t0 = N*TOKENS.travelStart, t1 = N*TOKENS.travelEnd;
+  if (!n) { const p = M.places[0] || { lon: 0, lat: 20 }, k = EASE.move(clamp((f - t0)/(t1 - t0))); return { look: [p.lon - 40*(1-k), p.lat], drawn: [], arrived: [k > 0.9 ? 1 : 0] }; }
+  const per = (t1 - t0)/n, drawn = [], arrived = [1]; let look = legs[0].a;
+  for (let i = 0; i < n; i++) { const s = t0 + i*per, travel = per*(1 - TOKENS.legHoldPct), k = EASE.move(clamp((f - s)/travel));
+    drawn.push(k); arrived.push(k >= 1 ? 1 : 0); if (f >= s) look = legs[i].interp(k); }
+  return { look, drawn, arrived };
+}
+function renderFrame(f) {
+  if (!M) return;
+  const S = state(f), gIn = EASE.out(clamp(f/TOKENS.globeIn)), out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
+  proj.scale(R*(0.92 + 0.08*gIn)).rotate([-S.look[0], -S.look[1] + TOKENS.tilt*0, 0]);
+  svg.style("opacity", Math.min(0.999, gIn*(1 - out)));
+  L.sphere.attr("d", path({ type: "Sphere" })).attr("fill", COL.ocean);
+  L.grid.attr("d", path(d3.geoGraticule10())).attr("fill", "none").attr("stroke", COL.grid).attr("stroke-width", 0.6);
+  L.land.selectAll("path").attr("d", path).attr("fill", d => hlSet.has(d.properties.name) ? COL.hl : COL.land);
+  const sw = Math.max(2, CONFIG.h*0.005);
+  L.routes.selectAll("path").each(function (_, i) { const k = S.drawn[i], lg = legs[i], pts = d3.range(0, 65).map(j => lg.interp(k*j/64));
+    d3.select(this).attr("d", k > 0 ? path({ type: "LineString", coordinates: pts }) : null).attr("stroke-width", sw); });
+  const center = proj.invert(C), mr = CONFIG.h*TOKENS.markerR, fs = CONFIG.h*TOKENS.labelPct;
+  L.marks.selectAll("g").each(function (_, i) {
+    const p = M.places[i], vis = d3.geoDistance([p.lon, p.lat], center) < Math.PI/2 - 0.05, xy = proj([p.lon, p.lat]), g = d3.select(this);
+    // arrival frame of place i: start of travel for the first place, end of leg i-1 for the others
+    const n = legs.length, t0 = N*TOKENS.travelStart, per = n ? (N*TOKENS.travelEnd - t0)/n : 0, at = i === 0 ? t0 - 6 : t0 + (i-1)*per + per*(1 - TOKENS.legHoldPct);
+    const a = EASE.pop(clamp((f - at)/10)), pu = clamp((f - at)/TOKENS.pulse);
+    g.style("display", vis && f >= at ? null : "none").attr("transform", `translate(${xy[0]},${xy[1]})`);
+    g.select(".dot").attr("r", mr*a); g.select(".ring").attr("r", mr*(1 + 2.4*pu)).attr("stroke-width", sw*0.6).attr("opacity", 1 - pu);
+    // one focal point: a place keeps its label until the camera leaves for the next stop
+    const nextAt = i < n ? t0 + i*per : Infinity, lab = clamp((f - at - 4)/8) * (1 - clamp((f - nextAt)/8));
+    g.select("text").text(p.name).attr("x", mr*1.8).attr("y", fs*0.35).attr("font-size", fs).attr("stroke-width", fs*0.22).attr("opacity", lab);
+  });
+  letters.forEach((el, i) => { const a = EASE.out(clamp((f - TOKENS.capDelay - i*TOKENS.capStagger)/TOKENS.capIn)), b = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));
+    el.style.transform = `translateY(${((1-a)-b)*CONFIG.h*0.03}px)`; el.style.opacity = (a>0 && b<1) ? 1 : 0; });
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function Lp(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(Lp); })(0); }); // live preview only
+</script>

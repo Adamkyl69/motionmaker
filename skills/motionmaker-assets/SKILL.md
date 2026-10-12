@@ -39,9 +39,15 @@ Never ship an asset whose licence you could not find. Nothing from these sources
    - These templates are starting points for one asset plus a caption. For richer scenes, copy the loader code into your own composition: it is a pure function of the frame number in all three.
 7. **Verify as usual:** `check.mjs` (determinism, seam, errors), stills, art-director critique (see `craft/illustration.md`), and **`ledger.mjs check --dir motion-out/<slug>`** before export (must PASS; it fails on unrecorded files, unknown licences and missing CC BY credits). Then `ledger.mjs credits` for the end card or post text and `ledger.mjs report` to write `assets/ASSETS.md` for the client.
 
+## Real footage (screen recordings, product clips)
+Browsers cannot seek a `<video>` to an exact frame, so footage is extracted once: `node $AS/scripts/footage.mjs probe <video>` then the scaffold does the rest:
+`TEMPLATE=footage-scene FOOTAGE=<video> [FROM=2.5 TO=9] LOOK=<look> bash $MOTIONMAKER_SKILLS/motionmaker/scripts/scaffold.sh <slug> "<caption or ->" W H fps secs - - -`.
+Frames go to `<slug>/footage/` at the composition fps (variable-rate recordings are resampled), so composition frame k shows footage frame k (verified exact to the frame). The scene puts it in a clean window and directs **camera punch-ins** from `TOKENS.camera` (frame, centre, zoom) and an optional highlight ring. Ask before using a screen recording: it can show private data (names, emails, tokens); crop or blur first. Record it in the ledger (usually USER-OWNED).
+
 ## How frame-exactness works here (so you can debug it)
 - **Lottie:** `anim.goToAndStop(frame, true)`; time is `(f/fps)`, wrapped by the animation's duration for loops, else clamped to its last frame.
 - **Rive:** the animation must be passed in `animations: [name]` when constructing; then `stopRendering()`, and per frame `scrub(name, seconds); drawFrame()`. `scrub` clamps past the end, so loops wrap the time by the animation's own duration. The runtime wasm must be served from the project folder (`rive.RuntimeLoader.setWasmUrl("./vendor/rive.wasm")`), because the renderer blocks non-local requests.
+- **Footage:** each frame image is decoded to an ImageBitmap and drawn on a canvas with an explicit crop; an `<img>` with CSS zoom was not reproducible (Chrome resampled differently depending on the previous frame).
 - **Illustrations:** parts are wrapped in new `<g>` elements and transformed with SVG `transform` attributes (not CSS) around fixed pivots; idle periods divide the loop length evenly. The outer fade stays at 0.999 or less so the raster path never changes when the fade finishes.
 
 ## Limits to say out loud

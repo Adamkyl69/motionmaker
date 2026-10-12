@@ -17,11 +17,13 @@
 const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
 // all timing in frames; no inline magic numbers elsewhere
 const TOKENS = { rise:0.07, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:8, outStagger:1, push:0.02, barMin:0.6,
-                 fontPct:__FONTPCT__, titleTopPct:0.41, barTopPct:0.62, barWPct:0.5, barHPct:0.017 };
+                 fontPct:__FONTPCT__, barGapEm:0.32, barWPct:0.5, barHPct:0.017 };
 const { clamp, EASE } = Motion, N = CONFIG.frames;
 const stage = document.getElementById("stage"), title = document.getElementById("title"), bar = document.getElementById("bar");
-title.style.fontSize = CONFIG.w * TOKENS.fontPct + "px"; title.style.top = CONFIG.h * TOKENS.titleTopPct + "px";
-Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:CONFIG.h*TOKENS.barTopPct+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:Math.max(4,CONFIG.h*TOKENS.barHPct)+"px" });
+// title and bar are centred as one block; the bar sits below the descenders (barGapEm under the line box), whatever the font
+const fontPx = Math.min(CONFIG.w * TOKENS.fontPct, CONFIG.h * 0.3), barH = Math.max(4, CONFIG.h*TOKENS.barHPct), blockH = fontPx * (1 + TOKENS.barGapEm) + barH, titleTop = (CONFIG.h - blockH) / 2;
+title.style.fontSize = fontPx + "px"; title.style.top = titleTop + "px";
+Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:titleTop + fontPx*(1 + TOKENS.barGapEm)+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:barH+"px" });
 const letters = [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; title.appendChild(s); return s; });
 
 function renderFrame(f){

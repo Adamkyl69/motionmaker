@@ -27,7 +27,8 @@ Call B (brand and references), only for what is unknown:
 5. **Brand:** exact hex colours, fonts, logo rules, no-gos. Offer "pick for me" (then you choose from a look and say so).
 6. **References:** a link, video or description of something they love, and something they hate. Ask what *specifically* they like about it. If they supply a video, run `motionmaker-reference` and take principles, not footage.
 7. **Anything that must or must not appear** (legal copy, competitors, faces, claims).
-8. **Illustration and animation:** does the piece need characters, spot illustrations or a ready-made animation? Offer: *none, type and shape only* / *a kit: Open Peeps or Humaaans characters* / *a LottieFiles animation they pick* / *a Rive file* / *their own artwork*. If they pick any, hand over to `motionmaker-assets` (inspect, recolour, ledger) and read its `craft/illustration.md`; say upfront that Rive community files require a visible credit.
+8. **Supporting material:** code to show, an equation, places on a map, product screen recordings, feature icons? Each has a template (`motionmaker-libs`, `motionmaker-assets`). One icon set per piece; one hand-drawn mark per shot.
+9. **Illustration and animation:** does the piece need characters, spot illustrations or a ready-made animation? Offer: *none, type and shape only* / *a kit: Open Peeps or Humaaans characters* / *a LottieFiles animation they pick* / *a Rive file* / *their own artwork*. If they pick any, hand over to `motionmaker-assets` (inspect, recolour, ledger) and read its `craft/illustration.md`; say upfront that Rive community files require a visible credit.
 
 If the user says "just make it" or gives a one-line request: do a **lightweight pass**: infer objective, audience and tone from the request, state your three assumptions in one line each, and go straight to Step 2. Never skip Step 2.
 
@@ -37,7 +38,7 @@ Run (with the user's real headline, their tone words, and their brand accent if 
 node $AD/scripts/directions.mjs "<headline>" --tone "<their tone words>" [--accent "#hex"] [--size WxH] --out motion-out/<slug>/ad/directions
 ```
 It renders the same words in 3 looks on the real template into `directions.png` (labelled A/B/C) and `directions.json`. **Read the image**, then tell the user the path, describe each direction in one line (the feeling, the audience it suits, the trade-off), give your recommendation and why, and ask via AskUserQuestion: **A** | **B** | **C** | **Mix (say what to change)**. If the user's references or brand clash with all three, build a custom look (`scripts/palette.mjs gen <brand hex> --scheme ...`) and show it as option D.
-Limits to say out loud when relevant: the style frame uses the title template's layout (a real art director would also vary composition); fonts come from what is installed on the machine, so ship the brand font file if exactness matters.
+Limits to say out loud when relevant: the style frame uses the title template's layout (a real art director would also vary composition); each look ships its own open-licence font when `motionmaker-libs` fonts are installed (`lib.mjs setup fonts`); without them, system fonts are used and type will differ between machines. A brand font the client owns: add it with `fonts.mjs add` or ship the file and override the font.
 
 ## Step 3: lock the system
 Write `motion-out/<slug>/AD-BRIEF.md` from `AD-BRIEF-template.md`: strategy, big idea and visual metaphor (one sentence each), chosen look and why, visual system with the checks run, motion language, sound idea, board / shot list, the poster frame, approvals. Run and paste the results of:

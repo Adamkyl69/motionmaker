@@ -5,7 +5,7 @@
 //   motionmaker update      [same target flags]     re-copy from this package (keeps backups of anything you edited)
 //   motionmaker uninstall   [same target flags]     remove what this tool installed (and only that)
 //   motionmaker doctor                              check node, ffmpeg, Chromium, Playwright (never installs)
-//   motionmaker setup [dir] [--3d] [--browser]      install Playwright (+ three/gsap with --3d) into a working folder
+//   motionmaker setup [dir] [--3d] [--browser] [--libs [groups]]   install Playwright (+ three/gsap with --3d) into a working folder; --libs installs optional libraries into the kit cache
 //   motionmaker list                                show where the skills are installed
 //
 // Targets: --global = $CLAUDE_CONFIG_DIR/skills or ~/.claude/skills (default); --project = ./.claude/skills; --dir <path>.
@@ -114,6 +114,8 @@ function setup() {
   if (!existsSync(path.join(dir, "package.json"))) steps.push(["npm", ["init", "-y"]]);
   steps.push(["npm", ["install", ...pkgs]]);
   if (has("--browser")) steps.push(["npx", ["playwright", "install", "chromium"]]);
+  // --libs [groups]: optional libraries (fonts, code, math, maps, sketch, icons:*) into the shared kit cache, not the working folder
+  const li = argv.indexOf("--libs"); if (li > -1) { const groups = argv.slice(li + 1).filter(a => !a.startsWith("--")); steps.push(["node", [path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "skills", "motionmaker-libs", "scripts", "lib.mjs"), "setup", ...(groups.length ? groups : ["fonts"])]]); }
   say(`Setting up ${dir}\n${steps.map(([c, a]) => "  $ " + [c, ...a].join(" ")).join("\n")}${dry ? "\n[dry run]" : ""}`);
   if (dry) return;
   mkdirSync(dir, { recursive: true });
@@ -126,6 +128,6 @@ function list() {
     const m = readManifest(dir); say(m ? `${label}: ${dir}\n  v${m.version} installed ${m.installedAt}\n  ${m.skills.join(", ")}` : `${label}: not installed (${dir})`);
   }
 }
-const help = () => say(`motionmaker v${PKG.version}: install the Motionmaker skills for Claude Code\n\nCommands:\n  install    [--global|--project|--dir <path>] [--force] [--dry-run]   copy the skills (default target: ~/.claude/skills)\n  update     [same flags]                                             re-copy from this package\n  uninstall  [same flags]                                             remove only what this tool installed\n  doctor                                                              check node / ffmpeg / Chromium / Playwright\n  setup [dir] [--3d] [--browser] [--dry-run]                          npm-install Playwright (+ three, gsap) in a working folder\n  list                                                                show installed locations\n\nAfter installing, start Claude Code and type /motionmaker.`);
+const help = () => say(`motionmaker v${PKG.version}: install the Motionmaker skills for Claude Code\n\nCommands:\n  install    [--global|--project|--dir <path>] [--force] [--dry-run]   copy the skills (default target: ~/.claude/skills)\n  update     [same flags]                                             re-copy from this package\n  uninstall  [same flags]                                             remove only what this tool installed\n  doctor                                                              check node / ffmpeg / Chromium / Playwright\n  setup [dir] [--3d] [--browser] [--libs [groups]] [--dry-run]         npm-install Playwright (+ three, gsap) in a working folder; --libs adds fonts (default) or the named groups: fonts code math maps sketch icons all\n  list                                                                show installed locations\n\nAfter installing, start Claude Code and type /motionmaker.`);
 
 ({ install: () => install(false), update: () => install(true), uninstall, doctor, setup, list, help, "--help": help, "-h": help, version: () => say(PKG.version) }[cmd] || help)();
