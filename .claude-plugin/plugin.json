@@ -1,6 +1,6 @@
 {
   "name": "motionmaker",
-  "description": "Make frame-exact motion graphics with Claude: one /motionmaker command with an art director that asks creative-brief questions, shows three directions, confirms a frame-locked brief, renders, reviews, adds synthesized sound and exports MP4/GIF. Includes reference-video analysis, a motion-technique catalog matcher, illustration and animation assets (Open Peeps, Humaaans, LottieFiles, Rive) with a licence ledger, optional libraries (bundled fonts per look, code reveals, equations, globe maps, hand-drawn marks, icon sets, frame-exact footage), fifteen templates and verification tools.",
+  "description": "Make frame-exact motion graphics with Claude: one /motionmaker command with an art director that asks creative-brief questions, shows three directions, confirms a frame-locked brief, renders, reviews, adds synthesized sound and exports MP4/GIF. Includes reference-video analysis, a motion-technique catalog matcher, illustration and animation assets (Open Peeps, Humaaans, LottieFiles, Rive) with a licence ledger, optional libraries (bundled fonts per look, code reveals, equations, globe maps, hand-drawn marks, icon sets, frame-exact footage), art styles (Bauhaus, Van Gogh, Constructivism, Seurat, Matisse, ukiyo-e), beat-grid music, a finished-film gate with an independent reviewer and sealed delivery, an OpenMontage handoff for footage and AI-video work, sixteen templates and verification tools.",
   "version": "0.1.0",
   "author": {
     "name": "Adamkyl69"

@@ -1,0 +1,65 @@
+{
+ "_about": "Art styles: movements and long-dead artists only (public domain), drawn by our own code in templates/styles/<id>.js. One card per style in this folder (<id>.md). Ratings are about OUR implementation: 3 = recognisable at a glance, ready; 2 = usable, read the weaknesses; 1 = experimental.",
+ "styles": {
+  "bauhaus": {
+   "name": "Bauhaus",
+   "era": "1919-1933",
+   "font": {
+    "package": "@fontsource/poppins",
+    "weight": 800
+   },
+   "rating": 3,
+   "goodFor": "product launches, design and architecture, data, anything that wants order and confidence"
+  },
+  "van-gogh": {
+   "name": "Van Gogh night sky",
+   "era": "1889 (public domain)",
+   "font": {
+    "package": "@fontsource/young-serif",
+    "weight": 400
+   },
+   "rating": 3,
+   "goodFor": "stories, launches with a dreamy or romantic tone, night/sleep/space products, art and culture"
+  },
+  "constructivism": {
+   "name": "Russian Constructivism",
+   "era": "1919-1930s (El Lissitzky, Rodchenko)",
+   "font": {
+    "package": "@fontsource/oswald",
+    "weight": 700
+   },
+   "rating": 3,
+   "goodFor": "announcements, calls to action, launches with urgency, protest-energy campaigns, bold data claims"
+  },
+  "matisse": {
+   "name": "Matisse paper cut-outs",
+   "era": "late 1940s-1950s",
+   "font": {
+    "package": "@fontsource/fraunces",
+    "weight": 700
+   },
+   "rating": 2,
+   "goodFor": "joyful brands, culture and education, kids and family, summer campaigns, anything that wants warmth and rhythm"
+  },
+  "seurat": {
+   "name": "Seurat pointillism",
+   "era": "1880s (public domain)",
+   "font": {
+    "package": "@fontsource/playfair-display",
+    "weight": 700
+   },
+   "rating": 3,
+   "goodFor": "leisure, travel, outdoors, slow and luminous moods, premium lifestyle"
+  },
+  "ukiyo-e": {
+   "name": "Ukiyo-e woodblock print",
+   "era": "Edo period, 1700s-1850s (Hokusai, Hiroshige)",
+   "font": {
+    "package": "@fontsource/young-serif",
+    "weight": 400
+   },
+   "rating": 2,
+   "goodFor": "travel, Japan-related subjects, craft and heritage brands, calm-but-dramatic stories, ocean/water topics"
+  }
+ }
+}

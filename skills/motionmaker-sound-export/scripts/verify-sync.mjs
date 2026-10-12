@@ -11,7 +11,7 @@ const x = new Float32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4), even
 const win = Math.round(0.012*SR), env = new Float32Array(x.length);          // 12 ms RMS envelope
 let acc = 0; for (let i = 0; i < x.length; i++) { acc += x[i]*x[i]; if (i >= win) acc -= x[i-win]*x[i-win]; env[i] = Math.sqrt(acc / win); }
 let ok = true;
-for (const e of events) {
+for (const e of events.filter(e => !e.music && e.frame !== undefined)) {   // music on the BPM grid is not a picture hit
   const t0 = e.frame/fps, lo = Math.round((t0 - 0.5/fps)*SR), hi = Math.min(x.length, Math.round((t0 + 4.5/fps)*SR));   // search: from half a frame before the picture to 4.5 frames after
   let best = lo, bv = -1; for (let i = Math.max(0, lo); i < hi; i++) if (env[i] > bv) { bv = env[i]; best = i; }
   const swell = e.type === "whoosh";

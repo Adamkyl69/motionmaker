@@ -18,3 +18,7 @@ Give the reference one job (a card entrance with a controlled landing, a transit
 5. Hand off to `motionmaker-brief` (frame-locked BRIEF.md).
 
 Typical findings to extract: entrance direction/duration/scale/opacity change/visible overshoot; order product -> headline -> labels; readable hold; the state carried into the next shot.
+
+## Beat grid of a reference
+`node scripts/beat-grid.mjs <reference.mp4>`: finds the cuts and fits the tempo they follow (60-200 BPM, quarter and eighth readings, share of cuts on the grid, beats per cut). Use it to put your own cuts and reveals on the same grid (`motionmaker-sound-export/scripts/beat.mjs`). Below about 60% on-grid the reference is not cut to a beat: say so instead of forcing a BPM.
+

@@ -26,6 +26,7 @@ run equation-scene 4 960x540    env LOOK=editorial-calm TEMPLATE=equation-scene 
 run map-scene 5 960x540         env LOOK=night-cinema TEMPLATE=map-scene PLACES="Istanbul@41.01,28.98;Berlin@52.52,13.40" HIGHLIGHT="Turkey,Germany" bash "$S" map-scene "Two cities" 960 540 30 5 - - - out
 run annotate-scene 4 960x540    env LOOK=warm-craft TEMPLATE=annotate-scene MARK=circle KEYWORD=simple bash "$S" annotate-scene "Keep it simple" 960 540 30 4 - - - out
 run icon-features 4 960x540     env LOOK=playful-pop TEMPLATE=icon-features ICONS="lucide:zap,lucide:shield-check,lucide:rocket" bash "$S" icon-features "Fast|Safe|Ready" 960 540 30 4 - - - out
+for st in bauhaus van-gogh constructivism seurat matisse ukiyo-e; do run style-$st 4 960x540 env TEMPLATE=style-scene STYLE=$st bash "$S" style-$st "Made by hand" 960 540 30 4 - - - out; done
 if node "$SK/motionmaker-assets/scripts/kit.mjs" peep --hair ShortVolumed --face Cute --body Shirt --out peep.svg >/dev/null 2>&1; then
   run illustration-scene 4 960x540 env LOOK=night-cinema TEMPLATE=illustration-scene ASSET=peep.svg bash "$S" illustration-scene "Meet us" 960 540 30 4 - - - out
 else echo "SKIP illustration-scene (run: node $SK/motionmaker-assets/scripts/kit.mjs setup)"; skip=$((skip+1)); fi

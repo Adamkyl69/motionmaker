@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: an ART STYLE scene. style.js (copied from templates/styles/<id>.js by scaffold.sh STYLE=<id>) draws the whole frame on a canvas:
+     the style's world, its motif loops (what lives in the picture: a swirling sky, a rotating bar, shimmering dots) and the headline's main action.
+     This page gives every style the same contract: env (size, unit, seeded random, loop-safe periods, fonts, easing) and renderFrame(f).
+     Frame-exact: style.draw must be a pure function of f; anything random is drawn from env.rng in setup, never per frame. Style cards with the
+     cues, palette, motifs and pitfalls of each style: motionmaker-art-director/styles/. -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="tokens.js"></script>
+<script src="style.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, seed:__SEED__, exitStart:__EXIT__ };
+const { clamp, EASE } = Motion, ctx = document.getElementById("c").getContext("2d");
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const secs = CONFIG.frames / CONFIG.fps;
+const env = {
+  W: CONFIG.w, H: CONFIG.h, u: Math.min(CONFIG.w, CONFIG.h) / 1080, portrait: CONFIG.h > CONFIG.w * 1.15, fps: CONFIG.fps, N: CONFIG.frames, secs,
+  text: CONFIG.text === "-" ? "" : CONFIG.text, rng: mulberry32(CONFIG.seed), clamp, EASE,
+  // a motif period close to `base` seconds that divides the clip length, so every loop closes exactly at the seam
+  loop: base => secs / Math.max(1, Math.round(secs / base)),
+  // main-action envelope: 0 -> 1 entrance from `start` over `dur` frames, 1 -> 0 exit at the clip's end (keeps the seam frame different from frame 0)
+  enter: (f, start, dur, ease = EASE.out) => ease(clamp((f - start) / dur)),
+  exit: f => EASE.in(clamp((f - CONFIG.exitStart) / 10)),
+  font: (size, weight, family) => `${weight} ${size}px ${family}`,
+  // largest font size (px) at which `text` fits `maxW`, capped at `maxSize`
+  fit(text, maxW, maxSize, weight, family, track = 0) { ctx.save(); ctx.font = this.font(100, weight, family); const w = ctx.measureText(text).width + track * 100 * Math.max(0, text.length - 1); ctx.restore(); return Math.min(maxSize, 100 * maxW / Math.max(1, w)); },
+};
+window.ready = document.fonts.ready.then(() => Promise.all([...document.fonts].map(f => f.status === "unloaded" ? f.load().catch(() => 0) : 0))).then(() => { STYLE.setup(ctx, env); renderFrame(0); });
+function renderFrame(f) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; STYLE.draw(ctx, env, f); }
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q) * CONFIG.fps)));
+else window.ready.then(() => { let s = null; (function L(ts) { s ??= ts; renderFrame(Math.floor((ts - s) / 1000 * CONFIG.fps) % CONFIG.frames); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

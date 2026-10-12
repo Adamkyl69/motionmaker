@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene] [LOOK=<look-name>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -44,6 +44,14 @@ esac
 if [ "$EXIT" -gt 0 ] && [ "$EXIT" -lt $(( ENT + 12 )) ]; then
   echo "WARNING: ${SECS}s is too short for this content (entrance ends f$ENT, exit starts f$EXIT, hold < 12 frames): shorten text or lengthen the loop" >&2; fi
 D="$OUT/$SLUG"
+if [ "$TPL" = style-scene ]; then
+  STYLE=${STYLE:?"style-scene needs STYLE=<id> (see motionmaker-art-director/styles/INDEX.md)"}; SF="$HERE/templates/styles/$STYLE.js"
+  [ -f "$SF" ] || { echo "unknown style '$STYLE' (have: $(cd "$HERE/templates/styles" && ls *.js | sed 's/.js//' | tr '\n' ' '))" >&2; exit 6; }
+  mkdir -p "$D"; cp "$SF" "$D/style.js"; SEED=${SEED:-7}; EXIT=$(( N - 10 ))
+  SJ="$SK/motionmaker-art-director/styles/styles.json"
+  if [ -f "$SJ" ]; then FSPEC=$(node -e 'const s=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).styles[process.argv[2]];if(s&&s.font)console.log(s.font.package+" "+s.font.weight)' "$SJ" "$STYLE")
+    if [ -n "$FSPEC" ]; then node "$SK/motionmaker-libs/scripts/fonts.mjs" add $FSPEC --dir "$D" >/dev/null 2>&1 && FONTLINK=1 || echo "note: style font not installed, using fallbacks (node $SK/motionmaker-libs/scripts/lib.mjs setup fonts)" >&2; fi; fi
+fi
 if [ "$TPL" = annotate-scene ]; then
   P=$(find_pkg roughjs) || { echo "roughjs not found: run  node $SK/motionmaker-libs/scripts/lib.mjs setup sketch" >&2; exit 3; }
   mkdir -p "$D/vendor"; cp "$P/bundled/rough.js" "$D/vendor/rough.js"; MARK=${MARK:-circle}

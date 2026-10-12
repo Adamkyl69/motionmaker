@@ -30,3 +30,9 @@ Pick 1-2 follow-ups per round; pasting many turns a fix into a rewrite. When a f
 | Reads as "AI default" | model used default look | name each default, ban, re-render |
 | Chrome looks like plastic (3D) | no reflections | add horizon/studio env, roughness ~0.05 |
 | Letters 50 deep (three r160 TextGeometry) | `depth` overwritten with 50 | pin version; use `height` for extrusion |
+
+## Finished-film checks, independent review, delivery (after check.mjs)
+- `scripts/film-gate.mjs <film.mp4>`: judges the exported film like a viewer: RED dead stretch (nothing visibly changes for >= 4 s; a slow push counts as change), RED blank stretch (>= 0.3 s mid-film, judged by edges), RED blue-purple film (>= 30% of frames). Thresholds adapted from huashu-art-motion (MIT) and re-calibrated on our own templates (their full-frame motion floor failed all of ours; it is reported, not gated).
+- `scripts/review-pack.mjs <film.mp4> --dir <project> --intent "..." --platform "..."`: contact sheets with timecodes, key frames, gate report, BRIEF.md and INTENT.md for a reviewer who never saw the code. Spawn a fresh subagent with only "Read <pack>/BRIEF.md and follow it exactly." It writes `review/NN-review.md` (first impression before the intent, timecoded findings with severity, regressions, Verdict SHIP/FIX). In testing it found a squashed-picture bug in our own product-demo template that every automated check had passed.
+- `scripts/deliver.mjs <film.mp4> --dir <project>`: refuses (exit 2) on RED gate, no review of this exact film (matched by its sha256), a FIX verdict, a failing ledger or RED provenance; `--override-review "reason"` / `--override-provenance "reason"` are recorded. Writes DELIVERY.md with a sealed facts block; `deliver.mjs --verify DELIVERY.md` detects edited facts or a swapped film.
+

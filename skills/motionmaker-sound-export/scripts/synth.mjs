@@ -1,6 +1,8 @@
 // Synthesize a frame-synced soundtrack with the Web Audio API (OfflineAudioContext in headless Chromium). No samples.
 // usage: node synth.mjs <events.json> <seconds> <fps> <out.wav> [--bed 0.02]
 // events.json: [{ "frame": 12, "type": "tick|thud|whoosh|chime|pop|click", "gain": 1, "pitch": 1 }, ...]
+// Music on a BPM grid (from beat.mjs music): { "time": 0.5, "type": "kick|hat|note", "midi": 69, "dur": 0.25, "gain": 0.5, "music": true }:
+// "time" is the exact beat time in seconds (the peak lands there), not tied to a picture frame; verify-sync.mjs skips music events.
 // Each hit's attack PEAK lands exactly 1 frame after its picture frame (light beats sound). Swells (whoosh) peak there too,
 // so they need ~5 frames of lead-in at 24 fps (event frame >= 5). A quiet pad "bed" keeps the mix alive.
 // Output: mono 48 kHz 16-bit WAV (pre-normalization; run loudnorm.sh next).
@@ -28,11 +30,15 @@ const samples = await page.evaluate(async ({ events, secs, fps, bed, SR }) => {
     whoosh:(t, g, p) => { const n = noise(), f = ctx.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 0.8; f.frequency.setValueAtTime(400*p, t); f.frequency.exponentialRampToValueAtTime(5000*p, t + 0.2);   // sweep ends exactly when the swell peaks
                           const v = ctx.createGain(); env(v, t, 0.2, 0.15, 0.45*g); n.connect(f).connect(v).connect(master); n.start(t); n.stop(t + 0.6); },
     chime: (t, g, p) => { [1, 2.76, 5.4].forEach((m, i) => { const o = osc("sine", 880*p*m, 0, t, 0), v = ctx.createGain(); env(v, t, ATK, 0.9 / (i + 1), 0.28*g / (i + 1)); o.connect(v).connect(master); o.start(t); o.stop(t + 1.2); }); },
+    kick:  (t, g, p) => { const o = osc("sine", 150*p, 45*p, t, 0.12), v = ctx.createGain(); env(v, t, 0.003, 0.28, 0.9*g); o.connect(v).connect(master); o.start(t); o.stop(t + 0.4); },
+    hat:   (t, g, p) => { const n = noise(), f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 7000*p; const v = ctx.createGain(); env(v, t, 0.002, 0.045, 0.35*g); n.connect(f).connect(v).connect(master); n.start(t); n.stop(t + 0.1); },
+    note:  (t, g, p, e) => { const f = 440 * Math.pow(2, ((e.midi ?? 69) - 69) / 12) * p, dur = e.dur ?? 0.25;   // soft pluck: triangle + an octave sine, fast attack, decays over the note length
+      [[1, "triangle", 0.5], [2, "sine", 0.12]].forEach(([m, type, lv]) => { const o = osc(type, f*m, 0, t, 0), v = ctx.createGain(); env(v, t, 0.006, Math.max(0.08, dur*0.9), lv*g); o.connect(v).connect(master); o.start(t); o.stop(t + dur + 0.3); }); },
   };
   for (const e of events) {                              // picture at frame f -> sound peak at frame f+1 (minus the voice's attack)
-    const peak = (e.frame + 1) / fps, atk = e.type === "whoosh" ? 0.2 : e.type === "click" ? 0.002 : ATK;
-    if (peak - atk < 0) { console.error(`WARNING: ${e.type} at frame ${e.frame} needs ${(atk*fps).toFixed(1)} frames of lead-in; it will start at t=0 and land early. Move it later.`); }
-    voices[e.type](Math.max(0, peak - atk), e.gain ?? 1, e.pitch ?? 1);
+    const peak = e.time ?? (e.frame + 1) / fps, atk = e.type === "whoosh" ? 0.2 : e.type === "click" ? 0.002 : ATK;
+    if (peak - atk < -1e-6 && e.time === undefined) { console.error(`WARNING: ${e.type} at frame ${e.frame} needs ${(atk*fps).toFixed(1)} frames of lead-in; it will start at t=0 and land early. Move it later.`); }
+    if (!voices[e.type]) throw new Error(`unknown sound type ${e.type}`); voices[e.type](Math.max(0, peak - atk), e.gain ?? 1, e.pitch ?? 1, e);
   }
   if (bed > 0) { const v = ctx.createGain(); v.gain.value = bed*0.12; v.connect(master);          // soft two-note pad, fades in/out so the loop seam is silent-ish
     [220, 330].forEach((f, i) => { const o = osc("sine", f, 0, 0, 0); o.detune.value = i*5; o.connect(v); o.start(0); o.stop(secs); });

@@ -12,14 +12,14 @@
 <script>
 const CONFIG = {
   w:__W__, h:__H__, fps:30, frames:600,
-  headline:"__TEXT__", closing:"Build with clarity.", product:"Product", fileName:"report.md", fileMeta:"12 KB",
+  headline:"__TEXT__", closing:"__TEXT__", product:"Product", fileName:"report.md", fileMeta:"12 KB",   // closing repeats the claim (a generic tagline drops the message); use the brand line if the brief has one
   bg:"__BG__", fg:"__FG__", accent:"__ACCENT__", font:"__FONT__",
   assets:{ report:null, exported:null, logo:null },                        // e.g. "public/report.png"
 };
 // Global, inclusive frame numbers at 30 fps (seconds in the comments). One place to edit timing.
 const TIMELINE = {
-  headline:[0,18], card:[18,42], settle:[42,119],
-  cursorMove:[150,180], pressUp:192, press:195, pressRelease:201, cursorRest:[204,222], result:[210,234], hold:[234,419],
+  headline:[-8,18], card:[18,42], settle:[42,119],
+  cursorMove:[150,180], pressUp:192, press:195, pressRelease:201, cursorRest:[204,240], result:[210,234], hold:[234,419],
   cut:420, closingFade:[420,438], end:599,
 };
 const LAYOUT = {                                  // design space 1080x1080, origin top-left, px; keep content inside margin
@@ -47,7 +47,7 @@ function drawReport(c, pressed, dim) {                                    // pla
   if (img.report) ctx.drawImage(img.report, x, y, w, h); else {
     ctx.fillStyle = "#262E3B"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#2F3947"; ctx.fillRect(x, y, 170, h);   // card surface sits clearly above the page colour (it is the hero)
     ctx.fillStyle = CONFIG.accent; ctx.beginPath(); ctx.arc(x + 34, y + 38, 12, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = CONFIG.fg; ctx.font = font(20, 700); ctx.fillText(CONFIG.product, x + 56, y + 45);
+    ctx.fillStyle = "#E8ECF2"; ctx.font = font(20, 700); ctx.fillText(CONFIG.product, x + 56, y + 45);   // UI ink is fixed light: the card is always dark (the look's text colour can be dark)
     ["Home", "Projects", "Reports", "Settings"].forEach((s, i) => { ctx.globalAlpha = A*(i === 2 ? 1 : 0.5); ctx.font = font(18, 600); ctx.fillText(s, x + 28, y + 110 + i*44); }); ctx.globalAlpha = A;
     ctx.font = font(30, 800); ctx.fillText("Project report", x + 210, y + 70);
     ctx.fillStyle = "#2E3846"; [0.8, 0.95, 0.6, 0.85].forEach((k, i) => { rr(x + 210, y + 110 + i*34, (w - 250)*k, 14, 7); ctx.fill(); });
@@ -68,7 +68,7 @@ function drawFile(p) {                                                    // fin
     ctx.shadowColor = "rgba(0,0,0,0.45)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; rr(-w/2, -h/2, w, h, 20); ctx.fillStyle = "#F5F7FA"; ctx.fill(); ctx.shadowColor = "transparent";
     ctx.fillStyle = "#101318"; ctx.font = font(34, 800); ctx.fillText(CONFIG.fileName, -w/2 + 110, -4); ctx.fillStyle = "#5C6672"; ctx.font = font(22, 600); ctx.fillText(CONFIG.fileMeta, -w/2 + 110, 32);
     rr(-w/2 + 26, -34, 56, 68, 8); ctx.fillStyle = "#DDE3EA"; ctx.fill();
-    ctx.beginPath(); ctx.arc(-w/2 + 76, 30, 18, 0, Math.PI*2); ctx.fillStyle = CONFIG.accent; ctx.fill();
+    ctx.beginPath(); ctx.arc(-w/2 + 76, 30, 18, 0, Math.PI*2); ctx.fillStyle = "#1F9D61"; ctx.fill();   // success is green whatever the brand accent: a red tick reads as an error (independent review, round 3)
     ctx.strokeStyle = "#101318"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-w/2 + 68, 30); ctx.lineTo(-w/2 + 74, 37); ctx.lineTo(-w/2 + 85, 23); ctx.stroke();
   }
   ctx.restore();
@@ -96,13 +96,21 @@ function headline(f) {
 function renderFrame(f) {
   f = Math.min(f, CONFIG.frames - 1);
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = CONFIG.bg; ctx.fillRect(0, 0, CONFIG.w, CONFIG.h);
-  ctx.scale(CONFIG.w/1080, CONFIG.h/1080);
+  // the layout lives in a 1080x1080 design square: scale it UNIFORMLY and centre it (a separate x/y scale squashed every non-square render;
+  // found by the independent film review). The background already fills the whole frame.
+  // fit the CONTENT bounds (not the empty design square) so non-square frames use their space: on 16:9 the UI is about 30% larger
+  { const B = { x: 64, y: 64, w: 952, h: 836 }, k = Math.min(CONFIG.w/B.w, CONFIG.h/B.h)*0.96; ctx.translate(CONFIG.w/2 - (B.x + B.w/2)*k, CONFIG.h/2 - (B.y + B.h/2)*k); ctx.scale(k, k); }
   if (f >= T.cut) {                                                       // CLOSING: hard cut to logo + closing copy
-    const p = EASE.out(seg(f, T.closingFade)); ctx.globalAlpha = p;
+    const p = 0.35 + 0.65*EASE.out(seg(f, T.closingFade)), zs = 1 + 0.02*seg(f, [T.cut, T.end]); ctx.globalAlpha = p;   // end card holds, but with a slow 2% push so it is not frozen
+    ctx.translate(540, 540); ctx.scale(zs, zs); ctx.translate(-540, -540);
     ctx.fillStyle = CONFIG.accent; ctx.beginPath(); ctx.arc(540, 450, 54, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = CONFIG.fg; ctx.font = font(56, 800); ctx.textAlign = "center"; ctx.fillText(CONFIG.product, 540, 590);
     ctx.font = font(40, 600); ctx.globalAlpha = p*0.8; ctx.fillText(CONFIG.closing, 540, 660); ctx.textAlign = "left"; ctx.globalAlpha = 1; return;
   }
+  // slow push-in across the product section (5%, at below the 5% ambient ceiling): the reading holds stay readable but the picture never freezes.
+  // Without it the 6 s result hold was completely static, which the finished-film gate (film-gate.mjs) flags as a dead stretch.
+  const push = 1 + 0.05*EASE.move(seg(f, [T.settle[0], T.cut - 1])), fx = L.file.x + L.file.w/2, fy = L.file.y + L.file.h/2;
+  ctx.translate(fx, fy); ctx.scale(push, push); ctx.translate(-fx, -fy);
   headline(f);
   const cp = EASE.out(seg(f, T.card)), c = L.card, y = c.y + (1 - cp)*60;     // card enters 60 px low, opacity 0->1, then holds EXACTLY at its settled position
   ctx.save(); ctx.globalAlpha = cp; ctx.translate(0, y - c.y);
