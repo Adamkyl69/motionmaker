@@ -11,7 +11,7 @@ const CONFIG = { title:"__TEXT__", unit:"%", w:__W__, h:__H__, fps:__FPS__, fram
   data:[{label:"Q1",value:12},{label:"Q2",value:19},{label:"Q3",value:31},{label:"Q4",value:58}] };
 const TOKENS = { startAt:6, stagger:4, ratio:0.8, w0:12, countLen:30, exitAt:__EXIT__, exitLen:10, titleIn:10, plotPct:0.5, padPct:0.12 };
 const { clamp, EASE, springRatio } = Motion, N = CONFIG.frames, fps = CONFIG.fps, ctx = document.getElementById("c").getContext("2d");
-const font = (px, w = 700) => `${w} ${px}px "Helvetica Neue", Arial, sans-serif`;
+const font = (px, w = 700) => `${w} ${px}px __FONT__`;
 const max = Math.max(...CONFIG.data.map(d => d.value));
 
 function renderFrame(f) {

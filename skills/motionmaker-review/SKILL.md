@@ -5,6 +5,8 @@ description: The render -> look -> fix critique loop for animations: contact she
 
 # Motion review (the lab loop)
 
+> Art direction first: when `motionmaker-art-director` is installed, run its critique (`critique.mjs`, `looktests.sh`, checklist) before this technical loop, and give notes in its frame-specific format.
+
 The first render is a draft. Do 2-4 rounds: render stills -> **Read the images** -> notes with frame numbers -> fix one or two things -> re-render only what changed.
 
 1. Stills: frames 0, N/4, N/2, 3N/4, N-1, plus a contact sheet: `scripts/contact-sheet.sh out/frames 8 4 3 out/contact.png`, then Read `out/contact.png`.

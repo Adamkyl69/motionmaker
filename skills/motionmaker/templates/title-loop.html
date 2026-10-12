@@ -6,8 +6,8 @@
 <style>
   html,body{margin:0;background:__BG__}
   #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
-  #title{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:800;color:__FG__;
-    font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:-0.04em;line-height:1}
+  #title{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;
+    font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
   #title span{display:inline-block;will-change:transform}
   #bar{position:absolute;background:__ACCENT__;transform-origin:left center}
 </style>
@@ -16,7 +16,7 @@
 <script>
 const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
 // all timing in frames; no inline magic numbers elsewhere
-const TOKENS = { rise:0.07, inF:14, stagger:2, exitStart:__EXIT__, outF:8, outStagger:1, push:0.02, barMin:0.6,
+const TOKENS = { rise:0.07, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:8, outStagger:1, push:0.02, barMin:0.6,
                  fontPct:__FONTPCT__, titleTopPct:0.41, barTopPct:0.62, barWPct:0.5, barHPct:0.017 };
 const { clamp, EASE } = Motion, N = CONFIG.frames;
 const stage = document.getElementById("stage"), title = document.getElementById("title"), bar = document.getElementById("bar");

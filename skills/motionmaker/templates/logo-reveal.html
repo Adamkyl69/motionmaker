@@ -11,12 +11,12 @@ const CONFIG = { text:"__TEXT__", tagline:"", w:__W__, h:__H__, fps:__FPS__, fra
 const TOKENS = { markPct:0.2, gapPct:0.035, fontPct:__FONTPCT__, markAt:4, wipeAt:16, wipeLen:12, tagAt:30, tagLen:12,
   markRatio:0.55, markW0:15, spinDeg:-14, exitAt:__EXIT__, exitLen:12 };
 const { clamp, EASE, springRatio } = Motion, N = CONFIG.frames, fps = CONFIG.fps, ctx = document.getElementById("c").getContext("2d");
-const font = px => `800 ${px}px "Helvetica Neue", Arial, sans-serif`;
+const font = px => `__WEIGHT__ ${px}px __FONT__`;
 
 function renderFrame(f) {
   const T = TOKENS, W = CONFIG.w, H = CONFIG.h, m = W*T.markPct, fs = W*T.fontPct, gap = W*T.gapPct;
   ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = CONFIG.bg; ctx.fillRect(0, 0, W, H);
-  ctx.font = font(fs); ctx.letterSpacing = `${-0.03*fs}px`;
+  ctx.font = font(fs); ctx.letterSpacing = `${(__TRACK__)*fs}px`;
   const tw = ctx.measureText(CONFIG.text).width, total = m + gap + tw, x0 = (W - total)/2, cy = H/2;
   const out = EASE.in(clamp((f - T.exitAt) / T.exitLen));                       // exit: whole lockup slides up and away
   const pop = springRatio((f - T.markAt)/fps, T.markRatio, T.markW0);           // overshoots, then settles

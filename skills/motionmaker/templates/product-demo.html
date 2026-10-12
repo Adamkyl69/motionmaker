@@ -6,14 +6,14 @@
      Closing 420-599: hard cut to logo + closing copy. Design space is 1080x1080, scaled to the canvas.
      Replace the procedural placeholder screens by setting CONFIG.assets (png/jpg under ./public/) once the user supplies real ones.
      Pure function of f. Needs tokens.js. -->
-<style>html,body{margin:0;background:#101318}canvas{display:block}</style>
+<style>html,body{margin:0;background:__BG__}canvas{display:block}</style>
 <canvas id="c" width="__W__" height="__H__"></canvas>
 <script src="tokens.js"></script>
 <script>
 const CONFIG = {
   w:__W__, h:__H__, fps:30, frames:600,
   headline:"__TEXT__", closing:"Build with clarity.", product:"Product", fileName:"report.md", fileMeta:"12 KB",
-  bg:"#101318", fg:"#F5F7FA", accent:"__ACCENT__", font:'"Helvetica Neue", Arial, sans-serif',
+  bg:"__BG__", fg:"__FG__", accent:"__ACCENT__", font:"__FONT__",
   assets:{ report:null, exported:null, logo:null },                        // e.g. "public/report.png"
 };
 // Global, inclusive frame numbers at 30 fps (seconds in the comments). One place to edit timing.
@@ -45,7 +45,7 @@ function wrap(text, maxW, size) {                                        // retu
 function drawReport(c, pressed, dim) {                                    // placeholder product screen (replace with CONFIG.assets.report)
   const { x, y, w, h, r } = c, A = ctx.globalAlpha; ctx.save(); rr(x, y, w, h, r); ctx.clip();
   if (img.report) ctx.drawImage(img.report, x, y, w, h); else {
-    ctx.fillStyle = "#1B2028"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#222A34"; ctx.fillRect(x, y, 170, h);
+    ctx.fillStyle = "#262E3B"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#2F3947"; ctx.fillRect(x, y, 170, h);   // card surface sits clearly above the page colour (it is the hero)
     ctx.fillStyle = CONFIG.accent; ctx.beginPath(); ctx.arc(x + 34, y + 38, 12, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = CONFIG.fg; ctx.font = font(20, 700); ctx.fillText(CONFIG.product, x + 56, y + 45);
     ["Home", "Projects", "Reports", "Settings"].forEach((s, i) => { ctx.globalAlpha = A*(i === 2 ? 1 : 0.5); ctx.font = font(18, 600); ctx.fillText(s, x + 28, y + 110 + i*44); }); ctx.globalAlpha = A;
@@ -53,6 +53,7 @@ function drawReport(c, pressed, dim) {                                    // pla
     ctx.fillStyle = "#2E3846"; [0.8, 0.95, 0.6, 0.85].forEach((k, i) => { rr(x + 210, y + 110 + i*34, (w - 250)*k, 14, 7); ctx.fill(); });
   }
   ctx.restore();
+  ctx.save(); rr(x, y, w, h, r); ctx.strokeStyle = "#46536A"; ctx.globalAlpha = A; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();                                     // hairline edge so the card separates at a glance
   const b = L.button, k = pressed;                                       // export button with pressed response (accent overlay, scale 1 -> 0.96)
   ctx.save(); ctx.globalAlpha = A*(1 - 0.65*dim); ctx.translate(b.x + b.w/2, b.y + b.h/2); ctx.scale(1 - 0.04*k, 1 - 0.04*k);
   rr(-b.w/2, -b.h/2, b.w, b.h, b.r); ctx.fillStyle = k > 0 ? CONFIG.accent : "#F5F7FA"; ctx.fill();

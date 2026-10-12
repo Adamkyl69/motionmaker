@@ -7,6 +7,8 @@ description: Write a directed motion prompt with exact numbers (frames, hex, eas
 
 Each line removes one decision the model would otherwise make for you; the model's own decisions are the default (generic) look. Fill every line, defaulting from `../motionmaker-build/numbers.md` values when the user gave none.
 
+> If an `AD-BRIEF.md` exists (from `motionmaker-art-director`), derive this brief from it: its look, palette, type and motion language are decisions, not suggestions. The motion-personality table is in `motionmaker-art-director/craft/principles.md` section 5.
+
 ## Template
 
 ```
