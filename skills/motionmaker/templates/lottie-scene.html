@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a Lottie animation (borrowed asset) on a composed stage with a caption. Frame-exact: lottie-web goToAndStop(frame, true) is deterministic.
+     The animation file lives in assets/ and must be recorded with ledger.mjs (source, creator, licence) before it ships. Needs tokens.js and vendor/lottie.min.js. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  #art{position:absolute}
+  #cap{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
+  #cap span{display:inline-block}
+  #bar{position:absolute;background:__ACCENT__;transform-origin:left center}
+</style>
+<div id="stage"><div id="art"></div><div id="cap"></div><div id="bar"></div></div>
+<script src="tokens.js"></script>
+<script src="vendor/lottie.min.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, asset:"__ASSETFILE__", assetSeconds:__ASSETSEC__, loop:__LOOP__ === 1 };
+const TOKENS = { artIn:14, artRise:0.03, capDelay:10, capIn:__INF__, capStagger:__STAGGER__, exitStart:__EXIT__, outF:10,
+                 artBox:{ x:0.08, y:0.06, w:0.84, h:0.66 }, capPct:Math.min(__FONTPCT__, 0.06), capTopPct:0.80, barTopPct:0.9, barWPct:0.3, barHPct:0.012 };
+const { clamp, EASE } = Motion, N = CONFIG.frames, stage = document.getElementById("stage"), art = document.getElementById("art"), cap = document.getElementById("cap"), bar = document.getElementById("bar");
+const A = TOKENS.artBox; Object.assign(art.style, { left:CONFIG.w*A.x+"px", top:CONFIG.h*A.y+"px", width:CONFIG.w*A.w+"px", height:CONFIG.h*A.h+"px" });
+cap.style.fontSize = CONFIG.w*TOKENS.capPct+"px"; cap.style.top = CONFIG.h*TOKENS.capTopPct+"px";
+Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:CONFIG.h*TOKENS.barTopPct+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:Math.max(3,CONFIG.h*TOKENS.barHPct)+"px" });
+const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; cap.appendChild(s); return s; });
+let anim = null;
+window.ready = fetch(CONFIG.asset).then(r => r.json()).then(data => new Promise(res => {
+  anim = lottie.loadAnimation({ container: art, renderer: "svg", loop: false, autoplay: false, animationData: data, rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
+  anim.addEventListener("DOMLoaded", () => { renderFrame(0); res(); });
+}));
+function renderFrame(f){
+  if (anim) {   // asset time: wraps when it is a loop, else plays once and holds its last frame
+    const t = f / CONFIG.fps, d = CONFIG.assetSeconds, tt = CONFIG.loop ? ((t % d) + d) % d : Math.min(t, d);
+    anim.goToAndStop(Math.min(anim.totalFrames - 0.001, tt * anim.frameRate), true);
+  }
+  const aIn = EASE.out(clamp(f / TOKENS.artIn)), aOut = EASE.in(clamp((f - TOKENS.exitStart) / TOKENS.outF));
+  art.style.opacity = aIn * (1 - aOut); art.style.transform = `translateY(${(1-aIn)*CONFIG.h*TOKENS.artRise + aOut*CONFIG.h*TOKENS.artRise}px)`;
+  letters.forEach((el, i) => {
+    const inP = EASE.out(clamp((f - TOKENS.capDelay - i*TOKENS.capStagger) / TOKENS.capIn)), outP = EASE.in(clamp((f - TOKENS.exitStart - i*0.5) / TOKENS.outF));
+    el.style.transform = `translateY(${((1-inP) - outP) * CONFIG.h*0.03}px)`; el.style.opacity = (inP>0 && outP<1) ? 1 : 0;
+  });
+  const bi = EASE.out(clamp((f - TOKENS.capDelay) / 24)), bo = EASE.in(clamp((f - TOKENS.exitStart) / TOKENS.outF));
+  bar.style.transform = `scaleX(${bi - bo})`;
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

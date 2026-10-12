@@ -11,3 +11,5 @@ These are test renders with placeholder content, not finished work. Your own out
 
 | `art-director-three-directions.png` | The art director's three directions (Editorial Calm, Night Cinema, Swiss Minimal) for the same headline, from `directions.mjs` on the real template | `skills/motionmaker-art-director/scripts/directions.mjs --tone "calm premium"` |
 | `art-director-look-tests.png` | Look tests on a launch-clip frame: original / grayscale / squint / phone thumbnail (after the card-contrast fix) | `looktests.sh` |
+
+- `assets-illustration-scene.png`: `illustration-scene` with an Open Peeps bust (left, night-cinema look) and a Humaaans figure (right, playful-pop look), both built locally with `kit.mjs`. Art: Pablo Stanley, CC0.

@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a Rive animation (borrowed asset) on a composed stage with a caption. Frame-exact: Rive scrub(animation, seconds) + drawFrame() after stopRendering() is deterministic; time is wrapped by the animation duration for loops.
+     The animation file lives in assets/ and must be recorded with ledger.mjs (source, creator, licence) before it ships. Needs tokens.js and vendor/rive.js and vendor/rive.wasm. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__}
+  #art{position:absolute}
+  #cap{position:absolute;left:0;right:0;text-align:center;white-space:pre;font-weight:__WEIGHT__;color:__FG__;font-family:__FONT__;letter-spacing:__TRACK__em;line-height:1}
+  #cap span{display:inline-block}
+  #bar{position:absolute;background:__ACCENT__;transform-origin:left center}
+</style>
+<div id="stage"><canvas id="art"></canvas><div id="cap"></div><div id="bar"></div></div>
+<script src="tokens.js"></script>
+<script src="vendor/rive.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__, asset:"__ASSETFILE__", artboard:"__ARTBOARD__", animation:"__ANIMATION__", assetSeconds:__ASSETSEC__, loop:__LOOP__ === 1 };
+const TOKENS = { artIn:14, artRise:0.03, capDelay:10, capIn:__INF__, capStagger:__STAGGER__, exitStart:__EXIT__, outF:10,
+                 artBox:{ x:0.08, y:0.06, w:0.84, h:0.66 }, capPct:Math.min(__FONTPCT__, 0.06), capTopPct:0.80, barTopPct:0.9, barWPct:0.3, barHPct:0.012 };
+const { clamp, EASE } = Motion, N = CONFIG.frames, stage = document.getElementById("stage"), art = document.getElementById("art"), cap = document.getElementById("cap"), bar = document.getElementById("bar");
+const A = TOKENS.artBox; Object.assign(art.style, { left:CONFIG.w*A.x+"px", top:CONFIG.h*A.y+"px", width:CONFIG.w*A.w+"px", height:CONFIG.h*A.h+"px" });
+cap.style.fontSize = CONFIG.w*TOKENS.capPct+"px"; cap.style.top = CONFIG.h*TOKENS.capTopPct+"px";
+Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:CONFIG.h*TOKENS.barTopPct+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:Math.max(3,CONFIG.h*TOKENS.barHPct)+"px" });
+const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; cap.appendChild(s); return s; });
+let rv = null; rive.RuntimeLoader.setWasmUrl("./vendor/rive.wasm");   // the renderer blocks non-local requests: the runtime must be served from this folder
+art.width = Math.round(CONFIG.w*A.w); art.height = Math.round(CONFIG.h*A.h);
+window.ready = new Promise((res, rej) => { rv = new rive.Rive({ src: CONFIG.asset, canvas: art, artboard: CONFIG.artboard || undefined, animations: [CONFIG.animation], autoplay: false, layout: new rive.Layout({ fit: rive.Fit.Contain }),
+  onLoad() { rv.stopRendering(); rv.resizeDrawingSurfaceToCanvas(); renderFrame(0); res(); }, onLoadError: e => rej(new Error("rive load failed: " + e)) }); });
+function renderFrame(f){
+  if (rv) {   // scrub clamps past the end, so loops wrap the time by the animation's own duration
+    const t = f / CONFIG.fps, d = CONFIG.assetSeconds, tt = CONFIG.loop ? ((t % d) + d) % d : Math.min(t, d);
+    rv.scrub(CONFIG.animation, tt); rv.drawFrame();
+  }
+  const aIn = EASE.out(clamp(f / TOKENS.artIn)), aOut = EASE.in(clamp((f - TOKENS.exitStart) / TOKENS.outF));
+  art.style.opacity = aIn * (1 - aOut); art.style.transform = `translateY(${(1-aIn)*CONFIG.h*TOKENS.artRise + aOut*CONFIG.h*TOKENS.artRise}px)`;
+  letters.forEach((el, i) => {
+    const inP = EASE.out(clamp((f - TOKENS.capDelay - i*TOKENS.capStagger) / TOKENS.capIn)), outP = EASE.in(clamp((f - TOKENS.exitStart - i*0.5) / TOKENS.outF));
+    el.style.transform = `translateY(${((1-inP) - outP) * CONFIG.h*0.03}px)`; el.style.opacity = (inP>0 && outP<1) ? 1 : 0;
+  });
+  const bi = EASE.out(clamp((f - TOKENS.capDelay) / 24)), bo = EASE.in(clamp((f - TOKENS.exitStart) / TOKENS.outF));
+  bar.style.transform = `scaleX(${bi - bo})`;
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q)*CONFIG.fps)));
+else window.ready.then(() => { let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%N); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

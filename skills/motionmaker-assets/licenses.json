@@ -1,0 +1,72 @@
+{
+  "_about": "Licence summaries for the asset sources Motionmaker knows. Each was read from the source's own page on the date in checkedOn. They are SUMMARIES, not legal advice, and a single asset can carry different terms from its collection: always confirm on the asset's own page and record that page's URL in the ledger. Unknown = blocked.",
+  "checkedOn": "2026-10-12",
+  "licenses": {
+    "CC0-1.0": {
+      "name": "CC0 1.0 Public Domain Dedication",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "commercial": true, "attribution": "none", "derivatives": "free",
+      "restrictions": [],
+      "seenOn": ["https://www.openpeeps.com/ (Open Peeps)", "https://www.humaaans.com/ (Humaaans)", "https://www.opendoodles.com/ (Open Doodles)"],
+      "note": "Open Peeps, Humaaans and Open Doodles by Pablo Stanley state CC0 on their own sites. No credit required; crediting is still good manners."
+    },
+    "LOTTIEFILES-SIMPLE": {
+      "name": "LottieFiles Simple License (public animations)",
+      "url": "https://lottiefiles.com/page/license",
+      "commercial": true, "attribution": "optional", "derivatives": "same-terms",
+      "restrictions": ["modified versions must carry the same terms", "no additional or different terms may be imposed", "no technical measures restricting the granted rights", "do not compile Files to replicate or build a competing service", "provided AS IS"],
+      "note": "Applies to public animation files on lottiefiles.com. Attribution is not required but strongly encouraged. Premium or creator-restricted files are different: check the animation's page."
+    },
+    "UNDRAW": {
+      "name": "unDraw license",
+      "url": "https://undraw.co/license",
+      "commercial": true, "attribution": "none", "derivatives": "allowed",
+      "restrictions": ["no redistribution in packs or as a collection", "no competing service built from the assets", "no scraping/embedding/automated downloading without consent", "no AI/ML training or datasets without written permission", "bundled brand logos are trademarks: use only to represent that brand"],
+      "note": "Free for commercial use, no credit needed."
+    },
+    "CC-BY-4.0": {
+      "name": "Creative Commons Attribution 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "commercial": true, "attribution": "required", "derivatives": "allowed-with-credit",
+      "restrictions": ["credit the creator, link the licence, and indicate if you changed the work"],
+      "seenOn": ["https://rive.app/docs/community/community-overview (Rive Community / Marketplace files are shared under CC BY)"],
+      "note": "Rive community files: attribution REQUIRED. Put the credit in the video (end card) or the post, and keep it in the ledger."
+    },
+    "MIT": {
+      "name": "MIT (code)",
+      "url": "https://opensource.org/license/mit",
+      "commercial": true, "attribution": "notice-with-code", "derivatives": "allowed",
+      "restrictions": ["keep the copyright and licence notice when you redistribute the CODE"],
+      "note": "Covers software only (lottie-web, @rive-app/canvas, react-peeps by Emre Cakir, humaaans npm by jktzes). It does not describe the artwork inside a wrapper package; the art keeps its own licence (CC0 for Open Peeps and Humaaans)."
+    },
+    "USER-OWNED": {
+      "name": "Made or owned by the user/client",
+      "url": "",
+      "commercial": true, "attribution": "none", "derivatives": "allowed",
+      "restrictions": ["the user confirms they own the rights"],
+      "note": "Use for the client's own illustrations, logos and animations."
+    },
+    "PAID-LICENSED": {
+      "name": "Purchased or subscription licence (user supplies the terms)",
+      "url": "",
+      "commercial": "check", "attribution": "check", "derivatives": "check",
+      "restrictions": ["record the licence name, order or plan, and the URL of the terms; confirm video/ad use and redistribution of the source file are allowed"],
+      "note": "For paid kits (for example from marketplaces). Many forbid redistributing the source file; our output is a rendered video, but check."
+    },
+    "UNKNOWN": {
+      "name": "Unknown",
+      "url": "",
+      "commercial": false, "attribution": "required", "derivatives": "no",
+      "restrictions": ["do not ship: find the licence first"],
+      "note": "Blocked by ledger.mjs check."
+    }
+  },
+  "sources": {
+    "open-peeps": { "name": "Open Peeps", "type": "illustration (hand-drawn people, SVG)", "creator": "Pablo Stanley", "license": "CC0-1.0", "url": "https://www.openpeeps.com/", "get": "SVG/PNG singles or the full library (Gumroad link on the site). Or build characters locally: node scripts/kit.mjs setup && node scripts/kit.mjs peep ... (uses the MIT 'react-peeps' package as the renderer)." },
+    "humaaans": { "name": "Humaaans", "type": "illustration (mix-and-match people, SVG)", "creator": "Pablo Stanley", "license": "CC0-1.0", "url": "https://www.humaaans.com/", "get": "Library via Gumroad link on the site, or build locally with kit.mjs human (uses the MIT 'humaaans' npm package parts)." },
+    "open-doodles": { "name": "Open Doodles", "type": "illustration (SVG/PNG/GIF doodles)", "creator": "Pablo Stanley", "license": "CC0-1.0", "url": "https://www.opendoodles.com/", "get": "Download singles from the site (SVG/PNG/GIF)." },
+    "lottiefiles": { "name": "LottieFiles (public animations)", "type": "Lottie JSON / dotLottie animations", "creator": "various; record the creator on each animation's page", "license": "LOTTIEFILES-SIMPLE", "url": "https://lottiefiles.com/", "get": "Download as Lottie JSON from the animation page (a .lottie file is a zip: unzip it and use animations/*.json). Record the animation page URL." },
+    "rive-community": { "name": "Rive Community / Marketplace", "type": "Rive .riv interactive animations", "creator": "various; record the creator", "license": "CC-BY-4.0", "url": "https://rive.app/community", "get": "Download the .riv from the file page (or remix it in the Rive editor and export). Attribution required." },
+    "undraw": { "name": "unDraw", "type": "illustration (SVG, recolourable)", "creator": "Katerina Limpitsouni / unDraw", "license": "UNDRAW", "url": "https://undraw.co/", "get": "Download one SVG at a time from the site with your brand colour set. No bulk downloading." }
+  }
+}

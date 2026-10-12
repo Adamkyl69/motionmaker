@@ -19,7 +19,8 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | 2D vector object model, serialize/animate | Fabric.js | fabricjs/fabric.js | canvas; wrap draw in renderFrame(n) |
 | Celebration bursts | canvas-confetti | catdad/canvas-confetti | uses randomness: seed/replace Math.random for frame-exact renders |
 | React UI springs, gestures, layout | Motion | motiondivision/motion | live UI, no video renderer |
-| Interactive state-machine vector art | Rive | rive-app/rive-runtime | up to 120 FPS, product UI |
+| Interactive state-machine vector art | Rive | rive-app/rive-runtime | product UI; for video use `rive-scene` (linear animations only, via motionmaker-assets; community files need CC BY credit) |
+| Ready-made animated vectors | lottie-web | airbnb/lottie-web | `lottie-scene` via motionmaker-assets; goToAndStop is frame-exact |
 | Video as React components | Remotion | remotion-dev/remotion | free for individuals and companies up to 3 staff; official Agent Skills |
 | Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes | Apache 2.0, CLI renders MP4 (verify repo URL) |
 | Web timelines, kinetic type | GSAP | greensock/GSAP | free incl. SplitText, MorphSVG, DrawSVG, ScrollTrigger |

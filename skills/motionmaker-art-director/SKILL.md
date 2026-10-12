@@ -27,6 +27,7 @@ Call B (brand and references), only for what is unknown:
 5. **Brand:** exact hex colours, fonts, logo rules, no-gos. Offer "pick for me" (then you choose from a look and say so).
 6. **References:** a link, video or description of something they love, and something they hate. Ask what *specifically* they like about it. If they supply a video, run `motionmaker-reference` and take principles, not footage.
 7. **Anything that must or must not appear** (legal copy, competitors, faces, claims).
+8. **Illustration and animation:** does the piece need characters, spot illustrations or a ready-made animation? Offer: *none, type and shape only* / *a kit: Open Peeps or Humaaans characters* / *a LottieFiles animation they pick* / *a Rive file* / *their own artwork*. If they pick any, hand over to `motionmaker-assets` (inspect, recolour, ledger) and read its `craft/illustration.md`; say upfront that Rive community files require a visible credit.
 
 If the user says "just make it" or gives a one-line request: do a **lightweight pass**: infer objective, audience and tone from the request, state your three assumptions in one line each, and go straight to Step 2. Never skip Step 2.
 
@@ -46,18 +47,19 @@ Convert the motion language to numbers (table in `craft/principles.md` section 5
 For several shots, write the shot list table: every row has a focal point, a composition, one hero move, the text, the sound hit, and the emotion. Each shot gets one job: hook, build, payoff or close.
 
 ## Step 4: direct the build
-When `motionmaker-build` scaffolds, use `LOOK=<look> ... scaffold.sh - - -` (a hex overrides that one colour), so palette, type, weight, tracking and entrance timing come from the look. Keep every choice traceable to the AD-BRIEF. If the build needs something the brief does not cover (a new colour, a second typeface), stop and decide it in the brief first.
+When `motionmaker-build` scaffolds, use `LOOK=<look> ... scaffold.sh - - -` (for borrowed art: `TEMPLATE=lottie-scene|rive-scene|illustration-scene ASSET=<file>`, see `motionmaker-assets`) (a hex overrides that one colour), so palette, type, weight, tracking and entrance timing come from the look. Keep every choice traceable to the AD-BRIEF. If the build needs something the brief does not cover (a new colour, a second typeface), stop and decide it in the brief first.
 
 ## Step 5: critique every round (you are the toughest reviewer in the room)
 After rendering stills (always include the poster frame, the hero frame and one per shot):
 1. `node $AD/scripts/critique.mjs <stills...>`
 2. `bash $AD/scripts/looktests.sh <poster.png>` then **Read it** (original | grayscale | squint | phone thumbnail).
 3. Walk `craft/critique-checklist.md` sections B to D with the real images in front of you.
+4. If the piece uses borrowed art, also walk the six checks in `motionmaker-assets/craft/illustration.md` (one family, reads small, accent on the hero only, no collisions, no colour drift into the text colour, clarifies rather than decorates).
 Write notes in the AD format: *frame, what you see, why it matters, what to change, what stays fixed* (see the checklist). Give at most 5 notes per round, ordered by what hurts the idea most. Fix hierarchy and legibility first, then consistency, then polish. Remove before you add. Then hand the notes to `motionmaker-review` for the technical loop (`check.mjs`, determinism, seams).
 The tools measure craft only. Do not report "AD approved" because the numbers pass: judge the idea, the hierarchy and the feel yourself.
 
 ## Step 6: sign-off
-Before delivery state: the **poster frame** (number and why it sells), the **one-sentence idea** the piece communicates (it must match the single-minded message), what you cut and why, and any compromise the user accepted. Update the approvals table in AD-BRIEF.md.
+Before delivery state: the **poster frame** (number and why it sells), the **one-sentence idea** the piece communicates (it must match the single-minded message), what you cut and why, and any compromise the user accepted. If there is borrowed art: `ledger.mjs check` must PASS and the credits go in the end card or the post text. Update the approvals table in AD-BRIEF.md.
 
 ## Rules
 - One idea, one hero per shot, restraint over decoration; the user's brand and mandatories beat your taste.

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# usage: [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo] [LOOK=<look-name>] \
+# usage: [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene] [LOOK=<look-name>] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
 # With LOOK set, pass "-" for bg/fg/accent to take the look's colours; a real hex overrides that one colour (brand colours on a look's typography).
+# lottie-scene / rive-scene / illustration-scene need ASSET=<file> (.json Lottie, .riv Rive, .svg figure). The file is inspected (BLOCK stops the build), copied to <slug>/assets/, and must then be recorded with
+#   motionmaker-assets/scripts/ledger.mjs. Caption "-" = no caption. The Lottie/Rive runtimes come from the kit cache (node motionmaker-assets/scripts/kit.mjs setup) or ./node_modules.
 # three-product needs `three` and gsap-kinetic needs `gsap` in ./node_modules (npm i three@0.160.0 gsap@3.12.5) or in $MOTION_VENDOR_SRC.
 set -euo pipefail
 SLUG=${1:?slug}; TEXT=${2:?text}; W=${3:?w}; H=${4:?h}; FPS=${5:?fps}; SECS=${6:?seconds}; BG=${7:?bg}; FG=${8:?fg}; AC=${9:?accent}; OUT=${10:-motion-out}
@@ -31,6 +33,25 @@ case "$TPL" in
 esac
 if [ "$EXIT" -gt 0 ] && [ "$EXIT" -lt $(( ENT + 12 )) ]; then
   echo "WARNING: ${SECS}s is too short for this content (entrance ends f$ENT, exit starts f$EXIT, hold < 12 frames): shorten text or lengthen the loop" >&2; fi
+D="$OUT/$SLUG"
+case "$TPL" in lottie-scene|rive-scene|illustration-scene)
+  ASSET=${ASSET:?"$TPL needs ASSET=<file> (.json Lottie / .riv Rive / .svg figure). Find and vet one with the motionmaker-assets skill"}; [ -f "$ASSET" ] || { echo "ASSET not found: $ASSET" >&2; exit 6; }
+  INSPECT="$SK/motionmaker-assets/scripts/inspect-asset.mjs"; [ -f "$INSPECT" ] || { echo "asset templates need the motionmaker-assets skill installed next to this one ($INSPECT not found)" >&2; exit 4; }
+  IJ=$(node "$INSPECT" "$ASSET" --json) && IRC=0 || IRC=$?; if [ "$IRC" -eq 2 ]; then echo "$IJ" | node -e 'const r=JSON.parse(require("fs").readFileSync(0,"utf8"));r.block.forEach(b=>console.error("BLOCK "+b))'; echo "ASSET blocked (untrusted content). Fix the asset, or review it yourself and re-run with ALLOW_UNSAFE_ASSET=1" >&2; [ "${ALLOW_UNSAFE_ASSET:-}" = 1 ] || exit 7; fi
+  ABASE=$(basename "$ASSET" | tr -c 'A-Za-z0-9._\n-' '_'); ASSETFILE="assets/$ABASE"; mkdir -p "$D/assets"; cp "$ASSET" "$D/assets/$ABASE"
+  LOOPF=${LOOP:-0}; ASSETSEC=0; AB=${ARTBOARD:-}; AN=${ANIMATION:-}
+  if [ "$TPL" = lottie-scene ]; then ASSETSEC=$(echo "$IJ" | node -e 'const r=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(r.facts.durationSeconds||0)'); fi
+  if [ "$TPL" = rive-scene ]; then
+    RV=$(echo "$IJ" | AB="$AB" AN="$AN" node -e 'const r=JSON.parse(require("fs").readFileSync(0,"utf8")),ab=r.facts.artboards||[];const a=ab.find(x=>x.name===process.env.AB)||ab[0];if(!a){console.log("\t\t0");process.exit()}const n=a.animations.find(x=>x.name===process.env.AN)||a.animations[0];console.log([a.name,n?n.name:"",n?n.seconds:0].join("\t"))')
+    IFS=$'\t' read -r AB AN ASSETSEC <<<"$RV"; [ -n "$AN" ] || { echo "no linear animation found in $ASSET (state machines are not frame-stepped): pick a file with a timeline animation" >&2; exit 8; }
+  fi
+  if [ "$TPL" != illustration-scene ]; then
+    awk -v d="$ASSETSEC" 'BEGIN{exit !(d>0)}' || { echo "could not read the asset duration" >&2; exit 8; }
+    [ "$LOOPF" = 1 ] && awk -v s="$SECS" -v d="$ASSETSEC" 'BEGIN{r=s/d; if (r-int(r+0.5) > 0.02 || int(r+0.5)-r > 0.02) exit 0; exit 1}' && echo "WARNING: LOOP=1 but ${SECS}s is not a whole multiple of the asset's ${ASSETSEC}s: the animation will jump at the loop point. Set the length to ${ASSETSEC}s (one cycle) or a multiple of it, or use LOOP=0 to play once and hold" >&2
+  fi
+  IDLESEC=$(awk -v s="$SECS" 'BEGIN{k=int(s/2.4+0.5); if(k<1)k=1; printf "%.4f", s/k}')
+  case "$TPL" in lottie-scene) EXIT=$(( N - 12 ));; rive-scene) EXIT=$(( N - 12 ));; illustration-scene) EXIT=$(( N - 12 ));; esac;;
+esac
 FONTPCT=$(awk -v l="$LEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.9/((gw+t)*l); if(p>0.14)p=0.14; printf "%.3f",p}')                 # keep text inside the frame
 [ "$TPL" = logo-reveal ] && FONTPCT=$(awk -v l="$LEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.62/((gw+t)*l); if(p>0.11)p=0.11; printf "%.3f",p}')
 WORDPX=$(awk -v w="$W" -v c="$LEN" -v gw="$GW" 'BEGIN{p=0.84*w/((gw+0.03)*c); if(p>0.2*w)p=0.2*w; printf "%d",p}'); BARH=$(awk -v h="$H" 'BEGIN{printf "%d",h*0.017<4?4:h*0.017}')
@@ -40,9 +61,10 @@ ESC=$(printf '%s' "$TEXT" | sed 's/[&/\]/\\&/g'); FESC=$(printf '%s' "$FONT" | s
 sed -e "s/__TEXT__/$ESC/g" -e "s/__W__/$W/g" -e "s/__H__/$H/g" -e "s/__FPS__/$FPS/g" -e "s/__N__/$N/g" \
     -e "s/__BG__/$BG/g" -e "s/__FG__/$FG/g" -e "s/__ACCENT__/$AC/g" -e "s/__EXIT__/$EXIT/g" -e "s/__FONTPCT__/$FONTPCT/g" \
     -e "s/__WORDPX__/$WORDPX/g" -e "s/__FONT__/$FESC/g" -e "s/__WEIGHT__/$WEIGHT/g" -e "s/__TRACK__/$TRACK/g" -e "s/__INF__/$INF/g" -e "s/__STAGGER__/$STAGGER/g" -e "s/__BARH__/$BARH/g" -e "s/__EXITSEC__/$EXITSEC/g" \
+    -e "s#__ASSETFILE__#${ASSETFILE:-}#g" -e "s/__ASSETSEC__/${ASSETSEC:-0}/g" -e "s/__LOOP__/${LOOPF:-0}/g" -e "s/__IDLESEC__/${IDLESEC:-2.4}/g" -e "s/__ARTBOARD__/${AB:-}/g" -e "s/__ANIMATION__/${AN:-}/g" \
     "$HERE/templates/$TPL.html" > "$D/anim.html"
 cp "$SK/motionmaker-build/scripts/tokens.js" "$D/tokens.js"
-find_pkg(){ for r in "${MOTION_VENDOR_SRC:-}" "$PWD/node_modules" "$D/node_modules" "$(dirname "$OUT")/node_modules"; do [ -n "$r" ] && [ -d "$r/$1" ] && { echo "$r/$1"; return; }; done; return 1; }
+find_pkg(){ for r in "${MOTION_VENDOR_SRC:-}" "$PWD/node_modules" "$D/node_modules" "$(dirname "$OUT")/node_modules" "${MOTIONMAKER_KITS:-$HOME/.cache/motionmaker/kits}/node_modules"; do [ -n "$r" ] && [ -d "$r/$1" ] && { echo "$r/$1"; return; }; done; return 1; }
 if [ "$TPL" = three-product ]; then
   P=$(find_pkg three) || { echo "three not found: run  npm i three@0.160.0  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
   mkdir -p "$D/vendor/addons/environments"; cp "$P/build/three.module.min.js" "$D/vendor/"; cp "$P/examples/jsm/environments/RoomEnvironment.js" "$D/vendor/addons/environments/"
@@ -51,5 +73,8 @@ if [ "$TPL" = gsap-kinetic ]; then
   P=$(find_pkg gsap) || { echo "gsap not found: run  npm i gsap@3.12.5  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
   mkdir -p "$D/vendor"; cp "$P/dist/gsap.min.js" "$D/vendor/"
 fi
+if [ "$TPL" = lottie-scene ]; then P=$(find_pkg lottie-web) || { echo "lottie-web not found: run  node motionmaker-assets/scripts/kit.mjs setup  (or npm i lottie-web@5.13.0)" >&2; exit 3; }; mkdir -p "$D/vendor"; cp "$P/build/player/lottie.min.js" "$D/vendor/"; fi
+if [ "$TPL" = rive-scene ]; then P=$(find_pkg @rive-app/canvas) || { echo "@rive-app/canvas not found: run  node motionmaker-assets/scripts/kit.mjs setup  (or npm i @rive-app/canvas@2.44.2)" >&2; exit 3; }; mkdir -p "$D/vendor"; cp "$P/rive.js" "$P/rive.wasm" "$D/vendor/"; fi
+if [ -n "${ASSETFILE:-}" ]; then echo "Next: record the asset's licence before it ships:  node $SK/motionmaker-assets/scripts/ledger.mjs add $D/$ASSETFILE --source <page url> --creator \"<name>\" --license <id> --dir $D" >&2; fi
 printf '# Receipts: %s\n\nTemplate: %s\nPrompt: see PROMPT.md\n\n## Follow-ups (exactly as sent)\n\n(none yet)\n' "$SLUG" "$TPL" > "$D/RECEIPTS.md"
 echo "$D"
