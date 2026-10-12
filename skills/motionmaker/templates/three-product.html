@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: 3D product shot (Three.js r160, studio lighting, hero spring + follow-through, loop-safe orbit).
+     Frame-exact: renderFrame(f) is a pure function of f. Replace the product-building block with your own model/GLB.
+     Needs ./vendor/three.module.min.js and ./vendor/addons/environments/RoomEnvironment.js (scaffold.sh copies them) and tokens.js. -->
+<style>html,body{margin:0;background:__BG__}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+<canvas id="c"></canvas>
+<script src="tokens.js"></script>
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const CONFIG = { w:__W__, h:__H__, fps:__FPS__, frames:__N__, bpm:120, bg:"__BG__", body:"__FG__", accent:"__ACCENT__" };
+const TOKENS = {                       // frames derived from the beat grid; no magic numbers below
+  beat: CONFIG.fps*60/CONFIG.bpm,      // 12 frames at 120 BPM / 24 fps
+  fov:30, camDist:6.6, lookY:0.9, camBreath:0.35, azim:0.35, elevMid:0.38, elevSwing:0.2,
+  lidOpen:Math.PI*0.62, lidPress:0.05, pressF:3, lidRatio:0.6, lidW0:16,
+  budRise:0.62, budRatio:0.7, budW0:13, budLag:3, budFollowRatio:0.5,
+  closeBudsF:CONFIG.fps*2.75, closeBudsLen:8, closeLidF:CONFIG.fps*3.05, closeLidLen:12,
+};
+const { clamp, EASE, springRatio } = Motion, N = CONFIG.frames, fps = CONFIG.fps;
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(1); renderer.setSize(CONFIG.w, CONFIG.h, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(CONFIG.bg);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;   // studio reflections, built in code
+scene.environmentIntensity = 0.55;
+const cam = new THREE.PerspectiveCamera(TOKENS.fov, CONFIG.w/CONFIG.h, 0.1, 50);
+
+// studio: key (warm), fill (cool, soft), rim (behind). No glow, no bloom.
+const key = new THREE.DirectionalLight(0xfff1e0, 2.6); key.position.set(-3.5, 5, 3.5); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6; key.shadow.camera.left=-3; key.shadow.camera.right=3; key.shadow.camera.top=3; key.shadow.camera.bottom=-3; key.shadow.bias=-0.0004;
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.7); fill.position.set(4, 2, 2);
+const rim = new THREE.DirectionalLight(0xffffff, 1.4); rim.position.set(0.5, 3, -5);
+scene.add(key, fill, rim);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity: 0.22 }));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+// ---- product (swap this block for your model) ----
+function roundedBox(w, h, d, r, bevel = 0.02) {                 // extruded rounded rect: product-like silhouette
+  const s = new THREE.Shape(), x = -w/2, y = -d/2;
+  s.moveTo(x+r, y); s.lineTo(x+w-r, y); s.absarc(x+w-r, y+r, r, -Math.PI/2, 0); s.lineTo(x+w, y+d-r); s.absarc(x+w-r, y+d-r, r, 0, Math.PI/2);
+  s.lineTo(x+r, y+d); s.absarc(x+r, y+d-r, r, Math.PI/2, Math.PI); s.lineTo(x, y+r); s.absarc(x+r, y+r, r, Math.PI, Math.PI*1.5);
+  const g = new THREE.ExtrudeGeometry(s, { depth: h-2*bevel, bevelEnabled:true, bevelThickness:bevel, bevelSize:bevel, bevelSegments:6, curveSegments:32 });
+  g.rotateX(-Math.PI/2); g.translate(0, bevel, 0); return g;
+}
+const ceramic = new THREE.MeshPhysicalMaterial({ color: CONFIG.body, roughness:0.38, clearcoat:0.35, clearcoatRoughness:0.3 });
+const chrome  = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness:1, roughness:0.05 });
+const accent  = new THREE.MeshPhysicalMaterial({ color: CONFIG.accent, roughness:0.4, clearcoat:0.2 });
+const product = new THREE.Group(); scene.add(product);
+const base = new THREE.Mesh(roundedBox(1.7, 0.7, 1.3, 0.35), ceramic); base.castShadow = base.receiveShadow = true; product.add(base);
+const deck = new THREE.Mesh(roundedBox(1.35, 0.02, 0.95, 0.28, 0.005), accent); deck.position.y = 0.69; deck.receiveShadow = true; product.add(deck);
+const hinge = new THREE.Group(); hinge.position.set(0, 0.7, -0.65); product.add(hinge);     // lid rotates about the back edge
+const lid = new THREE.Mesh(roundedBox(1.7, 0.36, 1.3, 0.35), ceramic); lid.position.set(0, 0, 0.65); lid.castShadow = true; hinge.add(lid);
+function rimGeometry(w, d, r, t, h) {                               // thin frame (rect with a hole) so chrome reads as a trim line, not a mirror
+  const rr = (W, D, R) => { const s = new THREE.Path(), x = -W/2, y = -D/2;
+    s.moveTo(x+R, y); s.lineTo(x+W-R, y); s.absarc(x+W-R, y+R, R, -Math.PI/2, 0); s.lineTo(x+W, y+D-R); s.absarc(x+W-R, y+D-R, R, 0, Math.PI/2);
+    s.lineTo(x+R, y+D); s.absarc(x+R, y+D-R, R, Math.PI/2, Math.PI); s.lineTo(x, y+R); s.absarc(x+R, y+R, R, Math.PI, Math.PI*1.5); return s; };
+  const shape = new THREE.Shape(rr(w, d, r).getPoints(48)); shape.holes.push(new THREE.Path(rr(w - 2*t, d - 2*t, Math.max(0.01, r - t)).getPoints(48)));
+  const g = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); g.rotateX(-Math.PI/2); return g;
+}
+const seam = new THREE.Mesh(rimGeometry(1.72, 1.32, 0.36, 0.035, 0.02), chrome); seam.position.set(0, -0.005, 0.65); hinge.add(seam);
+const buds = [-0.36, 0.36].map(x => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.42, 16, 32), ceramic);
+  m.castShadow = true; m.position.set(x, 0.72, 0); product.add(m); return m; });
+
+function renderFrame(f) {
+  const T = TOKENS, sec = g => g/fps;
+  // lid: 3-frame anticipation (small press), spring open on the beat, eased close near the end of the loop
+  const open0 = T.beat, press = EASE.move(clamp((f - (open0 - T.pressF)) / T.pressF));
+  const opening = springRatio(sec(f - open0), T.lidRatio, T.lidW0);
+  const closing = EASE.move(clamp((f - T.closeLidF) / T.closeLidLen));
+  hinge.rotation.x = f < open0 ? T.lidPress*press : -(T.lidOpen*opening)*(1-closing);
+  // buds: rise on beat 2, second bud lags (overlapping action), looser spring (follow-through); descend with ease-in
+  buds.forEach((b, i) => {
+    const rise = springRatio(sec(f - (2*T.beat + i*T.budLag)), i ? T.budFollowRatio : T.budRatio, T.budW0);
+    const down = EASE.in(clamp((f - T.closeBudsF - i*2) / T.closeBudsLen));
+    b.position.y = 0.72 + T.budRise*rise*(1-down);
+    b.rotation.z = (i ? -1 : 1) * 0.08 * rise * (1-down);
+  });
+  // camera: loop-safe orbit (whole cycle) + slow breathing push, always moving
+  const ph = Motion.phase(f, N), a = Math.sin(2*Math.PI*ph)*T.azim, e = T.elevMid - Math.cos(2*Math.PI*ph)*T.elevSwing*0.5;
+  const d = T.camDist - T.camBreath*(0.5 - 0.5*Math.cos(2*Math.PI*ph));
+  cam.position.set(Math.sin(a)*Math.cos(e)*d, Math.sin(e)*d + 0.3, Math.cos(a)*Math.cos(e)*d); cam.lookAt(0, T.lookY, 0);
+  renderer.render(scene, cam);
+}
+window.renderFrame = renderFrame; window.ready = Promise.resolve();
+const q = new URLSearchParams(location.search).get("t");
+renderFrame(q===null ? 0 : Math.round(parseFloat(q)*fps));
+if(q===null){ let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*fps)%N); requestAnimationFrame(L); })(0); }  // live preview only
+</script>

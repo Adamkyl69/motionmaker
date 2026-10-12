@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: kinetic type with a GSAP timeline that is SEEKED, never played: renderFrame(f) => tl.time(f/fps).
+     That makes GSAP frame-exact. Needs ./vendor/gsap.min.js (scaffold.sh copies it). Words rise with expo.out, stagger, hold, exit. -->
+<style>
+  html,body{margin:0;background:__BG__}
+  #stage{position:relative;width:__W__px;height:__H__px;overflow:hidden;background:__BG__;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:0 .28em;padding:0 8%;box-sizing:border-box;text-align:center;font:800 __WORDPX__px/1.02 "Helvetica Neue",Arial,sans-serif;letter-spacing:-0.04em;color:__FG__}
+  .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.18em;margin-bottom:-.18em}.w>span{display:inline-block;will-change:transform}
+  #bar{position:absolute;left:25%;width:50%;height:__BARH__px;bottom:16%;background:__ACCENT__;transform-origin:left center}
+</style>
+<div id="stage"><div id="bar"></div></div>
+<script src="vendor/gsap.min.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
+const TOKENS = { rise:110, riseDur:0.6, wordStagger:0.12, exitAt:__EXITSEC__, exitDur:0.35, exitStagger:0.05, barDur:0.8, barMin:0.6 };  // seconds
+const stage = document.getElementById("stage"), bar = document.getElementById("bar");
+const spans = CONFIG.text.split(/\s+/).map(w => { const o = document.createElement("div"); o.className = "w"; const s = document.createElement("span"); s.textContent = w; o.appendChild(s); stage.insertBefore(o, bar); return s; });
+gsap.ticker.remove(gsap.updateRoot);                    // GSAP must never advance itself: frames come only from seek()
+const tl = gsap.timeline({ paused: true });
+tl.set(bar, { scaleX: TOKENS.barMin }, 0).fromTo(spans, { yPercent: TOKENS.rise }, { yPercent: 0, duration: TOKENS.riseDur, ease: "expo.out", stagger: TOKENS.wordStagger }, 0)
+  .to(bar, { scaleX: 1, duration: TOKENS.barDur, ease: "expo.out" }, 0)
+  .to(spans, { yPercent: -TOKENS.rise, duration: TOKENS.exitDur, ease: "power3.in", stagger: TOKENS.exitStagger }, TOKENS.exitAt)
+  .to(bar, { scaleX: TOKENS.barMin, duration: TOKENS.exitDur + TOKENS.exitStagger*spans.length, ease: "power3.in" }, TOKENS.exitAt);
+function renderFrame(f) { tl.time(f / CONFIG.fps, false); }
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+renderFrame(q===null ? 0 : Math.round(parseFloat(q)*CONFIG.fps));
+if(q===null){ let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*CONFIG.fps)%CONFIG.frames); requestAnimationFrame(L); })(0); }  // live preview only
+</script>

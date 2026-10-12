@@ -1,0 +1,14 @@
+{
+  "name": "motionmaker",
+  "owner": { "name": "ErdemKlyc" },
+  "metadata": { "description": "Motionmaker skills for Claude Code" },
+  "plugins": [
+    {
+      "name": "motionmaker",
+      "source": "./",
+      "description": "Frame-exact motion graphics with Claude: /motionmaker command, templates, sound, export and verification.",
+      "version": "0.1.0",
+      "category": "design"
+    }
+  ]
+}

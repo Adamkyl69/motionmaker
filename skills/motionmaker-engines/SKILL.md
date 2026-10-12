@@ -1,0 +1,30 @@
+---
+name: motionmaker-engines
+description: Choose the animation engine and supporting repositories (Three.js, drei, Remotion, HyperFrames, GSAP, Motion, Fabric.js, Rive, deck.gl, cobe, canvas-confetti, twgl.js, ffmpeg.wasm) for a motion task and state it in the brief's OUTPUT line. Use when starting an animation or when the user asks which library to use.
+---
+
+# Motion engines
+
+Name the engine in the prompt or the model picks for you ("A Remotion composition, 1920x1080, 30 fps, 450 frames").
+
+Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/data-driven video -> Remotion. Think in web pages + GSAP -> HyperFrames. Anything 3D -> Three.js. Motion inside a product (not a video) -> Motion or GSAP/Rive.
+
+| Need | Use | Repo | Notes |
+|---|---|---|---|
+| 3D scenes, shaders, camera orbits | Three.js | mrdoob/three.js | drive time from frame number; fov 35-50; pin version (r160 TextGeometry `height`, not `depth`) |
+| Lighting rigs, HDR env, controls for Three | drei | pmndrs/drei | React Three Fiber helpers |
+| Raw fragment shaders, less boilerplate | twgl.js | greggman/twgl.js | raymarched blobs, glints |
+| Product hero globe | cobe | shuding/cobe | dot-matrix WebGL globe < 5KB |
+| Millions of animated data points | deck.gl | visgl/deck.gl | WebGL2 layers |
+| 2D vector object model, serialize/animate | Fabric.js | fabricjs/fabric.js | canvas; wrap draw in renderFrame(n) |
+| Celebration bursts | canvas-confetti | catdad/canvas-confetti | uses randomness: seed/replace Math.random for frame-exact renders |
+| React UI springs, gestures, layout | Motion | motiondivision/motion | live UI, no video renderer |
+| Interactive state-machine vector art | Rive | rive-app/rive-runtime | up to 120 FPS, product UI |
+| Video as React components | Remotion | remotion-dev/remotion | free for individuals and companies up to 3 staff; official Agent Skills |
+| Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes | Apache 2.0, CLI renders MP4 (verify repo URL) |
+| Web timelines, kinetic type | GSAP | greensock/GSAP | free incl. SplitText, MorphSVG, DrawSVG, ScrollTrigger |
+| In-browser stitching/transcode | ffmpeg.wasm | ffmpegwasm/ffmpeg.wasm | native ffmpeg preferred in cloud/CLI |
+
+Star counts and claims for these libraries came from a user-pasted list and were not verified. Verify license and version before depending on a library; note Remotion's company-size license rule.
+
+Frame-exact caveats: any library with its own clock/RAF must be driven manually (seek a GSAP timeline to f/fps; step a Three clock by hand); seed any randomness; confirm with `motionmaker-review/scripts/check.mjs`.

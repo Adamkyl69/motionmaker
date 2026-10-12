@@ -1,0 +1,118 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: product action demo (launch clip). Frame-locked to GLOBAL inclusive frame numbers; edit TIMELINE, not the drawing code.
+     Opening 0-119: headline, card enter, settled hold. Product 120-419: cursor -> press -> finished file, readable hold.
+     Closing 420-599: hard cut to logo + closing copy. Design space is 1080x1080, scaled to the canvas.
+     Replace the procedural placeholder screens by setting CONFIG.assets (png/jpg under ./public/) once the user supplies real ones.
+     Pure function of f. Needs tokens.js. -->
+<style>html,body{margin:0;background:#101318}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = {
+  w:__W__, h:__H__, fps:30, frames:600,
+  headline:"__TEXT__", closing:"Build with clarity.", product:"Product", fileName:"report.md", fileMeta:"12 KB",
+  bg:"#101318", fg:"#F5F7FA", accent:"__ACCENT__", font:'"Helvetica Neue", Arial, sans-serif',
+  assets:{ report:null, exported:null, logo:null },                        // e.g. "public/report.png"
+};
+// Global, inclusive frame numbers at 30 fps (seconds in the comments). One place to edit timing.
+const TIMELINE = {
+  headline:[0,18], card:[18,42], settle:[42,119],
+  cursorMove:[150,180], pressUp:192, press:195, pressRelease:201, cursorRest:[204,222], result:[210,234], hold:[234,419],
+  cut:420, closingFade:[420,438], end:599,
+};
+const LAYOUT = {                                  // design space 1080x1080, origin top-left, px; keep content inside margin
+  margin:64, headline:{x:96, y:112, w:888, size:64, lh:1.1, maxLines:2},
+  card:{x:120, y:350, w:840, h:480, r:24},
+  button:{x:700, y:690, w:220, h:64, r:14},        // "Export" control, in design space (anchor = its center)
+  file:{w:320, h:110, x:330, y:632},               // finished-file chip: left of the button, below the text lines (no overlap)
+  cursorRest:{x:210, y:790},
+  cursorWaypoints:[{x:420,y:800},{x:690,y:812}],                  // quadratic start + control; the path then ends at the button anchor. Runs along the card bottom, clear of all text
+};
+const { clamp, EASE, springRatio, lerp } = Motion, T = TIMELINE, L = LAYOUT, ctx = document.getElementById("c").getContext("2d");
+const seg = (f, [a, b]) => clamp((f - a) / (b - a));                      // progress 0..1 across a [start,end] frame pair
+const font = (px, w = 700) => `${w} ${px}px ${CONFIG.font}`;
+const img = {};
+window.ready = Promise.all(Object.entries(CONFIG.assets).filter(([, v]) => v).map(([k, v]) => new Promise(res => { const i = new Image(); i.onload = () => { img[k] = i; res(); }; i.onerror = () => res(); i.src = v; })));
+
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function wrap(text, maxW, size) {                                        // returns lines that fit maxW (so longest copy can be checked)
+  ctx.font = font(size, 800); const words = text.split(" "), lines = []; let cur = "";
+  for (const w of words) { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  lines.push(cur); return lines;
+}
+function drawReport(c, pressed, dim) {                                    // placeholder product screen (replace with CONFIG.assets.report)
+  const { x, y, w, h, r } = c, A = ctx.globalAlpha; ctx.save(); rr(x, y, w, h, r); ctx.clip();
+  if (img.report) ctx.drawImage(img.report, x, y, w, h); else {
+    ctx.fillStyle = "#1B2028"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#222A34"; ctx.fillRect(x, y, 170, h);
+    ctx.fillStyle = CONFIG.accent; ctx.beginPath(); ctx.arc(x + 34, y + 38, 12, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = CONFIG.fg; ctx.font = font(20, 700); ctx.fillText(CONFIG.product, x + 56, y + 45);
+    ["Home", "Projects", "Reports", "Settings"].forEach((s, i) => { ctx.globalAlpha = A*(i === 2 ? 1 : 0.5); ctx.font = font(18, 600); ctx.fillText(s, x + 28, y + 110 + i*44); }); ctx.globalAlpha = A;
+    ctx.font = font(30, 800); ctx.fillText("Project report", x + 210, y + 70);
+    ctx.fillStyle = "#2E3846"; [0.8, 0.95, 0.6, 0.85].forEach((k, i) => { rr(x + 210, y + 110 + i*34, (w - 250)*k, 14, 7); ctx.fill(); });
+  }
+  ctx.restore();
+  const b = L.button, k = pressed;                                       // export button with pressed response (accent overlay, scale 1 -> 0.96)
+  ctx.save(); ctx.globalAlpha = A*(1 - 0.65*dim); ctx.translate(b.x + b.w/2, b.y + b.h/2); ctx.scale(1 - 0.04*k, 1 - 0.04*k);
+  rr(-b.w/2, -b.h/2, b.w, b.h, b.r); ctx.fillStyle = k > 0 ? CONFIG.accent : "#F5F7FA"; ctx.fill();
+  ctx.fillStyle = "#101318"; ctx.font = font(24, 700); ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("Export report", 0, 2); ctx.restore();
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  if (k > 0) { ctx.save(); ctx.strokeStyle = CONFIG.accent; ctx.globalAlpha = A*0.6*(1 - k); ctx.lineWidth = 4; const g = 18*(1 - k) + 6; rr(b.x - g, b.y - g, b.w + 2*g, b.h + 2*g, b.r + g); ctx.stroke(); ctx.restore(); }
+}
+function drawFile(p) {                                                    // finished-file chip: pops + settles, then stays still and readable
+  const { w, h } = L.file, cx = L.file.x + w/2, cy = L.file.y, s = lerp(0.9, 1, EASE.out(p));
+  ctx.save(); ctx.translate(cx, cy + (1 - EASE.out(p))*16); ctx.scale(s, s); ctx.globalAlpha = p;
+  if (img.exported) ctx.drawImage(img.exported, -w/2, -h/2, w, h); else {
+    ctx.shadowColor = "rgba(0,0,0,0.45)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12; rr(-w/2, -h/2, w, h, 20); ctx.fillStyle = "#F5F7FA"; ctx.fill(); ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#101318"; ctx.font = font(34, 800); ctx.fillText(CONFIG.fileName, -w/2 + 110, -4); ctx.fillStyle = "#5C6672"; ctx.font = font(22, 600); ctx.fillText(CONFIG.fileMeta, -w/2 + 110, 32);
+    rr(-w/2 + 26, -34, 56, 68, 8); ctx.fillStyle = "#DDE3EA"; ctx.fill();
+    ctx.beginPath(); ctx.arc(-w/2 + 76, 30, 18, 0, Math.PI*2); ctx.fillStyle = CONFIG.accent; ctx.fill();
+    ctx.strokeStyle = "#101318"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-w/2 + 68, 30); ctx.lineTo(-w/2 + 74, 37); ctx.lineTo(-w/2 + 85, 23); ctx.stroke();
+  }
+  ctx.restore();
+}
+function cursorAt(f) {                                                    // approach along a quadratic curve, press scale, then drift to rest
+  const [p0, p1] = L.cursorWaypoints, b = L.button, end = { x: b.x + b.w*0.88, y: b.y + b.h*0.62 };   // the button anchor: right padding, so the tip never covers the label
+  const t = EASE.move(seg(f, T.cursorMove)), q = (1 - t)*(1 - t), m = 2*(1 - t)*t, n = t*t;
+  let x = q*p0.x + m*p1.x + n*end.x, y = q*p0.y + m*p1.y + n*end.y;
+  const away = EASE.move(seg(f, T.cursorRest)); x = lerp(x, L.cursorRest.x, away); y = lerp(y, L.cursorRest.y, away);
+  const s = f < T.pressUp ? 1 : f < T.press ? lerp(1, 0.92, (f - T.pressUp)/(T.press - T.pressUp)) : lerp(0.92, 1, seg(f, [T.press, T.pressRelease]));
+  return { x, y, s, end };
+}
+function drawCursor(c) {
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(c.s, c.s); ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 30); ctx.lineTo(8, 23); ctx.lineTo(14, 36); ctx.lineTo(20, 33); ctx.lineTo(14, 21); ctx.lineTo(24, 21); ctx.closePath();
+  ctx.fillStyle = "#fff"; ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#101318"; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+}
+function headline(f) {
+  const H = L.headline, p = EASE.out(seg(f, T.headline)), lines = wrap(CONFIG.headline, H.w, H.size);
+  if (lines.length > H.maxLines) console.warn(`headline wraps to ${lines.length} lines (max ${H.maxLines}): shorten or widen the box`);
+  ctx.save(); ctx.globalAlpha = p; ctx.fillStyle = CONFIG.fg; ctx.font = font(H.size, 800);
+  lines.forEach((ln, i) => ctx.fillText(ln, H.x, H.y + H.size*0.9 + i*H.size*H.lh + (1 - p)*24)); ctx.restore();
+  return lines.length;
+}
+function renderFrame(f) {
+  f = Math.min(f, CONFIG.frames - 1);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = CONFIG.bg; ctx.fillRect(0, 0, CONFIG.w, CONFIG.h);
+  ctx.scale(CONFIG.w/1080, CONFIG.h/1080);
+  if (f >= T.cut) {                                                       // CLOSING: hard cut to logo + closing copy
+    const p = EASE.out(seg(f, T.closingFade)); ctx.globalAlpha = p;
+    ctx.fillStyle = CONFIG.accent; ctx.beginPath(); ctx.arc(540, 450, 54, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = CONFIG.fg; ctx.font = font(56, 800); ctx.textAlign = "center"; ctx.fillText(CONFIG.product, 540, 590);
+    ctx.font = font(40, 600); ctx.globalAlpha = p*0.8; ctx.fillText(CONFIG.closing, 540, 660); ctx.textAlign = "left"; ctx.globalAlpha = 1; return;
+  }
+  headline(f);
+  const cp = EASE.out(seg(f, T.card)), c = L.card, y = c.y + (1 - cp)*60;     // card enters 60 px low, opacity 0->1, then holds EXACTLY at its settled position
+  ctx.save(); ctx.globalAlpha = cp; ctx.translate(0, y - c.y);
+  const press = f < T.press - 3 ? 0 : EASE.out(seg(f, [T.press, T.press + 6]))*(1 - seg(f, [T.press + 6, T.press + 24]) );   // button response: peaks ~f201, decays by ~f219
+  drawReport(c, press, EASE.out(seg(f, T.result)));
+  if (f >= T.result[0]) drawFile(EASE.out(seg(f, T.result)));
+  ctx.restore();
+  if (f >= T.headline[0] + 100) { const cu = cursorAt(f), visible = seg(f, [T.cursorMove[0] - 12, T.cursorMove[0]]); ctx.globalAlpha = visible; drawCursor(cu); ctx.globalAlpha = 1; }
+}
+window.renderFrame = renderFrame; window.TIMELINE = TIMELINE; window.LAYOUT = LAYOUT; window.cursorAt = cursorAt;
+const q = new URLSearchParams(location.search).get("t");
+window.ready.then(() => renderFrame(q === null ? 0 : Math.round(parseFloat(q)*CONFIG.fps)));
+if (q === null) window.ready.then(() => { let s = null; (function Lp(ts) { s ??= ts; renderFrame(Math.floor((ts - s)/1000*CONFIG.fps) % CONFIG.frames); requestAnimationFrame(Lp); })(0); });  // live preview only
+</script>

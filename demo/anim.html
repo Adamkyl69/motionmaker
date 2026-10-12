@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Launch day</title>
+<style>
+  html,body{margin:0;background:#fff}
+  #stage{position:relative;width:600px;height:600px;overflow:hidden;background:#fff}
+  #title{position:absolute;left:0;right:0;top:245px;text-align:center;white-space:pre;
+    font:800 84px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:-0.04em;color:#0F0F0F}
+  #title span{display:inline-block;will-change:transform}
+  #bar{position:absolute;left:150px;top:370px;width:300px;height:10px;background:#D97757;transform-origin:left center}
+</style>
+<div id="stage"><div id="title"></div><div id="bar"></div></div>
+<script>
+const FPS = 24, N = 96, TEXT = "Launch day";
+// token table: no inline numbers elsewhere
+const T = { rise:40, inF:14, stagger:2, holdStart:34, exitStart:79, outF:8, outStagger:1, push:0.02, barMin:0.6 };
+const EASE_OUT = [0.16,1,0.3,1], EASE_IN = [0.7,0,0.84,0];
+
+function bezier(x1,y1,x2,y2){           // pure cubic-bezier solver
+  const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx, cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by;
+  const X=t=>((ax*t+bx)*t+cx)*t, Y=t=>((ay*t+by)*t+cy)*t;
+  return x=>{ if(x<=0)return 0; if(x>=1)return 1; let lo=0,hi=1,t=x;
+    for(let i=0;i<30;i++){const v=X(t); if(Math.abs(v-x)<1e-6)break; v<x?lo=t:hi=t; t=(lo+hi)/2;}
+    return Y(t); };
+}
+const eOut = bezier(...EASE_OUT), eIn = bezier(...EASE_IN);
+const clamp = v => Math.min(1, Math.max(0, v));
+
+const title = document.getElementById("title"), bar = document.getElementById("bar");
+const letters = [...TEXT].map(ch => { const s=document.createElement("span"); s.textContent=ch; title.appendChild(s); return s; });
+
+function renderFrame(f){
+  const n = letters.length;
+  let barP = 0;
+  letters.forEach((el,i)=>{
+    const inP  = eOut(clamp((f - i*T.stagger) / T.inF));
+    const outP = eIn (clamp((f - T.exitStart - i*T.outStagger) / T.outF));
+    const y = (1-inP)*T.rise - outP*T.rise;         // rises in, exits upward
+    const vis = (inP>0 && outP<1) ? 1 : 0;           // letters hidden outside their window
+    el.style.transform = `translateY(${y}px)`;
+    el.style.opacity = vis;
+  });
+  const entering = eOut(clamp(f / (T.inF + n*T.stagger)));
+  const leaving  = eIn (clamp((f - T.exitStart) / (T.outF + n*T.outStagger)));
+  barP = T.barMin + (1-T.barMin) * (entering - leaving);
+  bar.style.transform = `scaleX(${barP})`;
+  // slow 2% push across the hold, eased back to 1 by the loop seam
+  const hold = clamp((f - T.holdStart) / (T.exitStart - T.holdStart));
+  const push = 1 + T.push * Math.sin(Math.PI * clamp(f / (N-1)));
+  document.getElementById("stage").style.transform = `scale(${push})`;
+  document.getElementById("stage").style.transformOrigin = "300px 300px";
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+renderFrame(q===null ? 0 : Math.round(parseFloat(q)*FPS));
+if(q===null){ let start=null; // live preview only; renders use renderFrame(n)
+  (function loop(ts){ start??=ts; renderFrame(Math.floor((ts-start)/1000*FPS)%N); requestAnimationFrame(loop); })(0); }
+</script>

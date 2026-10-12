@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: animated bar chart (2D canvas). Bars rise on staggered springs (damping 0.8, no bounce on labels),
+     values count up on ease-out, the highlighted bar takes the accent, one hero per shot. Edit CONFIG.data. Needs tokens.js. -->
+<style>html,body{margin:0;background:__BG__}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = { title:"__TEXT__", unit:"%", w:__W__, h:__H__, fps:__FPS__, frames:__N__, bg:"__BG__", fg:"__FG__", accent:"__ACCENT__", highlight:3,
+  data:[{label:"Q1",value:12},{label:"Q2",value:19},{label:"Q3",value:31},{label:"Q4",value:58}] };
+const TOKENS = { startAt:6, stagger:4, ratio:0.8, w0:12, countLen:30, exitAt:__EXIT__, exitLen:10, titleIn:10, plotPct:0.5, padPct:0.12 };
+const { clamp, EASE, springRatio } = Motion, N = CONFIG.frames, fps = CONFIG.fps, ctx = document.getElementById("c").getContext("2d");
+const font = (px, w = 700) => `${w} ${px}px "Helvetica Neue", Arial, sans-serif`;
+const max = Math.max(...CONFIG.data.map(d => d.value));
+
+function renderFrame(f) {
+  const T = TOKENS, W = CONFIG.w, H = CONFIG.h, pad = W*T.padPct, n = CONFIG.data.length;
+  ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = CONFIG.bg; ctx.fillRect(0, 0, W, H);
+  const out = EASE.in(clamp((f - T.exitAt) / T.exitLen));
+  ctx.save(); ctx.translate(0, out*H*0.06); ctx.globalAlpha = 1 - out;
+  // title: fades/slides in once, then holds still while it is read
+  const ti = EASE.out(clamp(f / T.titleIn)); ctx.globalAlpha *= ti; ctx.fillStyle = CONFIG.fg; ctx.textBaseline = "alphabetic";
+  ctx.font = font(W*0.055, 800); ctx.fillText(CONFIG.title, pad, pad*1.05 + (1-ti)*8); ctx.globalAlpha = 1 - out;
+  // plot area
+  const top = H*0.26, bottom = H - pad*1.4, plotH = bottom - top, gap = W*0.03, bw = (W - 2*pad - gap*(n-1))/n;
+  ctx.fillStyle = CONFIG.fg; ctx.globalAlpha = (1 - out)*0.2; ctx.fillRect(pad, bottom, W - 2*pad, 2); ctx.globalAlpha = 1 - out;
+  CONFIG.data.forEach((d, i) => {
+    const t0 = T.startAt + i*T.stagger, p = springRatio((f - t0)/fps, T.ratio, T.w0), h = plotH*(d.value/max)*Math.max(0, p);
+    const x = pad + i*(bw + gap), y = bottom - h;
+    ctx.fillStyle = i === CONFIG.highlight ? CONFIG.accent : CONFIG.fg; ctx.globalAlpha = (1 - out)*(i === CONFIG.highlight ? 1 : 0.85);
+    ctx.fillRect(x, y, bw, h);                                                  // bars grow from the baseline (no corner artifacts)
+    ctx.globalAlpha = 1 - out; ctx.fillStyle = CONFIG.fg; ctx.textAlign = "center";
+    ctx.font = font(W*0.032, 600); ctx.fillText(d.label, x + bw/2, bottom + W*0.05);
+    const c = EASE.out(clamp((f - t0) / T.countLen)), v = Math.round(d.value*c);   // count-up: no bounce on numbers
+    ctx.font = font(W*0.046, 800); ctx.fillText(v + CONFIG.unit, x + bw/2, y - W*0.02);
+  });
+  ctx.textAlign = "left"; ctx.restore();
+  // ambient hairline: always present and always (slightly) moving, so frame 0 is a finished composition and the loop never cuts to blank
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.fillStyle = CONFIG.accent;
+  const hl = W*(0.18 + 0.02*Math.sin(2*Math.PI*f/N)); ctx.fillRect((W - hl)/2, H*0.955, hl, Math.max(3, H*0.008));
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+renderFrame(q===null ? 0 : Math.round(parseFloat(q)*fps));
+if(q===null){ let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*fps)%N); requestAnimationFrame(L); })(0); }  // live preview only
+</script>

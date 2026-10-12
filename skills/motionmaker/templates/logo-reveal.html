@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: logo / wordmark reveal on a 2D canvas. Mark pops in on a spring (anticipation + overshoot), wordmark wipes in
+     with a mask, tagline settles, everything exits so the last frame differs from the first. Pure function of f. Needs tokens.js. -->
+<style>html,body{margin:0;background:__BG__}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="tokens.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", tagline:"", w:__W__, h:__H__, fps:__FPS__, frames:__N__, bg:"__BG__", fg:"__FG__", accent:"__ACCENT__" };
+const TOKENS = { markPct:0.2, gapPct:0.035, fontPct:__FONTPCT__, markAt:4, wipeAt:16, wipeLen:12, tagAt:30, tagLen:12,
+  markRatio:0.55, markW0:15, spinDeg:-14, exitAt:__EXIT__, exitLen:12 };
+const { clamp, EASE, springRatio } = Motion, N = CONFIG.frames, fps = CONFIG.fps, ctx = document.getElementById("c").getContext("2d");
+const font = px => `800 ${px}px "Helvetica Neue", Arial, sans-serif`;
+
+function renderFrame(f) {
+  const T = TOKENS, W = CONFIG.w, H = CONFIG.h, m = W*T.markPct, fs = W*T.fontPct, gap = W*T.gapPct;
+  ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle = CONFIG.bg; ctx.fillRect(0, 0, W, H);
+  ctx.font = font(fs); ctx.letterSpacing = `${-0.03*fs}px`;
+  const tw = ctx.measureText(CONFIG.text).width, total = m + gap + tw, x0 = (W - total)/2, cy = H/2;
+  const out = EASE.in(clamp((f - T.exitAt) / T.exitLen));                       // exit: whole lockup slides up and away
+  const pop = springRatio((f - T.markAt)/fps, T.markRatio, T.markW0);           // overshoots, then settles
+  ctx.save(); ctx.translate(0, -out*H*0.12); ctx.globalAlpha = 1 - out;
+  // mark: accent rounded square; spins from spinDeg, scales on the spring
+  ctx.save(); ctx.translate(x0 + m/2, cy); ctx.rotate(T.spinDeg*Math.PI/180*(1 - pop)); ctx.scale(pop, pop);
+  ctx.fillStyle = CONFIG.accent; const r = m*0.28; ctx.beginPath(); ctx.roundRect(-m/2, -m/2, m, m, r); ctx.fill();
+  ctx.fillStyle = CONFIG.bg; ctx.beginPath(); ctx.arc(0, 0, m*0.18, 0, Math.PI*2); ctx.fill(); ctx.restore();
+  // wordmark: mask wipe left -> right (clip rect grows), text itself slides 6% so it feels pulled out
+  const wipe = EASE.move(clamp((f - T.wipeAt) / T.wipeLen));
+  if (wipe > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x0 + m + gap, 0, tw*wipe, H); ctx.clip();
+    ctx.fillStyle = CONFIG.fg; ctx.textBaseline = "middle"; ctx.fillText(CONFIG.text, x0 + m + gap - (1-wipe)*tw*0.06, cy + fs*0.04); ctx.restore(); }
+  if (CONFIG.tagline) {                                                         // optional tagline: opacity may fade, position may not bounce
+    const tp = EASE.out(clamp((f - T.tagAt) / T.tagLen)); ctx.globalAlpha = (1 - out)*tp; ctx.font = font(fs*0.3);
+    ctx.fillStyle = CONFIG.fg; ctx.textAlign = "left"; ctx.fillText(CONFIG.tagline, x0 + m + gap, cy + fs*0.78);
+  }
+  ctx.restore();
+  // ambient hairline: always present and always (slightly) moving, so frame 0 is a finished composition and the loop never cuts to blank
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1; ctx.fillStyle = CONFIG.accent;
+  const hl = W*(0.18 + 0.02*Math.sin(2*Math.PI*f/N)); ctx.fillRect((W - hl)/2, H*0.955, hl, Math.max(3, H*0.008));
+}
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+renderFrame(q===null ? 0 : Math.round(parseFloat(q)*fps));
+if(q===null){ let s=null; (function L(ts){ s??=ts; renderFrame(Math.floor((ts-s)/1000*fps)%N); requestAnimationFrame(L); })(0); }  // live preview only
+</script>
