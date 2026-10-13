@@ -26,6 +26,8 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | Maps, globes, routes | d3-geo + world-atlas | d3/d3, topojson/world-atlas | offline Natural Earth shapes; `map-scene` |
 | Hand-drawn marks | Rough.js | rough-stuff/rough | fixed seed; `annotate-scene` |
 | Icons | Lucide, Tabler, Phosphor, Material Symbols | lucide-icons/lucide etc. | `icons.mjs`, `icon-features` |
+| Explain a mechanism as a working object | Anatomy | wheresryan22/anatomy | MIT skill, separate install; filmed by `film-realtime.mjs` via motionmaker-anatomy |
+| Film any real-time web animation | film-realtime.mjs | (ours) | virtual clock, scripted input, CPU raster; `--check` proves two films identical |
 | Ready-made animated vectors | lottie-web | airbnb/lottie-web | `lottie-scene` via motionmaker-assets; goToAndStop is frame-exact |
 | Video as React components | Remotion | remotion-dev/remotion | free for individuals and companies up to 3 staff; official Agent Skills |
 | Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes | Apache 2.0, CLI renders MP4 (verify repo URL) |

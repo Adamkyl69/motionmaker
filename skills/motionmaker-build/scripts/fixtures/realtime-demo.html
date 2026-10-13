@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Real-time demo (film-realtime.mjs test fixture)</title>
+<!-- A page written the "normal" web way, NOT for video: requestAnimationFrame with measured dt, a setTimeout, a setInterval, a looping CSS animation,
+     an IntersectionObserver that starts the loop, Math.random particles, and a pointer interaction. film-realtime.mjs must film it identically twice. -->
+<style>
+  body{margin:0;background:#F4F1EA;font:600 20px system-ui,sans-serif;color:#1d1d1b}
+  #card{position:relative;width:640px;height:360px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)}
+  canvas{position:absolute;inset:0}
+  #badge{position:absolute;right:16px;top:14px;padding:4px 10px;border-radius:99px;background:#1d1d1b;color:#fff;font-size:14px;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.15)}}
+  #count{position:absolute;left:16px;bottom:12px}
+  #hint{position:absolute;right:16px;bottom:12px;font-size:14px;color:#888}
+</style>
+<div id="card"><canvas id="c" width="640" height="360"></canvas><span id="badge">live</span><span id="count">0 ticks</span><span id="hint">hover to attract</span></div>
+<script>
+const c = document.getElementById("c"), g = c.getContext("2d"), card = document.getElementById("card"), count = document.getElementById("count");
+const P = Array.from({ length: 60 }, () => ({ x: Math.random() * 640, y: Math.random() * 360, vx: (Math.random() - 0.5) * 120, vy: (Math.random() - 0.5) * 120 }));
+let last = 0, visible = false, ticks = 0, hue = 20, attract = null;
+function tick(now) { const dt = last ? Math.min((now - last) / 1000, 1 / 20) : 1 / 60; last = now;
+  g.fillStyle = "rgba(255,255,255,0.25)"; g.fillRect(0, 0, 640, 360);
+  for (const p of P) { if (attract) { p.vx += (attract[0] - p.x) * dt * 2; p.vy += (attract[1] - p.y) * dt * 2; }
+    p.x += p.vx * dt; p.y += p.vy * dt; if (p.x < 0 || p.x > 640) p.vx *= -1; if (p.y < 0 || p.y > 360) p.vy *= -1;
+    g.fillStyle = `hsl(${hue},70%,50%)`; g.beginPath(); g.arc(p.x, p.y, 4, 0, 7); g.fill(); }
+  if (visible) requestAnimationFrame(tick); }
+setInterval(() => { ticks++; count.textContent = ticks + " ticks"; }, 250);
+setTimeout(() => { hue = 210; }, 1500);
+card.addEventListener("pointermove", e => { const r = card.getBoundingClientRect(); attract = [e.clientX - r.left, e.clientY - r.top]; });
+card.addEventListener("pointerleave", () => { attract = null; });
+new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) requestAnimationFrame(tick); }).observe(card);
+</script>

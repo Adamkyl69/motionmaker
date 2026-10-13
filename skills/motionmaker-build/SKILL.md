@@ -25,3 +25,7 @@ description: Write and render a frame-exact animation program (single HTML file,
 4. Hand off to `motionmaker-review`. Do not export before review passes.
 
 Numbers: `numbers.md`. Engine choice: `motionmaker-engines`. In Claude app (no shell): ask for a frame counter + space-to-pause for naming frames, remove before final recording.
+
+## Filming pages that animate in real time
+Pages not written for `renderFrame(n)` (web demos, interactive figures, a user's site animation): `node scripts/film-realtime.mjs <page.html> <secs> <fps> [--clip "<selector>"] [--scale 2] [--frame WxH --bg "#hex"] [--actions a.json] [--css "..."] [--check]`. It replaces the page's clocks with a virtual one and steps it one frame per capture, gates input to scripted actions, and rasterises on the CPU so two films are identical (`--check`). Test fixture: `scripts/fixtures/realtime-demo.html`. Not virtualised: Web Workers, media playback, WebAudio clocks.
+

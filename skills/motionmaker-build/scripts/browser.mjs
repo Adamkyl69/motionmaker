@@ -24,9 +24,10 @@ export function serve(root) {
 // (`npx playwright install chromium`, or `motionmaker setup --browser`). Software WebGL (SwiftShader) keeps 3D renders reproducible
 // without a GPU; set MOTIONMAKER_GPU=1 to use the real GPU instead (faster, may differ slightly between machines).
 const chromePath = () => process.env.CHROMIUM || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
-export const launch = () => chromium.launch({
+// extra: more Chromium flags for a caller (film-realtime.mjs asks for single-threaded, fully-staged raster); MOTIONMAKER_CHROME_ARGS adds more.
+export const launch = (extra = []) => chromium.launch({
   ...(chromePath() ? { executablePath: chromePath() } : {}),
-  args: [...(process.env.MOTIONMAKER_GPU ? [] : ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]), "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"],
+  args: [...(process.env.MOTIONMAKER_GPU ? [] : ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"]), "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required", ...extra, ...(process.env.MOTIONMAKER_CHROME_ARGS || "").split(" ").filter(Boolean)],
 });
 // Open anim.html frozen at t=0 and wait for fonts, window.renderFrame and (optionally) window.ready.
 // Pages that expose a seekable timeline instead (awesome-ai-motion style: window.__seek(sec) + window.__ready) are adapted:

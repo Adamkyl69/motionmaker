@@ -16,3 +16,4 @@ These are test renders with placeholder content, not finished work. Your own out
 - `libs-templates.png`: the six new templates (code-reveal, equation-scene, map-scene, annotate-scene, icon-features, footage-scene with an ffmpeg test pattern), each rendered by `motionmaker-libs/scripts/smoke.sh`.
 - `looks-bundled-fonts.png`: the eight looks, each in its own bundled open-licence font (Fraunces, Inter, Cormorant Garamond, Archivo Black, Fredoka, JetBrains Mono, Playfair Display, DM Serif Display).
 - `art-styles.png`: the six art styles (Bauhaus, Van Gogh, Constructivism, Seurat, Matisse cut-outs, ukiyo-e) on the same headline, all drawn in code by `style-scene`.
+- `anatomy-raptor-filmed.png`: Anatomy's Raptor engine example (MIT, by Ryan, github.com/wheresryan22/anatomy) filmed by `motionmaker-anatomy`: assembled, taken apart by a scripted hover, then firing (WebGL plume); two films identical frame for frame.
