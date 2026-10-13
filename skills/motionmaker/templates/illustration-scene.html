@@ -52,7 +52,7 @@ function renderFrame(f){
     tr(rig.head, 0, lift + bob*TOKENS.bobPx*base.bh, TOKENS.swayDeg*sway, 1);
   } else if (rig.whole) tr(rig.whole, 0, 0, 0, 1 + TOKENS.breath*br*0.6);
   const aIn = EASE.pop(clamp(f / TOKENS.artIn)), aOut = EASE.in(clamp((f - TOKENS.exitStart) / TOKENS.outF)), vis = clamp(f / (TOKENS.artIn*0.5)) * (1 - aOut);
-  const pop = (TOKENS.popFrom + (1-TOKENS.popFrom)*aIn) * (1 - 0.04*aOut); if (rig.pop) { tr(rig.pop, 0, 0, 0, pop, pop); rig.svg.setAttribute("opacity", Math.min(vis, 0.999));   /* never exactly 1: the raster path must not change when the fade finishes */ } ground.style.opacity = 0.16 * vis;
+  const pop = (TOKENS.popFrom + (1-TOKENS.popFrom)*aIn) * (1 - 0.04*aOut); if (rig.pop) { tr(rig.pop, 0, 0, 0, pop, pop); rig.svg.setAttribute("opacity", vis); } ground.style.opacity = 0.16 * vis;
   letters.forEach((el, i) => {
     const inP = EASE.out(clamp((f - TOKENS.capDelay - i*TOKENS.capStagger) / TOKENS.capIn)), outP = EASE.in(clamp((f - TOKENS.exitStart - i*0.5) / TOKENS.outF));
     el.style.transform = `translateY(${((1-inP) - outP) * CONFIG.h*0.03}px)`; el.style.opacity = (inP>0 && outP<1) ? 1 : 0;

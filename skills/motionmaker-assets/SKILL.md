@@ -48,7 +48,7 @@ Frames go to `<slug>/footage/` at the composition fps (variable-rate recordings 
 - **Lottie:** `anim.goToAndStop(frame, true)`; time is `(f/fps)`, wrapped by the animation's duration for loops, else clamped to its last frame.
 - **Rive:** the animation must be passed in `animations: [name]` when constructing; then `stopRendering()`, and per frame `scrub(name, seconds); drawFrame()`. `scrub` clamps past the end, so loops wrap the time by the animation's own duration. The runtime wasm must be served from the project folder (`rive.RuntimeLoader.setWasmUrl("./vendor/rive.wasm")`), because the renderer blocks non-local requests.
 - **Footage:** each frame image is decoded to an ImageBitmap and drawn on a canvas with an explicit crop; an `<img>` with CSS zoom was not reproducible (Chrome resampled differently depending on the previous frame).
-- **Illustrations:** parts are wrapped in new `<g>` elements and transformed with SVG `transform` attributes (not CSS) around fixed pivots; idle periods divide the loop length evenly. The outer fade stays at 0.999 or less so the raster path never changes when the fade finishes.
+- **Illustrations:** parts are wrapped in new `<g>` elements and transformed with SVG `transform` attributes (not CSS) around fixed pivots; idle periods divide the loop length evenly.
 
 ## Limits to say out loud
 - Lottie: `lottie-web` skips many After Effects effects, 3D and some expressions; always look at the render. Expressions are JavaScript: only render files from sources the user trusts.

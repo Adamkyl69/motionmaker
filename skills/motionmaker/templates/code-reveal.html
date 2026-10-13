@@ -56,7 +56,7 @@ function build() {
 }
 function renderFrame(f) {
   const pIn = EASE.out(clamp(f/TOKENS.panelIn)), out = EASE.in(clamp((f-TOKENS.exitStart)/TOKENS.outF));
-  panel.style.opacity = Math.min(0.999, pIn*(1-out)); panel.style.transform = `translateY(${((1-pIn)+out*0.5)*CONFIG.h*0.03}px)`;
+  panel.style.opacity = pIn*(1-out); panel.style.transform = `translateY(${((1-pIn)+out*0.5)*CONFIG.h*0.03}px)`;
   letters.forEach((el, i) => { const a = EASE.out(clamp((f-TOKENS.capDelay-i*TOKENS.capStagger)/TOKENS.capIn)), b = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));
     el.style.transform = `translateY(${((1-a)-b)*CONFIG.h*0.03}px)`; el.style.opacity = (a>0 && b<1) ? 1 : 0; });
   if (!C) return;

@@ -46,7 +46,7 @@ window.ready = document.fonts.ready.then(() => Promise.all([...document.fonts].m
 function renderFrame(f) {
   const out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
   let k = 0; words.forEach(s => { if (!s.textContent.trim()) return; const p = EASE.out(clamp((f - k*TOKENS.wordStagger)/TOKENS.wordIn)); k++;
-    s.style.opacity = Math.min(0.999, p*(1 - out)); s.style.transform = `translateY(${((1-p) - out*0.4)*fontPx*0.25}px)`; });
+    s.style.opacity = p*(1 - out); s.style.transform = `translateY(${((1-p) - out*0.4)*fontPx*0.25}px)`; });
   // strokes draw one after another (a marker has one tip)
   const n = strokes.length, per = TOKENS.markDraw / Math.max(1, n);
   strokes.forEach((p, i) => { const t = EASE.move(clamp((f - markStart - i*per*0.8)/per)); p.style.strokeDashoffset = 1 - t; p.style.visibility = t > 0 && out < 1 ? "visible" : "hidden"; p.style.opacity = 1 - out; });

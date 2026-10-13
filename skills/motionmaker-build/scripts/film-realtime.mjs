@@ -54,7 +54,7 @@ const CLOCK = `(() => { let now = 0, rid = 0, tid = 0, seed = ${seed} || 1; cons
 })();`;
 
 async function film(dest) {
-  const srv = await serve(path.dirname(path.resolve(file))), browser = await launch(["--disable-gpu-rasterization", "--disable-gpu-compositing"]),   // CPU raster + compositing: on software GL, GPU raster and WebGL compositing vary by a few pixels run to run
+  const srv = await serve(path.dirname(path.resolve(file))), browser = await launch(),   // launch() rasterises and composites on the CPU (see browser.mjs)
         page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: dpr }), errs = [];
   page.on("pageerror", e => errs.push(String(e).slice(0, 160))); await page.route(u => !/^(http:\/\/127\.0\.0\.1|data:|blob:)/.test(u.href), r => r.abort());
   await page.addInitScript(CLOCK); if (opt("--css")) await page.addInitScript(css => document.addEventListener("DOMContentLoaded", () => { const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); }), opt("--css"));

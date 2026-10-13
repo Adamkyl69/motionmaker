@@ -39,10 +39,10 @@ function renderFrame(f) {
   const out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
   items.forEach((it, i) => {
     const t0 = TOKENS.start + i*TOKENS.stagger, a = EASE.pop(clamp((f - t0)/TOKENS.discIn)), vis = clamp((f - t0)/4) * (1 - out);
-    it.d.style.transform = `scale(${0.6 + 0.4*a})`; it.d.style.opacity = Math.min(0.999, vis);
+    it.d.style.transform = `scale(${0.6 + 0.4*a})`; it.d.style.opacity = vis;
     if (it.outline) { const p = EASE.move(clamp((f - t0 - 4)/TOKENS.drawF)); it.strokes.forEach(s => { s.style.strokeDashoffset = 1 - p; s.style.visibility = p > 0 ? "visible" : "hidden"; }); }   // hidden at 0: a round cap would show a dot
     else it.svg.style.transform = `scale(${EASE.pop(clamp((f - t0 - 4)/TOKENS.discIn))})`;
-    const l = EASE.out(clamp((f - t0 - TOKENS.labelDelay)/TOKENS.labelIn)); it.lb.style.opacity = Math.min(0.999, l*(1 - out)); it.lb.style.transform = `translateY(${(1-l)*CONFIG.h*0.02}px)`;
+    const l = EASE.out(clamp((f - t0 - TOKENS.labelDelay)/TOKENS.labelIn)); it.lb.style.opacity = l*(1 - out); it.lb.style.transform = `translateY(${(1-l)*CONFIG.h*0.02}px)`;
   });
 }
 window.renderFrame = renderFrame;

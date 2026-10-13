@@ -51,7 +51,7 @@ function renderFrame(f) {
   if (!M) return;
   const S = state(f), gIn = EASE.out(clamp(f/TOKENS.globeIn)), out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
   proj.scale(R*(0.92 + 0.08*gIn)).rotate([-S.look[0], -S.look[1] + TOKENS.tilt*0, 0]);
-  svg.style("opacity", Math.min(0.999, gIn*(1 - out)));
+  svg.style("opacity", gIn*(1 - out));
   L.sphere.attr("d", path({ type: "Sphere" })).attr("fill", COL.ocean);
   L.grid.attr("d", path(d3.geoGraticule10())).attr("fill", "none").attr("stroke", COL.grid).attr("stroke-width", 0.6);
   L.land.selectAll("path").attr("d", path).attr("fill", d => hlSet.has(d.properties.name) ? COL.hl : COL.land);

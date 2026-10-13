@@ -63,7 +63,7 @@ async function renderFrame(f) {
   const R = TOKENS.ring; if (R) { const on = EASE.out(clamp((f-R.from)/8)) * (1 - EASE.in(clamp((f-R.to)/8)));
     Object.assign(ring.style, { left:tx+R.x*box.vw*z+"px", top:ty+R.y*box.vh*z+"px", width:R.w*box.vw*z+"px", height:R.h*box.vh*z+"px", opacity:on }); } else ring.style.opacity = 0;
   const wIn = EASE.out(clamp(f/TOKENS.winIn)), wOut = EASE.in(clamp((f-TOKENS.exitStart)/TOKENS.outF));
-  win.style.opacity = Math.min(0.999, wIn*(1-wOut)); win.style.transform = `translateY(${((1-wIn) + wOut*0.5)*CONFIG.h*0.04}px)`;
+  win.style.opacity = wIn*(1-wOut); win.style.transform = `translateY(${((1-wIn) + wOut*0.5)*CONFIG.h*0.04}px)`;
   letters.forEach((el, i) => { const inP = EASE.out(clamp((f-TOKENS.capDelay-i*TOKENS.capStagger)/TOKENS.capIn)), outP = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));
     el.style.transform = `translateY(${((1-inP)-outP)*CONFIG.h*0.03}px)`; el.style.opacity = (inP>0 && outP<1) ? 1 : 0; });
 }
