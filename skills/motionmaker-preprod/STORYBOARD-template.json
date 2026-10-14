@@ -1,0 +1,19 @@
+{
+ "title": "Launch day",
+ "length": 12,
+ "size": "1080x1080",
+ "fps": 30,
+ "look": "editorial-calm",
+ "feel": "calm",
+ "bg": "-", "fg": "-", "accent": "-",
+ "scenes": [
+  { "id": "hook", "purpose": "hook", "secs": 2.5, "template": "title-loop", "text": "Ship faster",
+    "visual": "The headline alone on cream, underlined in rust", "move": "letters rise in one by one", "transition": "cut", "sound": "soft whoosh on the first letter" },
+  { "id": "build", "purpose": "build", "secs": 3.5, "template": "icon-features", "text": "Test|Review|Deploy", "env": { "ICONS": "lucide:flask-conical,lucide:eye,lucide:rocket" },
+    "visual": "Three steps, each an icon with a word", "move": "the three arrive left to right", "transition": "cut", "sound": "three light ticks" },
+  { "id": "payoff", "purpose": "payoff", "secs": 3.5, "template": "data-chart", "text": "4x more releases",
+    "visual": "Bars for four quarters, the last one in the accent", "move": "the bars grow, the last one overtakes", "transition": "fade", "sound": "rising tone, a pop on the last bar" },
+  { "id": "close", "purpose": "close", "secs": 2.5, "template": "logo-reveal", "text": "Acme",
+    "visual": "The logo mark and name", "move": "the mark draws, the name settles", "transition": "cut", "sound": "a warm chord" }
+ ]
+}

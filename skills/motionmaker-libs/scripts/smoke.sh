@@ -33,6 +33,8 @@ if node "$SK/motionmaker-build/scripts/film-realtime.mjs" "$SK/motionmaker-build
 EW="$SK/motionmaker-build/scripts/export-web.mjs"
 if [ -f out/title-loop/anim.html ] && node "$EW" out/title-loop/anim.html --out out/web-export --check 2>&1 | grep -q "^PASS  web export"; then echo "PASS web-export (TypeScript/React player, frame-exact)"; pass=$((pass+1)); else echo "FAIL web-export (run: node $EW out/title-loop/anim.html --check)"; fail=$((fail+1)); fi
 if node "$EW" "$SK/motionmaker-build/scripts/fixtures/realtime-demo.html" --live --clip "#card" --viewport 800x480 --actions fx-actions.json --out out/web-live --check 2>&1 | grep -q "^PASS  live web export"; then echo "PASS web-live (real-time page: pause, tour, reduced motion)"; pass=$((pass+1)); else echo "FAIL web-live (run: node $EW <fixture> --live --clip '#card' --check)"; fail=$((fail+1)); fi
+# pre-production tools (mood boards, motion feel, script / storyboard / animatic, approval record)
+if bash "$SK/motionmaker-preprod/scripts/selftest.sh" out/preprod-selftest 2>&1 | grep -q "^PASS"; then echo "PASS preprod (mood boards, feel, storyboard, animatic, approvals)"; pass=$((pass+1)); else echo "FAIL preprod (run: bash $SK/motionmaker-preprod/scripts/selftest.sh)"; fail=$((fail+1)); fi
 if node "$SK/motionmaker-assets/scripts/kit.mjs" peep --hair ShortVolumed --face Cute --body Shirt --out peep.svg >/dev/null 2>&1; then
   run illustration-scene 4 960x540 env LOOK=night-cinema TEMPLATE=illustration-scene ASSET=peep.svg bash "$S" illustration-scene "Meet us" 960 540 30 4 - - - out
 else echo "SKIP illustration-scene (run: node $SK/motionmaker-assets/scripts/kit.mjs setup)"; skip=$((skip+1)); fi

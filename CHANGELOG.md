@@ -2,6 +2,17 @@
 
 All notable changes. Dates are UTC.
 
+## 1.2.0 (2026-10-14): pre-production, so it builds what you imagine
+- **`motionmaker-preprod`** (new skill): onboarding the way a studio does it. Involvement level (Quick / Guided / Hands-on); "describe what you picture" in your own words, follow-ups only for the gaps, and a plain-language **brief-back** with every assumption listed; then **show, don't ask**:
+  - `moodboard.mjs`: your headline in every look plus fitting art styles, numbered; `--from-image` adds the colours of a reference picture (made readable, every change reported); `--vary` makes round 2 (inverted, two accents, two typefaces: one change per tile); `--worlds` shows eleven kinds of picture (type, logo, chart, product UI, 3D, characters, icons, map, code, equation, hand-drawn mark). Every tile carries its build recipe.
+  - `feel.mjs`: the same words in four motion personalities (calm, snappy, bouncy, dramatic) as a 2x2 video, GIF and filmstrip; the pick becomes `FEEL=` in the scaffold.
+  - `storyboard.mjs`: script (exact words, reading-time check), storyboard (a real frame of every scene, with words, picture, move, sound, transition), animatic (the timing as a video; `--motion` for real motion at 12 fps).
+  - `preprod.mjs`: approvals in the user's own words, bound to the exact file they saw; stale when the file changes; `check build` / `check deliver`; `board.html` with everything shown and said. `deliver.mjs` refuses on missing or stale approvals.
+- `/motionmaker` Phase 1-2 rewritten around it; the art director no longer re-asks what pre-production settled.
+- Scaffold: `FEEL=calm|snappy|bouncy|dramatic` for the title template (default output unchanged, checked frame for frame), fractional seconds (a 2.5 s scene).
+- Fixed: the equation template never fitted wide equations to the frame and, with the installed KaTeX (renamed classes), never revealed its terms one by one; its highlight underline is now measured on the layout the frames show.
+- `smoke.sh`: 25 checks, including a pre-production self-test.
+
 ## 1.1.0 (2026-10-14): animations as code for websites and React apps
 - **`export-web.mjs`** (motionmaker-build): any finished piece ships as code: a deploy folder (the page plus exactly the files it loads, found by drawing every frame in the sandboxed browser), `motion-player.ts` / `.js` (no dependencies: `mountMotion`, `<motion-clip>`), `Motion.tsx` / `.jsx` (React 18/19, Next.js client component), `demo.html` and a README. Frame n on the page is frame n of the video; it pauses off screen and in background tabs, shows a poster frame for reduced motion, and works across origins. `--check` compares sample frames pixel for pixel with the renderer and tests play, pause, loop, end and reduced motion.
 - **Live export** (`--live`) for real-time pages: a pausable clock injected as the page's first script, a crop to the card, a scripted tour (same actions as `film-realtime.mjs`) that ends at the visitor's first real touch.

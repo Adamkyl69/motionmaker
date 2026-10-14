@@ -3,10 +3,12 @@
 //   node palette.mjs gen <#hex> [--scheme mono|analogous|complementary|triad|split] [--mode light|dark]
 //   node palette.mjs check <bg> <fg> <accent>
 //   node palette.mjs look <look-name>          # check a look from ../looks/looks.json
+//   node palette.mjs from-image <picture>      # bg / text / accent taken from a reference picture (screenshot, photo, poster), made readable
 //
 // Checks (WCAG 2.x relative luminance): text vs background >= 4.5:1 (AA; 7:1 AAA), accent vs background >= 3:1 (large text / graphics),
 // accent distinct from text, and which ink (dark/light) is readable ON the accent. Also prints the usual 60-30-10 role split.
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -42,6 +44,43 @@ function gen(base, scheme = "complementary", mode = "light") {
   return { scheme, mode, base, bg, fg, accent, muted };
 }
 
+// Move a colour lighter or darker (whichever reaches the target contrast with bg, else whichever gets closer), keeping its hue.
+export function readable(bg, hex, target, sat = s0 => s0) {
+  const [h, s0, l0] = rgb2hsl(hex2rgb(hex)), tries = [-1, 1].map(dir => { let l = l0, c = hex;
+    for (let i = 0; i < 70 && contrast(bg, c) < target; i++) { l = Math.max(0.02, Math.min(0.98, l + dir * 0.015)); c = rgb2hex(hsl2rgb([h, sat(s0), l])); } return c; });
+  return tries.sort((x, y) => (contrast(bg, y) >= target) - (contrast(bg, x) >= target) || Math.abs(rgb2hsl(hex2rgb(x))[2] - l0) - Math.abs(rgb2hsl(hex2rgb(y))[2] - l0) || contrast(bg, y) - contrast(bg, x))[0];
+}
+// The same accent turned around the colour wheel by `deg`, kept readable on bg (round-2 accent variants).
+export function turnAccent(bg, accent, deg) { const [h, s, l] = rgb2hsl(hex2rgb(accent)); return readable(bg, rgb2hex(hsl2rgb([h + deg, Math.max(s, 0.55), l])), 3, s0 => Math.max(s0, 0.55)); }
+
+// A reference picture's colours as a usable palette. k-means on a small copy of the picture (deterministic: seeds spread by lightness).
+// bg = the biggest colour area; text = the most contrasting colour, pushed to 4.5:1 if needed; accent = the most colourful remaining one,
+// pushed to 3:1 against the bg if needed. Every adjustment is reported, so the user sees what was kept and what was changed.
+export function fromImage(file, k = 6) {
+  const raw = execFileSync("ffmpeg", ["-loglevel", "error", "-i", file, "-vf", "scale=80:-1:flags=area", "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 1 << 24 });
+  const px = []; for (let i = 0; i + 2 < raw.length; i += 3) px.push([raw[i], raw[i + 1], raw[i + 2]]);
+  if (px.length < k) throw new Error(`${file}: not a readable picture`);
+  // farthest-point seeds: a small but distinct colour (often the accent) gets its own cluster instead of being averaged into a big one
+  const d2 = (p, c) => (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2;
+  const byL = [...px].sort((a, b) => lum(a) - lum(b)); let cs = [byL[Math.floor(byL.length / 2)].slice()];
+  while (cs.length < k) { let far = null, fd = -1; for (const q of px) { const d = Math.min(...cs.map(c => d2(q, c))); if (d > fd) { fd = d; far = q; } } if (fd < 1) break; cs.push(far.slice()); }
+  let asg = new Array(px.length).fill(0);
+  for (let it = 0; it < 12; it++) {
+    asg = px.map(p => { let best = 0, bd = Infinity; cs.forEach((c, j) => { const d = d2(p, c); if (d < bd) { bd = d; best = j; } }); return best; });
+    cs = cs.map((c, j) => { const m = px.filter((_, i) => asg[i] === j); return m.length ? [0, 1, 2].map(ch => m.reduce((s, q) => s + q[ch], 0) / m.length) : c; });
+  }
+  const sw = cs.map((c, j) => ({ hex: rgb2hex(c), share: asg.filter(a => a === j).length / px.length })).filter(x => x.share > 0.005).sort((a, b) => b.share - a.share);
+  const notes = [], bg = sw[0].hex;
+  let fg = sw.slice(1).sort((a, b) => contrast(bg, b.hex) - contrast(bg, a.hex))[0]?.hex || (lum(hex2rgb(bg)) > 0.4 ? "#111111" : "#F5F5F5");
+  const push = (hex, target, sat) => readable(bg, hex, target, sat);
+  if (contrast(bg, fg) < 4.5) { const f2 = push(fg, 4.5, s0 => Math.min(s0, 0.3)); notes.push(`text ${fg} -> ${f2} (was ${contrast(bg, fg).toFixed(1)}:1 on the background; text needs 4.5:1)`); fg = f2; }
+  const cand = sw.filter(x => x.hex !== bg && x.hex !== fg).sort((a, b) => rgb2hsl(hex2rgb(b.hex))[1] - rgb2hsl(hex2rgb(a.hex))[1]);
+  let accent = cand[0]?.hex, src = accent;
+  if (!accent || rgb2hsl(hex2rgb(accent))[1] < 0.25) { const g = gen(bg, "complementary", lum(hex2rgb(bg)) > 0.4 ? "light" : "dark"); notes.push(`the picture has no strong colour; accent ${g.accent} is generated as the complement of its background`); accent = g.accent; src = null; }
+  if (contrast(bg, accent) < 3) { const a2 = push(accent, 3, s0 => Math.max(s0, 0.5)); notes.push(`accent ${accent} -> ${a2} (it must stand out from the background: 3:1)`); accent = a2; }
+  return { bg, fg, accent, accentFromPicture: !!src, swatches: sw.map(x => ({ hex: x.hex, share: +x.share.toFixed(3) })), notes };
+}
+
 const p = x => (x ? "PASS" : "WARN");
 function report(bg, fg, accent) {
   const r = check(bg, fg, accent);
@@ -53,6 +92,7 @@ const [cmd, ...args] = process.argv.slice(2), opt = (k, d) => { const i = args.i
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (cmd === "gen") { const g = gen(args[0] || "#3366FF", opt("--scheme"), opt("--mode")); console.log(JSON.stringify(g, null, 1)); console.log(""); report(g.bg, g.fg, g.accent); }
   else if (cmd === "check") { const r = report(args[0], args[1], args[2]); process.exit(r.ok ? 0 : 1); }
+  else if (cmd === "from-image") { if (!args[0]) { console.error("from-image <picture>"); process.exit(1); } const r = fromImage(args[0]); console.log(JSON.stringify(r, null, 1)); console.log(""); report(r.bg, r.fg, r.accent); }
   else if (cmd === "look") { const L = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../looks/looks.json"), "utf8")).looks[args[0]]; if (!L) { console.error("unknown look"); process.exit(1); } console.log(`# ${L.name}`); const r = report(L.bg, L.fg, L.accent); process.exit(r.ok ? 0 : 1); }
   else { console.error("usage: palette.mjs gen <#hex> [--scheme mono|analogous|complementary|triad|split] [--mode light|dark] | check <bg> <fg> <accent> | look <name>"); process.exit(1); }
 }

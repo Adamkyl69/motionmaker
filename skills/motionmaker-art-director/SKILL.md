@@ -14,6 +14,8 @@ Paths: `AD=$MOTIONMAKER_SKILLS/motionmaker-art-director` (the folder this file i
 2. **Every review round:** Step 5.
 3. **At delivery:** Step 6 sign-off.
 
+**With pre-production** (`motionmaker-preprod`; the project has `preprod/PREPROD.json`): the user has already described what they picture, confirmed BRIEF-BACK.md and chosen from the mood board, round 2 and the feel video. Do not ask Step 1 again: read BRIEF-BACK.md and the approved tiles (`moodboard.json` recipes, `feel.json`), ask only what is still open, and use Step 2 to vary layout and type on the chosen family. Record any new choice with `preprod.mjs approve style ...`.
+
 ## Step 1: creative brief (ask like an AD; skip what the user already told you)
 Use AskUserQuestion; at most 4 questions per call; one decision per question; offer concrete options plus "Other". Infer what you can and state your assumption instead of asking.
 

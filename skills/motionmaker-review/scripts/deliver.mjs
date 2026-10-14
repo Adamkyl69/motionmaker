@@ -1,10 +1,11 @@
 // The last door before a film is handed over. Refuses (exit 2) when something is red; otherwise writes DELIVERY.md whose facts are sealed with a hash.
 //
-//   node deliver.mjs <film.mp4> --dir <project> [--allow-blue-purple "reason"] [--override-review "reason"] [--override-provenance "reason"]
+//   node deliver.mjs <film.mp4> --dir <project> [--allow-blue-purple "reason"] [--override-review "reason"] [--override-provenance "reason"] [--override-preprod "reason"]
 //   node deliver.mjs --verify <project>/DELIVERY.md        has anyone edited the facts, or swapped the film, since delivery?
 //
 // Red = film-gate RED; no independent review of THIS film (review/NN-review.md containing "Film: <first 12 of its sha256>"); the latest review
-// says "Verdict: FIX" (override only with a stated reason, recorded); the licence ledger fails (when the project has assets/).
+// says "Verdict: FIX" (override only with a stated reason, recorded); the licence ledger fails (when the project has assets/); the project has a
+// pre-production record (preprod/PREPROD.json) whose required approvals are missing or stale.
 // The facts block is written by this script; the maker may write only under "Notes from the maker". Idea from huashu-art-motion's deliver.py (MIT).
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
@@ -45,6 +46,12 @@ const credits = existsSync(path.join(dir, "assets")) ? spawnSync("node", [path.j
 const provFile = path.join(dir, "montage", "PROVENANCE.json"); let provenance = null;
 if (existsSync(provFile)) { provenance = JSON.parse(readFileSync(provFile, "utf8")); for (const p of provenance.problems || []) { const t = typeof p === "string" ? { level: "RED", text: p } : p;
   if (t.level === "RED" && !opt("--override-provenance")) red.push(`provenance: ${t.text}`); else (t.level === "RED" ? yellow : yellow).push(`provenance: ${t.text}${t.level === "RED" ? ` (overridden: ${opt("--override-provenance")})` : ""}`); } }
+// 3c. pre-production approvals (motionmaker-preprod): a piece that has a record must have every required gate approved, on the files the user saw
+const ppFile = path.join(dir, "preprod", "PREPROD.json"); let preprod = null;
+if (existsSync(ppFile)) { const r = spawnSync("node", [path.join(HERE, "../../motionmaker-preprod/scripts/preprod.mjs"), "check", dir, "deliver"], { encoding: "utf8" });
+  const pp = JSON.parse(readFileSync(ppFile, "utf8")); preprod = { level: pp.level, ready: r.status === 0, approved: Object.entries(pp.gates).filter(([, g]) => g.status === "approved").map(([k]) => k) };
+  if (r.status !== 0) { const why = (r.stdout.match(/NOT READY for deliver: (.*)/) || [])[1] || "see preprod.mjs status";
+    if (opt("--override-preprod")) yellow.push(`pre-production not complete (${why}); overridden: ${opt("--override-preprod")}`); else red.push(`pre-production approvals missing or stale: ${why} (preprod.mjs status ${dir}; or --override-preprod "reason")`); } }
 // 4. probe
 const pr = JSON.parse(spawnSync("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height,r_frame_rate:format=duration,size", "-of", "json", film], { encoding: "utf8" }).stdout);
 const vs = pr.streams.find(s => s.codec_type === "video"), as = pr.streams.find(s => s.codec_type === "audio");
@@ -52,6 +59,7 @@ console.log(""); red.forEach(r => console.log("RED     " + r)); yellow.forEach(y
 if (red.length) { console.log(`\nNOT DELIVERED: ${red.length} red item(s). Fix, re-render, re-review.`); process.exit(2); }
 const facts = { film: { path: path.relative(dir, path.resolve(film)), sha256: sha, bytes: +pr.format.size, seconds: +(+pr.format.duration).toFixed(3), size: `${vs.width}x${vs.height}`, fps: vs.r_frame_rate, video: vs.codec_name, audio: as ? as.codec_name : "none" },
   filmGate: { verdict: gate.verdict, gates: gate.gates.map(g => ({ id: g.id, level: g.level, value: g.value })), allowBluePurple: gate.allowBluePurple },
+  preprod: preprod ? { level: preprod.level, ready: preprod.ready, approved: preprod.approved, override: opt("--override-preprod") || null } : null,
   provenance: provenance ? { source: provenance.producedWith, assets: (provenance.assets || []).length, problems: (provenance.problems || []).length, costUsd: provenance.costUsd } : null, review: { file: latest, verdict: reviewVerdict, override: opt("--override-review") || null, rounds: reviews.length }, ledger, requiredCredits: credits, yellow, deliveredBy: "motionmaker deliver.mjs" };
 const md = `# Delivery\n\n## Facts (written by deliver.mjs; do not edit: \`node deliver.mjs --verify DELIVERY.md\` detects changes)\n\n\`\`\`json facts\n${JSON.stringify(facts, null, 1)}\n\`\`\`\n\nSeal: ${seal(facts)}\n\n## Notes from the maker\n\n(what was cut, accepted compromises, known limits)\n`;
 writeFileSync(path.join(dir, "DELIVERY.md"), md); console.log(`\nDELIVERED${yellow.length ? ` with ${yellow.length} yellow note(s)` : ""}: ${path.join(dir, "DELIVERY.md")}${credits.length ? "\nCredits to show: " + credits.join(" | ") : ""}`);

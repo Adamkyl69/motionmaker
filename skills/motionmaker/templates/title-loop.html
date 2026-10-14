@@ -16,9 +16,10 @@
 <script>
 const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
 // all timing in frames; no inline magic numbers elsewhere
-const TOKENS = { rise:0.07, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:8, outStagger:1, push:0.02, barMin:0.6,
+const TOKENS = { rise:__RISE__, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:8, outStagger:1, push:__PUSH__, barMin:0.6,
                  fontPct:__FONTPCT__, barGapEm:0.32, barWPct:0.5, barHPct:0.017 };
-const { clamp, EASE } = Motion, N = CONFIG.frames;
+const { clamp, EASE, bezier, springRatio } = Motion, N = CONFIG.frames;
+const ENTER = __ENTER__; // entrance easing: the piece's motion feel (scaffold FEEL=...)
 const stage = document.getElementById("stage"), title = document.getElementById("title"), bar = document.getElementById("bar");
 // title and bar are centred as one block; the bar sits below the descenders (barGapEm under the line box), whatever the font
 const fontPx = Math.min(CONFIG.w * TOKENS.fontPct, CONFIG.h * 0.3), barH = Math.max(4, CONFIG.h*TOKENS.barHPct), blockH = fontPx * (1 + TOKENS.barGapEm) + barH, titleTop = (CONFIG.h - blockH) / 2;
@@ -29,7 +30,7 @@ const letters = [...CONFIG.text].map(ch => { const s=document.createElement("spa
 function renderFrame(f){
   const n = letters.length, rise = CONFIG.h * TOKENS.rise;
   letters.forEach((el,i)=>{
-    const inP  = EASE.out(clamp((f - i*TOKENS.stagger) / TOKENS.inF));
+    const inP  = ENTER(clamp((f - i*TOKENS.stagger) / TOKENS.inF));
     const outP = EASE.in (clamp((f - TOKENS.exitStart - i*TOKENS.outStagger) / TOKENS.outF));
     el.style.transform = `translateY(${(1-inP)*rise - outP*rise}px)`;
     el.style.opacity = (inP>0 && outP<1) ? 1 : 0;

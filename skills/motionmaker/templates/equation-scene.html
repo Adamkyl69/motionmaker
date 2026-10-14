@@ -26,11 +26,17 @@ const letters = CONFIG.text === "-" ? [] : [...CONFIG.text].map(ch => { const s=
 let terms = [], hls = [], hlBox = null, revealEnd = 0;
 window.ready = fetch("math/eq.html").then(r => r.text()).then(html => { eq.innerHTML = html; return document.fonts.ready; }).then(() => Promise.all([...document.fonts].map(f => f.status === "unloaded" ? f.load().catch(() => 0) : 0))).then(() => {
   // size: scale the typeset equation to fit the box (KaTeX sizes in em)
-  eq.style.fontSize = "100px"; const r = eq.querySelector(".katex").getBoundingClientRect();
+  // measure the typeset lines themselves: .katex is a block as wide as the frame whatever the font size
+  // (KaTeX names its line boxes .base, or .katex-base in newer versions). Terms are revealed one by one as inline-blocks: give them that
+  // layout BEFORE measuring, or the fit and the highlight underline are measured on a layout the frames never show.
+  const BASE = ".katex-html > .base, .katex-html > .katex-base";
+  terms = [...eq.querySelectorAll(BASE)].flatMap(b => [...b.children].filter(c => !c.classList.contains("strut") && !c.classList.contains("katex-strut")));
+  terms.forEach(t => { t.style.display = "inline-block"; });
+  eq.style.fontSize = "100px"; const rs = [...eq.querySelectorAll(BASE)].map(b => b.getBoundingClientRect());
+  const r = { width: Math.max(...rs.map(x => x.right)) - Math.min(...rs.map(x => x.left)), height: Math.max(...rs.map(x => x.bottom)) - Math.min(...rs.map(x => x.top)) };
   const k = Math.min(CONFIG.w*TOKENS.maxEqWPct / r.width, CONFIG.h*TOKENS.maxEqHPct / r.height); eq.style.fontSize = 100*k + "px";
   const r2 = eq.getBoundingClientRect(); eq.style.top = CONFIG.h*TOKENS.eqCenterPct - r2.height/2 + "px";
   // terms = top-level atoms of each .base line, revealed in reading order
-  terms = [...eq.querySelectorAll(".katex-html > .base")].flatMap(b => [...b.children].filter(c => !c.classList.contains("strut")));
   hls = [...eq.querySelectorAll(".hl")]; revealEnd = TOKENS.start + terms.length*TOKENS.stagger + TOKENS.termIn;
   if (hls.length) { const s = eq.getBoundingClientRect(), bs = hls.map(h => h.getBoundingClientRect()), st = $("stage").getBoundingClientRect();
     hlBox = { l: Math.min(...bs.map(b => b.left)) - st.left, r: Math.max(...bs.map(b => b.right)) - st.left, b: Math.max(...bs.map(b => b.bottom)) - st.top };
@@ -40,7 +46,7 @@ window.ready = fetch("math/eq.html").then(r => r.text()).then(html => { eq.inner
 const mix = (a, b, t) => { const p = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16)), A = p(a), B = p(b); return `rgb(${A.map((v,i) => Math.round(v+(B[i]-v)*t)).join(",")})`; };
 function renderFrame(f) {
   const out = EASE.in(clamp((f - TOKENS.exitStart)/TOKENS.outF));
-  terms.forEach((t, i) => { const p = EASE.out(clamp((f - TOKENS.start - i*TOKENS.stagger)/TOKENS.termIn)); t.style.opacity = p*(1-out); t.style.transform = `translateY(${(1-p)*0.25}em)`; t.style.display = "inline-block"; });
+  terms.forEach((t, i) => { const p = EASE.out(clamp((f - TOKENS.start - i*TOKENS.stagger)/TOKENS.termIn)); t.style.opacity = p*(1-out); t.style.transform = `translateY(${(1-p)*0.25}em)`; });
   const h = EASE.out(clamp((f - revealEnd - TOKENS.hlAfter)/TOKENS.hlIn)); hls.forEach(el => el.style.color = mix(CONFIG.fg, CONFIG.accent, h));
   under.style.transform = `scaleX(${hlBox ? EASE.move(clamp((f - revealEnd - TOKENS.hlAfter)/(TOKENS.hlIn*1.5))) * (1 - out) : 0})`;
   letters.forEach((el, i) => { const a = EASE.out(clamp((f - revealEnd - TOKENS.capDelay - i*TOKENS.capStagger)/TOKENS.capIn)), b = EASE.in(clamp((f-TOKENS.exitStart-i*0.5)/TOKENS.outF));

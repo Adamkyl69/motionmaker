@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [FEEL=calm|snappy|bouncy|dramatic] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -32,7 +32,19 @@ if [ -n "${LOOK:-}" ] && [ "${FONTS:-1}" != 0 ] && [ -f "$SK/motionmaker-libs/sc
   else echo "note: using system fonts for '$LOOK' (for identical type everywhere: node $SK/motionmaker-libs/scripts/lib.mjs setup fonts)" >&2; fi
 fi
 [ -f "$HERE/templates/$TPL.html" ] || { echo "unknown template '$TPL' (have: $(cd "$HERE/templates" && ls *.html | sed 's/.html//' | tr '\n' ' '))" >&2; exit 1; }
-N=$(( FPS * SECS )); LEN=${#TEXT}; WORDS=$(echo "$TEXT" | wc -w)
+N=$(awk -v f="$FPS" -v s="$SECS" 'BEGIN{printf "%d", f*s+0.5}'); LEN=${#TEXT}; WORDS=$(echo "$TEXT" | wc -w)   # SECS may be fractional (a 2.5 s scene)
+# FEEL=calm|snappy|bouncy|dramatic: the motion personality picked in pre-production (motionmaker-preprod/scripts/feel.mjs shows all four side by side).
+# It sets the title template's entrance length, letter stagger, easing, rise and push; without it the look's own timing and the defaults apply.
+ENTER="EASE.out"; RISE=0.07; PUSH=0.02
+fr(){ awk -v s="$1" -v f="$FPS" 'BEGIN{printf "%.2f", s*f}'; }
+case "${FEEL:-}" in
+  "") ;;
+  calm)     INF=$(fr 0.8); STAGGER=$(fr 0.1);  ENTER="bezier(0.45, 0, 0.25, 1)"; RISE=0.035; PUSH=0.01;;
+  snappy)   INF=$(fr 0.3); STAGGER=$(fr 0.03); ENTER="bezier(0.19, 1, 0.22, 1)"; RISE=0.06;  PUSH=0.02;;
+  bouncy)   INF=$(fr 0.6); STAGGER=$(fr 0.06); ENTER="(p => p >= 1 ? 1 : springRatio(p * 1.2, 0.42, 12))"; RISE=0.08; PUSH=0.02;;
+  dramatic) INF=$(fr 1.2); STAGGER=$(fr 0.12); ENTER="bezier(0.83, 0, 0.17, 1)"; RISE=0.08; PUSH=0.05;;
+  *) echo "unknown FEEL '$FEEL' (calm | snappy | bouncy | dramatic)" >&2; exit 1;;
+esac
 # Art-direction rule: the letters of a headline must all have arrived within ~1.5 s however long it is. Cap the per-letter stagger (fractional frames are fine).
 STAGGER=$(awk -v st="$STAGGER" -v fps="$FPS" -v l="$LEN" 'BEGIN{cap=fps*1.5/l; if(st>cap) st=cap; printf "%.2f", st}')
 case "$TPL" in
@@ -123,10 +135,10 @@ FONTPCT=$(awk -v l="$LEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.9
 WORDPX=$(awk -v w="$W" -v c="$LEN" -v gw="$GW" 'BEGIN{p=0.84*w/((gw+0.03)*c); if(p>0.2*w)p=0.2*w; printf "%d",p}'); BARH=$(awk -v h="$H" 'BEGIN{printf "%d",h*0.017<4?4:h*0.017}')
 EXITSEC=$(awk -v n="$N" -v f="$FPS" -v wd="$WORDS" 'BEGIN{printf "%.3f", (n-1)/f - 0.05*(wd-1) - 0.2}')
 D="$OUT/$SLUG"; mkdir -p "$D"
-ESC=$(printf '%s' "$TEXT" | sed 's/[&/\]/\\&/g'); FESC=$(printf '%s' "$FONT" | sed 's/[&/\]/\\&/g')
+ESC=$(printf '%s' "$TEXT" | sed 's/[&/\]/\\&/g'); FESC=$(printf '%s' "$FONT" | sed 's/[&/\]/\\&/g'); EESC=$(printf '%s' "$ENTER" | sed 's/[&/\]/\\&/g')
 sed -e "s/__TEXT__/$ESC/g" -e "s/__W__/$W/g" -e "s/__H__/$H/g" -e "s/__FPS__/$FPS/g" -e "s/__N__/$N/g" \
     -e "s/__BG__/$BG/g" -e "s/__FG__/$FG/g" -e "s/__ACCENT__/$AC/g" -e "s/__EXIT__/$EXIT/g" -e "s/__FONTPCT__/$FONTPCT/g" \
-    -e "s/__WORDPX__/$WORDPX/g" -e "s/__FONT__/$FESC/g" -e "s/__WEIGHT__/$WEIGHT/g" -e "s/__TRACK__/$TRACK/g" -e "s/__INF__/$INF/g" -e "s/__STAGGER__/$STAGGER/g" -e "s/__BARH__/$BARH/g" -e "s/__EXITSEC__/$EXITSEC/g" \
+    -e "s/__WORDPX__/$WORDPX/g" -e "s/__FONT__/$FESC/g" -e "s/__WEIGHT__/$WEIGHT/g" -e "s/__TRACK__/$TRACK/g" -e "s/__INF__/$INF/g" -e "s/__ENTER__/$EESC/g" -e "s/__RISE__/$RISE/g" -e "s/__PUSH__/$PUSH/g" -e "s/__STAGGER__/$STAGGER/g" -e "s/__BARH__/$BARH/g" -e "s/__EXITSEC__/$EXITSEC/g" \
     -e "s#__ASSETFILE__#${ASSETFILE:-}#g" -e "s/__ASSETSEC__/${ASSETSEC:-0}/g" -e "s/__LOOP__/${LOOPF:-0}/g" -e "s/__IDLESEC__/${IDLESEC:-2.4}/g" -e "s/__GW__/$GW/g" -e "s/__MARK__/${MARK:-circle}/g" -e "s/__KEYWORD__/$(printf '%s' "${KEYWORD:-}" | sed 's/[&/\]/\\&/g')/g" -e "s/__SEED__/${SEED:-7}/g" -e "s/__MODE__/${MODE:-type}/g" -e "s/__FOCUS__/${FOCUS:-}/g" -e "s/__ARTBOARD__/${AB:-}/g" -e "s/__ANIMATION__/${AN:-}/g" \
     "$HERE/templates/$TPL.html" > "$D/anim.html"
 [ -n "$FONTLINK" ] && node -e 'const f=process.argv[1],fs=require("fs");fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("<meta charset=\"utf-8\">","<meta charset=\"utf-8\">\n<link rel=\"stylesheet\" href=\"fonts/fonts.css\">"))' "$D/anim.html"

@@ -6,8 +6,8 @@
     {
       "name": "motionmaker",
       "source": "./",
-      "description": "Frame-exact motion graphics with Claude: /motionmaker command, art director, assets (Open Peeps, Humaaans, LottieFiles, Rive), libraries (fonts, code, equations, maps, icons), art styles, film QA gates, OpenMontage handoff, Anatomy explainers, templates, sound, export and verification.",
-      "version": "1.1.0",
+      "description": "Frame-exact motion graphics with Claude: /motionmaker command, pre-production (mood boards, motion feel, storyboard, animatic, recorded approvals), art director, assets (Open Peeps, Humaaans, LottieFiles, Rive), libraries (fonts, code, equations, maps, icons), art styles, film QA gates, OpenMontage handoff, Anatomy explainers, templates, sound, export and verification.",
+      "version": "1.2.0",
       "category": "design"
     }
   ]
