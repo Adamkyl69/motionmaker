@@ -2,6 +2,10 @@
 
 All notable changes. Dates are UTC.
 
+## 1.3.1 (2026-10-14): voice-over verified with a real ElevenLabs generation
+- One plain yes covers credits, plan and licence; after it, the voice is generated without further asking (again only when a run would cost clearly more than agreed). The user may give a **voice ID** directly (Voice Library, their own or designed voices): no audition needed. The audition page shows every voice's ID.
+- `voice.mjs get "<url>" --scene <n>`: downloads a generated take and checks it is audio (an expired link fails with a clear message). Verified live: a flow run's `content_url` is an MP3 valid for 2 hours; 55 credits ($0.011) for a 55-character line on eleven_v4; 3.55 s, mono 44.1 kHz, about -24 LUFS before the mix.
+
 ## 1.3.0 (2026-10-14): voice-over, and the gaps a test run found
 - **Voice-over**, from an ElevenLabs connector or MCP server when one is available (detected by its tools), or the user's own recording: `voice.mjs` (sound-export) writes the narration script with characters and speaking time, a free audition page from the voices' public samples, places each line on its scene (`--retime` lengthens scenes the real recording does not fit), writes captions (SRT/VTT, balanced chunks) and mixes with the music ducked exactly 10 dB under every line (cue-driven, not a compressor) at -14 LUFS. The animatic plays with the voice (`--voice`); `export.sh` can burn in captions (`CAPTIONS=`). Pre-production gets a `voice` gate, and the skills say to price the generation, ask the plan and get a yes before any credit is spent.
 - Licences: `ELEVENLABS-PAID` (commercial, except Beta Services) and `ELEVENLABS-FREE` (no commercial use; "elevenlabs.io" in the title), from ElevenLabs' own help page. The ledger says "non-commercial use only" and delivery then needs `--non-commercial "<stated use>"`, recorded in DELIVERY.md.

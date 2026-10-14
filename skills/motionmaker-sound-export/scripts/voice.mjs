@@ -7,6 +7,8 @@
 //   node voice.mjs voices <voices.json> [--n 4 | --ids a,b] [--out voice/audition]
 //        a free audition: downloads each candidate voice's public preview and writes voices.html (players, names, descriptions)
 //        voices.json = the saved result of a voice search (ElevenLabs creative_list_voices / search_voices), or a list of {voice_id,name,preview_url}
+//   node voice.mjs get    "<audio url>" --scene <n> [--dir voice]
+//        downloads a generated take (an ElevenLabs flow's content_url, valid 2 hours) as <dir>/scene-<n>.mp3 and checks it is audio
 //   node voice.mjs place  <STORYBOARD.json> --dir <voice dir> [--lead 0.25] [--tail 0.35] [--retime]
 //        reads <voice dir>/scene-<n>.(wav|mp3|m4a|ogg) for every scene that has "say"; checks each line fits its scene (lead + line + tail);
 //        --retime lengthens scenes that are too short (STORYBOARD.json is rewritten, the old one kept as .bak); writes <voice dir>/track.wav
@@ -50,10 +52,21 @@ else if (cmd === "voices") {
   const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Voice audition</title>
 <style>body{margin:0;background:#EEEDE9;font:15px/1.45 system-ui,sans-serif;color:#1d1d1b}main{max-width:820px;margin:auto;padding:24px 16px}h1{font-size:19px;margin:0}.sub{color:#555;margin:4px 0 18px}
 .v{background:#fff;border-radius:8px;padding:14px 16px;margin:0 0 12px;box-shadow:0 1px 3px #0001}.v b{font-size:16px}.t{color:#666;font-size:13px;margin:2px 0 8px}audio{width:100%}</style>
-<main><h1>Voice audition</h1><p class="sub">Each voice's own public sample (free: nothing was generated). Listen, then say the number. The samples read the provider's text, not your script: the next step is one short line of yours in the voice you pick.</p>
-${list.map(v => `<div class="v"><b>${v.n}. ${esc(v.name)}</b><div class="t">${esc([v.labels?.gender, v.labels?.age, v.labels?.accent].filter(Boolean).join(", "))}${v.description ? ` · ${esc(v.description.slice(0, 220))}` : ""}</div>${v.file ? `<audio controls preload="none" src="${v.file}"></audio>` : "<i>no preview available</i>"}</div>`).join("\n")}</main>`;
+<main><h1>Voice audition</h1><p class="sub">Each voice's own public sample (free: nothing was generated). Listen, then say the number, or paste any voice ID you prefer (from the ElevenLabs Voice Library or your own voices). The samples read the provider's text, not your script: the next step is one short line of yours in the voice you pick.</p>
+${list.map(v => `<div class="v"><b>${v.n}. ${esc(v.name)}</b> <code style="font-size:12px;color:#555;user-select:all">${esc(v.voice_id || "")}</code><div class="t">${esc([v.labels?.gender, v.labels?.age, v.labels?.accent].filter(Boolean).join(", "))}${v.description ? ` · ${esc(v.description.slice(0, 220))}` : ""}</div>${v.file ? `<audio controls preload="none" src="${v.file}"></audio>` : "<i>no preview available</i>"}</div>`).join("\n")}</main>`;
   writeFileSync(path.join(out, "voices.html"), html); writeFileSync(path.join(out, "voices.json"), JSON.stringify(list.map(({ n, voice_id, name, file, secs, description, labels }) => ({ n, voice_id, name, file, secs, description, labels })), null, 1));
   console.log(`${out}/voices.html (open it in a browser and listen)`); list.forEach(v => console.log(`  ${v.n}. ${v.name}${v.file ? ` (${v.secs.toFixed(1)} s sample)` : " (no preview)"}  ${v.voice_id}`));
+}
+else if (cmd === "get") {
+  // a generated take's audio link (ElevenLabs flows give a content_url that expires after 2 hours) -> <dir>/scene-<n>.<ext>, checked
+  const url = rest[0], n = opt("--scene"), vdir = path.resolve(opt("--dir", "voice"));
+  if (!/^https:\/\//.test(url || "") || !n) die('get "<https url>" --scene <n> [--dir voice]');
+  const ext = (url.split("?")[0].match(/\.(mp3|wav|m4a|ogg|flac)$/i) || [, "mp3"])[1].toLowerCase(), out = path.join(vdir, `scene-${n}.${ext}`);
+  mkdirSync(vdir, { recursive: true });
+  try { run("curl", ["-sSfL", "--max-time", "120", "-o", out, url]); } catch (e) { die(`download failed (${String(e.stderr || e.message).trim().split("\n").pop()}): links from ElevenLabs flows expire after 2 hours; read the run status again for a fresh one`); }
+  let d; try { d = dur(out); } catch { d = NaN; }
+  if (!(d > 0)) { rmSync(out, { force: true }); die("the download is not audio (an expired link returns an error page): read the run status again for a fresh link"); }
+  console.log(`${out}: ${d.toFixed(2)} s`);
 }
 else if (cmd === "place") {
   const file = rest[0], sb = loadSB(file), vdir = path.resolve(opt("--dir", "voice")), lead = +opt("--lead", 0.25), tail = +opt("--tail", 0.35), retime = rest.includes("--retime");
@@ -105,4 +118,4 @@ else if (cmd === "mix") {
   console.log(`${out}: ${(+fin.input_i).toFixed(1)} LUFS, true peak ${(+fin.input_tp).toFixed(1)} dBTP${bed ? `, bed ${duck} dB down under each of the ${cues.length} line(s)` : ""}`);
   if (Math.abs(+fin.input_i - lufs) > 1.5 || +fin.input_tp > -1) { console.log("WARN  outside the target (+/-1.5 LU, <= -1 dBTP)"); process.exit(1); }
 }
-else die("commands: lines | voices | place | mix");
+else die("commands: lines | voices | get | place | mix");
