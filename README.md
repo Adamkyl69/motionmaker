@@ -71,4 +71,4 @@ Linked, not copied; all rights stay with their authors. Their ideas shaped these
 - Libraries named in `motionmaker-engines` (Three.js, GSAP, Remotion, HyperFrames, Motion, Fabric.js, Rive, deck.gl, cobe, canvas-confetti, twgl.js, ffmpeg.wasm): check each one's licence before you depend on it. Remotion has a company-size licence rule.
 
 ## Status
-Version 1.3.2 (changes in [CHANGELOG.md](CHANGELOG.md)). See "What was tested" above for what is verified and what is not: Linux only so far, macOS and Windows untested, OpenMontage bridge tested against a mock project only. No licence file has been added yet: that is the owner's decision.
+Version 1.3.3 (changes in [CHANGELOG.md](CHANGELOG.md)). See "What was tested" above for what is verified and what is not: Linux only so far, macOS and Windows untested, OpenMontage bridge tested against a mock project only. No licence file has been added yet: that is the owner's decision.

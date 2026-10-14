@@ -2,6 +2,11 @@
 
 All notable changes. Dates are UTC.
 
+## 1.3.3 (2026-10-14): show before asking; ask the format
+From a user's run (a tennis-forehand explainer): the brief-back question pointed at a file the user never saw, and the format (16:9) was assumed.
+- Text the user approves (brief-back, script, voice lines) is pasted in full in the message right before the question; a file path alone does not count as showing it.
+- Platform and format are always asked, in platform words: Instagram Reels / TikTok / YouTube Shorts (9:16, 1080x1920), YouTube or a website (16:9, 1920x1080), Instagram or Facebook feed (4:5, 1080x1350), X or LinkedIn feed (1:1, 1080x1080); several platforms get one version each; vertical pieces keep words out of the apps' button and caption areas. The brief-back has a Format line, and `preprod.mjs` refuses to approve one without a real size.
+
 ## 1.3.2 (2026-10-14): Windows fixes from a real Windows install
 A user's Windows machine had hand-patched three scripts; `update --force` replaced them and the diff showed what Windows needs. Fixed for every script, not only those three:
 - `import()` of a file path (Node on Windows rejects "C:\..."): `directions.mjs`, `styles.mjs`, `inspect-asset.mjs` now import file URLs.

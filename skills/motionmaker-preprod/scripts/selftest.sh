@@ -23,6 +23,8 @@ P=. ; PP="node $HERE/preprod.mjs"
 printf "# Brief-back\nHello\n" > BRIEF-BACK.md
 $PP init $P --level guided --scenes 2 >/dev/null || fail "init"
 $PP check $P build >/dev/null 2>&1 && fail "check passed with nothing approved"
+$PP approve $P understanding --file BRIEF-BACK.md --words "yes" >/dev/null 2>&1 && fail "a brief-back without a Format line was approved"
+printf "# Brief-back\nHello\nFormat: Instagram Reels - 9:16, 1080x1920\n" > BRIEF-BACK.md
 for g in understanding:BRIEF-BACK.md style:mb/moodboard.png feel:feel/feel.mp4 script:SCRIPT.md storyboard:storyboard/storyboard.png animatic:animatic/animatic.mp4; do
   $PP approve $P ${g%%:*} --file ${g#*:} --words "yes" >/dev/null || fail "approve ${g%%:*}"; done
 $PP check $P build >/dev/null || fail "check refused after every approval"

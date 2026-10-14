@@ -64,6 +64,9 @@ else if (cmd === "approve" || cmd === "changes") {
   const file = opt("--file");
   if (cmd === "approve" && !file) die(`--file <what the user saw> is required: the approval is bound to that exact file`);
   if (file && !existsSync(file)) die(`file not found: ${file}`);
+  // the brief-back must say where it is posted and at what size: the format is asked, never assumed (a guessed 16:9 for a Reel is a re-render)
+  if (cmd === "approve" && name === "understanding" && file && !/^\s*Format:\s*[^<\s].*\d+\s*[x×]\s*\d+/im.test(readFileSync(file, "utf8")))
+    die(`refused: ${path.basename(file)} has no Format line with a size (e.g. "Format: Instagram Reels - 9:16, 1080x1920"). Ask the user where it will be posted, add the line, show the brief-back again.`);
   // a storyboard with a scene nobody has seen cannot be approved (storyboard.mjs marks it NOT SHOWN)
   const sbmd = file && path.join(path.dirname(path.resolve(file)), "STORYBOARD.md");
   if (cmd === "approve" && name === "storyboard" && sbmd && existsSync(sbmd) && /NOT SHOWN/.test(readFileSync(sbmd, "utf8"))) die(`refused: ${readFileSync(sbmd, "utf8").match(/NOT SHOWN.*/)[0]} Sketch those scenes, re-render the storyboard and show it again.`);
