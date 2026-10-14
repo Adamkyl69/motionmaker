@@ -1,0 +1,22 @@
+{
+ "about": "Night: stars that twinkle, a moon, dark faceted hills, a small town of lit windows, round trees. Shots: one slow pan with a dissolve to a closer look and the words.",
+ "seed": 31,
+ "haze": "#2b3a66",
+ "fx": { "vignette": 0.35, "grain": 0.07 },
+ "worlds": {
+  "night": { "haze": 0.5, "layers": [
+   { "type": "sky", "color": "#0c1433", "color2": "#2b3a6e", "horizon": 0.75 },
+   { "type": "stars", "count": 120, "below": 0.55 },
+   { "type": "sun", "k": 0.03, "x": 760, "y": 160, "r": 42, "color": "#f4f1dc", "glow": 3 },
+   { "type": "mountains", "k": 0.3, "y": 640, "height": 220, "width": 520, "color": "#24305a", "color2": "#1c2649" },
+   { "type": "skyline", "k": 0.55, "y": 720, "height": 110, "width": 50, "color": "#1a2140", "color2": "#ffd27a", "lit": 0.4, "haze": 0 },
+   { "type": "hills", "k": 0.8, "y": 820, "amp": 30, "wave": 380, "color": "#141a33" },
+   { "type": "rounds", "k": 1.0, "y": 860, "count": 10, "from": -1200, "to": 2400, "height": 200, "color": "#1f3a3a", "color2": "#173030" }
+  ] }
+ },
+ "shots": [
+  { "dur": 1, "from": { "x": -120, "y": 0, "zoom": 1.0 }, "to": { "x": 0, "y": 0, "zoom": 1.04 }, "ease": "gentle" },
+  { "dur": 1, "from": { "x": 60, "y": -20, "zoom": 1.25 }, "to": { "x": 100, "y": -20, "zoom": 1.3 }, "ease": "gentle", "transition": { "type": "dissolve", "dur": 1.0 },
+    "text": [ { "text": "__TEXT__", "k": 0.5, "x": 520, "y": 420, "size": 56, "color": "#f4f1dc", "weight": 600, "track": 0.14, "at": 0.5 } ] }
+ ]
+}

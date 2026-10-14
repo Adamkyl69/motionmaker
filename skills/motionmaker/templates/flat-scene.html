@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a FLAT DESIGN MOTION scene. scene.js (written by scaffold.sh from a preset in motionmaker-flat/presets/ or your own scene JSON) describes
+     worlds of flat layers at depths and the shots: a 2.5D camera move per shot, the words, the transitions. flat/flat.js draws it: parallax,
+     faceted shading, haze by depth, swaying fronds, drifting clouds, shimmer, light rays, grain. Frame-exact: shapes come from the scene's seed;
+     renderFrame(f) is a pure function of f. Edit scene.js, not flat.js. Guide: motionmaker-flat/SKILL.md. -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="flat.js"></script>
+<script src="scene.js"></script>
+<script>
+const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
+const ctx = document.getElementById("c").getContext("2d");
+const env = { W: CONFIG.w, H: CONFIG.h, fps: CONFIG.fps, N: CONFIG.frames, secs: CONFIG.frames / CONFIG.fps };
+let B = null;
+window.ready = document.fonts.ready.then(() => Promise.all([...document.fonts].map(f => f.status === "unloaded" ? f.load().catch(() => 0) : 0))).then(() => FLAT.load(window.SCENE)).then(images => { env.images = images; B = FLAT.build(window.SCENE, env); renderFrame(0); });
+function renderFrame(f) { if (B) FLAT.draw(ctx, env, B, f); }
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q) * CONFIG.fps)));
+else window.ready.then(() => { let s = null; (function L(ts) { s ??= ts; renderFrame(Math.floor((ts - s) / 1000 * CONFIG.fps) % CONFIG.frames); requestAnimationFrame(L); })(0); }); // live preview only
+</script>

@@ -29,6 +29,9 @@ run map-scene 5 960x540         env LOOK=night-cinema TEMPLATE=map-scene PLACES=
 run annotate-scene 4 960x540    env LOOK=warm-craft TEMPLATE=annotate-scene MARK=circle KEYWORD=simple bash "$S" annotate-scene "Keep it simple" 960 540 30 4 - - - out
 run icon-features 4 960x540     env LOOK=playful-pop TEMPLATE=icon-features ICONS="lucide:zap,lucide:shield-check,lucide:rocket" bash "$S" icon-features "Fast|Safe|Ready" 960 540 30 4 - - - out
 for st in bauhaus van-gogh constructivism seurat matisse ukiyo-e; do run style-$st 4 960x540 env TEMPLATE=style-scene STYLE=$st bash "$S" style-$st "Made by hand" 960 540 30 4 - - - out; done
+# flat design motion: every preset (worlds, parallax camera, transitions) renders identically twice; each preset passes validation, and vertical frames work
+for fp in coast alpine city night shapes; do node "$SK/motionmaker-flat/scripts/flat.mjs" validate "$SK/motionmaker-flat/presets/$fp.json" >/dev/null || { echo "FAIL flat-$fp (validate)"; fail=$((fail+1)); continue; }; run flat-$fp 4 960x540 env TEMPLATE=flat-scene SCENE=$fp bash "$S" flat-$fp "Go outside" 960 540 30 4 - - - out; done
+run flat-coast-vertical 4 360x640 env TEMPLATE=flat-scene SCENE=coast bash "$S" flat-coast-vertical "Go outside" 360 640 30 4 - - - out
 printf '[{"t":0.8,"do":"move","selector":"#card","from":[0.2,0.5],"to":[0.8,0.4],"dur":0.8},{"t":2,"do":"leave"}]' > fx-actions.json
 if node "$SK/motionmaker-build/scripts/film-realtime.mjs" "$SK/motionmaker-build/scripts/fixtures/realtime-demo.html" 2.5 30 --size 800x480 --clip "#card" --actions fx-actions.json --out out/film-realtime/frames --check 2>&1 | grep -q "^PASS"; then echo "PASS film-realtime (virtual clock, repeatable)"; pass=$((pass+1)); else echo "FAIL film-realtime (two films differ or the page errored)"; fail=$((fail+1)); fi
 # code export: a finished piece played live by the web player (frames must equal the renderer's), and a real-time page exported live

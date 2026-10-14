@@ -1,0 +1,22 @@
+{
+ "about": "City at dusk: a warm gradient sky, a low sun, two depths of skyline with lit windows, a river, birds. Shots: a slow push into the skyline, an iris transition to a tighter shot on the words.",
+ "seed": 5,
+ "haze": "#f6c9a8",
+ "fx": { "leak": { "x": 0.85, "y": 0.55, "color": "#ffb26b", "alpha": 0.2 }, "vignette": 0.25, "grain": 0.06 },
+ "worlds": {
+  "city": { "haze": 0.6, "layers": [
+   { "type": "sky", "color": "#3d4a8c", "color2": "#f4a97a", "horizon": 0.72 },
+   { "type": "sun", "k": 0.05, "x": 780, "y": 560, "r": 70, "color": "#ffd9a0", "glow": 4 },
+   { "type": "clouds", "k": 0.12, "y": 260, "count": 4, "size": 22, "color": "#f7b892", "speed": 6, "alpha": 0.8 },
+   { "type": "skyline", "k": 0.35, "y": 640, "height": 240, "width": 60, "color": "#8a6f9a", "lit": 0 },
+   { "type": "skyline", "k": 0.6, "y": 700, "height": 320, "width": 80, "color": "#4b3f6b", "color2": "#ffd38a", "lit": 0.3, "haze": 0.1 },
+   { "type": "water", "k": 0.7, "y": 700, "color": "#2e2f57", "color2": "#ffb77a", "count": 80, "depth": 320, "haze": 0 },
+   { "type": "birds", "k": 0.5, "x": 200, "y": 330, "count": 5, "speed": 30, "color": "#2b2346" }
+  ] }
+ },
+ "shots": [
+  { "dur": 1, "from": { "x": -100, "y": 0, "zoom": 1.0 }, "to": { "x": 40, "y": -10, "zoom": 1.12 }, "ease": "gentle" },
+  { "dur": 1, "from": { "x": 120, "y": -40, "zoom": 1.35 }, "to": { "x": 160, "y": -50, "zoom": 1.42 }, "ease": "gentle", "transition": { "type": "iris", "dur": 0.8, "x": 0.5, "y": 0.5 },
+    "text": [ { "text": "__TEXT__", "k": 0.62, "x": 640, "y": 360, "size": 58, "color": "#fff3e3", "weight": 700, "track": 0.1, "at": 0.4 } ] }
+ ]
+}

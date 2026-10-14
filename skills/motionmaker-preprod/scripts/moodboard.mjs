@@ -48,6 +48,7 @@ if (worlds) {
   const ex = f => path.resolve(SK, "../examples", f), card = (name, note, route, needs, image) => ({ name, note, card: { route, needs, image: image && existsSync(image) ? image : null }, recipe: { route } });
   tiles = [
     w("Kinetic type", "the words are the animation: no imagery", "title-loop"),
+    { name: "Flat design scene", note: "layered flat shapes, a slow camera with parallax, small living motion (example world)", recipe: { template: "flat-scene", env: { SCENE: "coast" }, secs: SECS } },
     w("Logo or wordmark", "a brand mark builds and settles", "logo-reveal"),
     w("Animated data", "numbers that grow (example data)", "data-chart"),
     w("Product or screen demo", "a screen, a cursor, a press, a result (placeholder UI)", "product-demo", {}, 20, [4, 5]),

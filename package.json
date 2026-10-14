@@ -1,6 +1,6 @@
 {
   "name": "motionmaker",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Motionmaker: Claude Code skills for frame-exact motion graphics (/motionmaker command, art director, illustration/animation assets, optional libraries, art styles, film QA and delivery gates, real-time page filming, templates, sound, export, verification) with an installer CLI.",
   "type": "module",
   "bin": { "motionmaker": "bin/cli.mjs" },

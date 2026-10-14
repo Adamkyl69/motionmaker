@@ -1,0 +1,30 @@
+{
+ "about": "Alpine lake: snow-capped faceted peaks, a still lake with shimmer, pine forests on two depths, a drifting cloud bank. Shots: a slow rise over the lake, then a whip pan to the forest edge with the words.",
+ "seed": 23,
+ "haze": "#dfeef5",
+ "fx": { "leak": { "x": 0.05, "y": 0.0, "color": "#fff3d6", "alpha": 0.14 }, "vignette": 0.2, "grain": 0.05 },
+ "worlds": {
+  "lake": { "haze": 0.55, "layers": [
+   { "type": "sky", "color": "#7cc2ea", "color2": "#e4f2f7", "horizon": 0.62 },
+   { "type": "clouds", "k": 0.1, "y": 150, "count": 5, "size": 30, "color": "#ffffff", "speed": 6 },
+   { "type": "mountains", "k": 0.2, "y": 560, "height": 330, "width": 560, "color": "#9db8d0", "color2": "#8aa6c0", "color3": "#f6fbff", "snow": true },
+   { "type": "mountains", "k": 0.4, "y": 620, "height": 260, "width": 420, "color": "#6f93ad", "color2": "#5d7f98", "color3": "#f2f8fc", "snow": true },
+   { "type": "pines", "k": 0.55, "y": 640, "count": 60, "from": -2000, "to": 3000, "height": 70, "color": "#3e6f63", "color2": "#2f5a50" },
+   { "type": "water", "k": 0.6, "y": 640, "color": "#4f8fae", "color2": "#bfe3f1", "count": 90, "depth": 380 },
+   { "type": "pines", "k": 1.3, "y": 1080, "count": 9, "from": -1200, "to": 2400, "height": 380, "color": "#2e5b4c", "color2": "#21463a", "blur": 2 }
+  ] },
+  "forest": { "haze": 0.5, "layers": [
+   { "type": "sky", "color": "#7cc2ea", "color2": "#e4f2f7", "horizon": 0.6 },
+   { "type": "mountains", "k": 0.25, "y": 520, "height": 300, "width": 500, "color": "#9db8d0", "color2": "#8aa6c0", "color3": "#f6fbff", "snow": true },
+   { "type": "hills", "k": 0.5, "y": 640, "amp": 40, "wave": 300, "color": "#6f9c80" },
+   { "type": "pines", "k": 0.6, "y": 660, "count": 40, "from": -2000, "to": 3000, "height": 120, "color": "#3e6f63", "color2": "#2f5a50" },
+   { "type": "hills", "k": 0.85, "y": 820, "amp": 30, "wave": 420, "phase": 1.2, "color": "#4d7f62" },
+   { "type": "pines", "k": 1.0, "y": 860, "count": 14, "from": -1400, "to": 2600, "height": 260, "color": "#2e5b4c", "color2": "#21463a" }
+  ] }
+ },
+ "shots": [
+  { "world": "lake", "dur": 1, "from": { "x": 0, "y": 80, "zoom": 1.0 }, "to": { "x": 60, "y": 0, "zoom": 1.06 }, "ease": "gentle" },
+  { "world": "forest", "dur": 1.1, "from": { "x": -80, "y": 0, "zoom": 1.05 }, "to": { "x": 40, "y": 0, "zoom": 1.1 }, "ease": "gentle", "transition": { "type": "whip", "dur": 0.5 },
+    "text": [ { "text": "__TEXT__", "k": 0.75, "x": 500, "y": 560, "size": 64, "color": "#ffffff", "weight": 700, "track": 0.1, "at": 0.5 } ] }
+ ]
+}
