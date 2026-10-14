@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [FEEL=calm|snappy|bouncy|dramatic] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -48,12 +48,13 @@ esac
 # Art-direction rule: the letters of a headline must all have arrived within ~1.5 s however long it is. Cap the per-letter stagger (fractional frames are fine).
 STAGGER=$(awk -v st="$STAGGER" -v fps="$FPS" -v l="$LEN" 'BEGIN{cap=fps*1.5/l; if(st>cap) st=cap; printf "%.2f", st}')
 case "$TPL" in
-  title-loop)  EXIT=$(( N - 6 - LEN )); ENT=$(awk -v i="$INF" -v s="$STAGGER" -v l="$LEN" 'BEGIN{printf "%d", i + s * l}');;       # last letter still mid-exit on frame N-1, so the seam frame differs from frame 0
+  title-loop)  OUTST=$(awk -v f="$FPS" -v l="$LEN" 'BEGIN{c=0.5*f/l; if(c>1)c=1; printf "%.3f", c}'); OUTF=$(awk -v f="$FPS" 'BEGIN{o=8; if(f<24)o=int(8*f/24+0.5); if(o<3)o=3; print o}')   # exit <= 0.5 s at any fps (letters were frames)
+               EXIT=$(awk -v n="$N" -v l="$LEN" -v s="$OUTST" 'BEGIN{printf "%d", n - 6 - int(l*s+0.999)}'); ENT=$(awk -v i="$INF" -v s="$STAGGER" -v l="$LEN" 'BEGIN{printf "%d", i + s * l}');;       # last letter still mid-exit on frame N-1, so the seam frame differs from frame 0
   logo-reveal) EXIT=$(( N - 16 )); ENT=34;;                              # exit (12 f) finishes by frame N-4; ambient hairline keeps frame 0 composed
   data-chart)  EXIT=$(( N - 14 )); ENT=40;;                             # exit (10 f) finishes by frame N-4
   *)           EXIT=0; ENT=0;;
 esac
-if [ "$EXIT" -gt 0 ] && [ "$EXIT" -lt $(( ENT + 12 )) ]; then
+if [ "${NO_EXIT:-0}" != 1 ] && [ "$EXIT" -gt 0 ] && [ "$EXIT" -lt $(( ENT + 12 )) ]; then   # (with NO_EXIT the reading-time check is storyboard.mjs script's)
   echo "WARNING: ${SECS}s is too short for this content (entrance ends f$ENT, exit starts f$EXIT, hold < 12 frames): shorten text or lengthen the loop" >&2; fi
 D="$OUT/$SLUG"
 if [ "$TPL" = style-scene ]; then
@@ -130,18 +131,29 @@ case "$TPL" in lottie-scene|rive-scene|illustration-scene)
   IDLESEC=$(awk -v s="$SECS" 'BEGIN{k=int(s/2.4+0.5); if(k<1)k=1; printf "%.4f", s/k}')
   EXIT=$(( N - 10 ));;   # exit (10 f) is still finishing on frame N-1, so the last frame never equals the empty frame 0
 esac
-FONTPCT=$(awk -v l="$LEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.9/((gw+t)*l); if(p>0.14)p=0.14; printf "%.3f",p}')                 # keep text inside the frame
+# Title template: a long line (over 22 characters) breaks into two balanced lines at the space nearest the middle and is sized by the longer
+# one (one 40-character line shrinks to a sliver). TWO_LINES=0 keeps one line. The break is written as "¶" and turned into \n below.
+SIZELEN=$LEN
+if [ "$TPL" = title-loop ] && [ "${TWO_LINES:-1}" != 0 ] && [ "$LEN" -gt 22 ] && [[ "$TEXT" == *" "* ]]; then
+  SPLIT=$(TEXT="$TEXT" node -e 'const t=process.env.TEXT,m=t.length/2;let b=-1;for(let i=0;i<t.length;i++)if(t[i]===" "&&(b<0||Math.abs(i-m)<Math.abs(b-m)))b=i;console.log(t.slice(0,b)+"\t"+t.slice(b+1))')
+  L1=${SPLIT%%$'\t'*}; L2=${SPLIT#*$'\t'}; SIZELEN=$(( ${#L1} > ${#L2} ? ${#L1} : ${#L2} )); TEXT="${L1}¶${L2}"
+fi
+FONTPCT=$(awk -v l="$SIZELEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.9/((gw+t)*l); if(p>0.14)p=0.14; printf "%.3f",p}')                 # keep text inside the frame
 [ "$TPL" = logo-reveal ] && FONTPCT=$(awk -v l="$LEN" -v gw="$GW" -v tr="$TRACK" 'BEGIN{t=(tr>0?tr:0); p=0.62/((gw+t)*l); if(p>0.11)p=0.11; printf "%.3f",p}')
 WORDPX=$(awk -v w="$W" -v c="$LEN" -v gw="$GW" 'BEGIN{p=0.84*w/((gw+0.03)*c); if(p>0.2*w)p=0.2*w; printf "%d",p}'); BARH=$(awk -v h="$H" 'BEGIN{printf "%d",h*0.017<4?4:h*0.017}')
 EXITSEC=$(awk -v n="$N" -v f="$FPS" -v wd="$WORDS" 'BEGIN{printf "%.3f", (n-1)/f - 0.05*(wd-1) - 0.2}')
 D="$OUT/$SLUG"; mkdir -p "$D"
+# NO_EXIT=1: the content stays on screen to the last frame (a scene that holds until its cut, an end card, a one-shot); the default exit
+# exists so a loop's last frame flows back into its first.
+[ "${NO_EXIT:-0}" = 1 ] && EXIT=$(( N * 10 + 100 ))
 ESC=$(printf '%s' "$TEXT" | sed 's/[&/\]/\\&/g'); FESC=$(printf '%s' "$FONT" | sed 's/[&/\]/\\&/g'); EESC=$(printf '%s' "$ENTER" | sed 's/[&/\]/\\&/g')
 sed -e "s/__TEXT__/$ESC/g" -e "s/__W__/$W/g" -e "s/__H__/$H/g" -e "s/__FPS__/$FPS/g" -e "s/__N__/$N/g" \
     -e "s/__BG__/$BG/g" -e "s/__FG__/$FG/g" -e "s/__ACCENT__/$AC/g" -e "s/__EXIT__/$EXIT/g" -e "s/__FONTPCT__/$FONTPCT/g" \
-    -e "s/__WORDPX__/$WORDPX/g" -e "s/__FONT__/$FESC/g" -e "s/__WEIGHT__/$WEIGHT/g" -e "s/__TRACK__/$TRACK/g" -e "s/__INF__/$INF/g" -e "s/__ENTER__/$EESC/g" -e "s/__RISE__/$RISE/g" -e "s/__PUSH__/$PUSH/g" -e "s/__STAGGER__/$STAGGER/g" -e "s/__BARH__/$BARH/g" -e "s/__EXITSEC__/$EXITSEC/g" \
+    -e "s/__WORDPX__/$WORDPX/g" -e "s/__FONT__/$FESC/g" -e "s/__WEIGHT__/$WEIGHT/g" -e "s/__TRACK__/$TRACK/g" -e "s/__INF__/$INF/g" -e "s/__OUTF__/${OUTF:-8}/g" -e "s/__OUTST__/${OUTST:-1}/g" -e "s/__ENTER__/$EESC/g" -e "s/__RISE__/$RISE/g" -e "s/__PUSH__/$PUSH/g" -e "s/__STAGGER__/$STAGGER/g" -e "s/__BARH__/$BARH/g" -e "s/__EXITSEC__/$EXITSEC/g" \
     -e "s#__ASSETFILE__#${ASSETFILE:-}#g" -e "s/__ASSETSEC__/${ASSETSEC:-0}/g" -e "s/__LOOP__/${LOOPF:-0}/g" -e "s/__IDLESEC__/${IDLESEC:-2.4}/g" -e "s/__GW__/$GW/g" -e "s/__MARK__/${MARK:-circle}/g" -e "s/__KEYWORD__/$(printf '%s' "${KEYWORD:-}" | sed 's/[&/\]/\\&/g')/g" -e "s/__SEED__/${SEED:-7}/g" -e "s/__MODE__/${MODE:-type}/g" -e "s/__FOCUS__/${FOCUS:-}/g" -e "s/__ARTBOARD__/${AB:-}/g" -e "s/__ANIMATION__/${AN:-}/g" \
     "$HERE/templates/$TPL.html" > "$D/anim.html"
 [ -n "$FONTLINK" ] && node -e 'const f=process.argv[1],fs=require("fs");fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("<meta charset=\"utf-8\">","<meta charset=\"utf-8\">\n<link rel=\"stylesheet\" href=\"fonts/fonts.css\">"))' "$D/anim.html"
+[[ "$TEXT" == *"¶"* ]] && node -e 'const f=process.argv[1],fs=require("fs");let h=fs.readFileSync(f,"utf8");h=h.replace(/<title>([^<]*)<\/title>/,(m,t)=>"<title>"+t.replace(/¶/g," ")+"</title>").replace(/¶/g,"\\n");fs.writeFileSync(f,h)' "$D/anim.html"
 cp "$SK/motionmaker-build/scripts/tokens.js" "$D/tokens.js"
 if [ "$TPL" = three-product ]; then
   P=$(find_pkg three) || { echo "three not found: run  npm i three@0.160.0  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
@@ -155,4 +167,6 @@ if [ "$TPL" = lottie-scene ]; then P=$(find_pkg lottie-web) || { echo "lottie-we
 if [ "$TPL" = rive-scene ]; then P=$(find_pkg @rive-app/canvas) || { echo "@rive-app/canvas not found: run  node motionmaker-assets/scripts/kit.mjs setup  (or npm i @rive-app/canvas@2.44.2)" >&2; exit 3; }; mkdir -p "$D/vendor"; cp "$P/rive.js" "$P/rive.wasm" "$D/vendor/"; fi
 if [ -n "${ASSETFILE:-}" ]; then echo "Next: record the asset's licence before it ships:  node $SK/motionmaker-assets/scripts/ledger.mjs add $D/$ASSETFILE --source <page url> --creator \"<name>\" --license <id> --dir $D" >&2; fi
 printf '# Receipts: %s\n\nTemplate: %s\nPrompt: see PROMPT.md\n\n## Follow-ups (exactly as sent)\n\n(none yet)\n' "$SLUG" "$TPL" > "$D/RECEIPTS.md"
+# when the content is fully on screen (for reading-time checks): entrance ends / exit starts, in frames; enterEnds 0 = not known for this template
+printf '{"template":"%s","fps":%s,"frames":%s,"enterEnds":%s,"exitStarts":%s}\n' "$TPL" "$FPS" "$N" "${ENT:-0}" "$( [ "${EXIT:-0}" -gt 0 ] && [ "${EXIT:-0}" -lt "$N" ] && echo "$EXIT" || echo "$N")" > "$D/timing.json"
 echo "$D"

@@ -32,7 +32,7 @@ Call B (brand and references), only for what is unknown:
 8. **Supporting material:** code to show, an equation, places on a map, product screen recordings, feature icons? Each has a template (`motionmaker-libs`, `motionmaker-assets`). One icon set per piece; one hand-drawn mark per shot.
 9. **Illustration and animation:** does the piece need characters, spot illustrations or a ready-made animation? Offer: *none, type and shape only* / *a kit: Open Peeps or Humaaans characters* / *a LottieFiles animation they pick* / *a Rive file* / *their own artwork*. If they pick any, hand over to `motionmaker-assets` (inspect, recolour, ledger) and read its `craft/illustration.md`; say upfront that Rive community files require a visible credit.
 
-If the user says "just make it" or gives a one-line request: do a **lightweight pass**: infer objective, audience and tone from the request, state your three assumptions in one line each, and go straight to Step 2. Never skip Step 2.
+If the user says "just make it" or gives a one-line request: do a **lightweight pass**: infer objective, audience and tone from the request, state your three assumptions in one line each, and go straight to Step 2. Never skip Step 2, unless the pre-production style gate is already approved (then Step 2 is optional: use it only when layout or type is still open, and never show a direction that contradicts what the user ruled out).
 
 ## Step 2: present three directions (the style frame gate)
 Run (with the user's real headline, their tone words, and their brand accent if they gave one):
@@ -48,7 +48,7 @@ Limits to say out loud when relevant: the style frame uses the title template's 
 Write `motion-out/<slug>/AD-BRIEF.md` from `AD-BRIEF-template.md`: strategy, big idea and visual metaphor (one sentence each), chosen look and why, visual system with the checks run, motion language, sound idea, board / shot list, the poster frame, approvals. Run and paste the results of:
 - `node $AD/scripts/palette.mjs check <bg> <fg> <accent>` (fix any WARN: change the colour or restrict where it is used)
 - `node $AD/scripts/type-scale.mjs <width> --chars <longest headline>` (decide wrap, size or copy cut now)
-Convert the motion language to numbers (table in `craft/principles.md` section 5) and hand the AD-BRIEF to `motionmaker-brief` as the source for the numeric brief. Show the user a 10-line summary and get a yes before building ("Approve the brief" gate).
+Convert the motion language to numbers (table in `craft/principles.md` section 5) and hand the AD-BRIEF to `motionmaker-brief` as the source for the numeric brief. Show the user a 10-line summary and get a yes before building ("Approve the brief" gate). With pre-production, that yes is the preprod gates (`preprod.mjs check build`): show the summary for information, do not ask for an extra approval.
 For several shots, write the shot list table: every row has a focal point, a composition, one hero move, the text, the sound hit, and the emotion. Each shot gets one job: hook, build, payoff or close.
 
 ## Step 4: direct the build

@@ -2,6 +2,18 @@
 
 All notable changes. Dates are UTC.
 
+## 1.3.0 (2026-10-14): voice-over, and the gaps a test run found
+- **Voice-over**, from an ElevenLabs connector or MCP server when one is available (detected by its tools), or the user's own recording: `voice.mjs` (sound-export) writes the narration script with characters and speaking time, a free audition page from the voices' public samples, places each line on its scene (`--retime` lengthens scenes the real recording does not fit), writes captions (SRT/VTT, balanced chunks) and mixes with the music ducked exactly 10 dB under every line (cue-driven, not a compressor) at -14 LUFS. The animatic plays with the voice (`--voice`); `export.sh` can burn in captions (`CAPTIONS=`). Pre-production gets a `voice` gate, and the skills say to price the generation, ask the plan and get a yes before any credit is spent.
+- Licences: `ELEVENLABS-PAID` (commercial, except Beta Services) and `ELEVENLABS-FREE` (no commercial use; "elevenlabs.io" in the title), from ElevenLabs' own help page. The ledger says "non-commercial use only" and delivery then needs `--non-commercial "<stated use>"`, recorded in DELIVERY.md.
+- Fixed after a no-context agent ran the onboarding for a kids' planets video:
+  - custom scenes need a sketch (`"preview"`): without one the storyboard says NOT SHOWN, `frames` exits 2 and the approval is refused;
+  - the script check counts only the time a line is fully on screen (the template's real entrance and exit, from the scaffold's new `timing.json`) and reads at a kids' pace when `"audience": "kids"`;
+  - scenes in a storyboard hold until their cut (`NO_EXIT`), and the title template's exit is at most 0.5 s at any frame rate (at 12 fps a long line used to crawl out for seconds);
+  - long titles break onto two balanced lines instead of shrinking (one-line titles unchanged, checked frame for frame);
+  - scene approvals also bind STORYBOARD.json; `preprod.mjs scenes` sets the scene count once known; old records gain new gates on load;
+  - `moodboard.mjs --avoid dark|light`; round 2 keeps round 1's size; `feel.mjs --from <moodboard.json> --tile <n>` uses the exact tile (colours included); scaffold warnings are shown on the storyboard; old scene images are cleared; `type-scale.mjs --chars` takes the text itself;
+  - the playbook: the headline is defined, both mood-board rounds are recorded, the art director's directions are optional after the style gate, no extra "approve the brief" yes, what to do beyond a template's limits.
+
 ## 1.2.0 (2026-10-14): pre-production, so it builds what you imagine
 - **`motionmaker-preprod`** (new skill): onboarding the way a studio does it. Involvement level (Quick / Guided / Hands-on); "describe what you picture" in your own words, follow-ups only for the gaps, and a plain-language **brief-back** with every assumption listed; then **show, don't ask**:
   - `moodboard.mjs`: your headline in every look plus fitting art styles, numbered; `--from-image` adds the colours of a reference picture (made readable, every change reported); `--vary` makes round 2 (inverted, two accents, two typefaces: one change per tile); `--worlds` shows eleven kinds of picture (type, logo, chart, product UI, 3D, characters, icons, map, code, equation, hand-drawn mark). Every tile carries its build recipe.

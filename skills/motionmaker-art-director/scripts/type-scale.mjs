@@ -1,10 +1,11 @@
 // A type system for a canvas, so sizes come from a scale instead of guesses.
-//   node type-scale.mjs <canvasWidthPx> [--ratio 1.5] [--chars 24] [--aspect 1:1]
+//   node type-scale.mjs <canvasWidthPx> [--ratio 1.5] [--chars 24 | --chars 'the longest line'] [--aspect 1:1]
 // Prints sizes for label / body / subhead / headline / display, and the largest headline size that fits <chars> characters on one line
 // inside the safe width (so "longest copy" is checked before motion starts). Ratios: 1.25 calm, 1.333 balanced, 1.5 punchy, 1.618 dramatic.
 const a = process.argv.slice(2), opt = (k, d) => { const i = a.indexOf(k); return i > -1 ? a[i + 1] : d; };
-const W = +a[0]; if (!W) { console.error("usage: type-scale.mjs <canvasWidthPx> [--ratio 1.5] [--chars 24]"); process.exit(1); }
-const ratio = +opt("--ratio", 1.5), chars = +opt("--chars", 24), safe = W * 0.9, base = Math.round(W * 0.03);
+const W = +a[0]; if (!W) { console.error("usage: type-scale.mjs <canvasWidthPx> [--ratio 1.5] [--chars 24 | --chars 'the longest line']"); process.exit(1); }
+const cv = opt("--chars", "24"), ratio = +opt("--ratio", 1.5), chars = /^\d+$/.test(cv) ? +cv : cv.length,  // --chars takes a count or the text itself
+      safe = W * 0.9, base = Math.round(W * 0.03);
 const step = k => Math.round(base * ratio ** k);
 const roles = [["label (caps, +6% tracking)", step(0)], ["body / caption", step(1)], ["subhead", step(2)], ["headline", step(3)], ["display (hero word)", step(4)]];
 console.log(`canvas ${W}px, ratio ${ratio}, base ${base}px, safe width ${Math.round(safe)}px (5% margin each side)\n`);

@@ -16,16 +16,18 @@
 <script>
 const CONFIG = { text:"__TEXT__", w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
 // all timing in frames; no inline magic numbers elsewhere
-const TOKENS = { rise:__RISE__, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:8, outStagger:1, push:__PUSH__, barMin:0.6,
+const TOKENS = { rise:__RISE__, inF:__INF__, stagger:__STAGGER__, exitStart:__EXIT__, outF:__OUTF__, outStagger:__OUTST__, push:__PUSH__, barMin:0.6,
                  fontPct:__FONTPCT__, barGapEm:0.32, barWPct:0.5, barHPct:0.017 };
 const { clamp, EASE, bezier, springRatio } = Motion, N = CONFIG.frames;
 const ENTER = __ENTER__; // entrance easing: the piece's motion feel (scaffold FEEL=...)
 const stage = document.getElementById("stage"), title = document.getElementById("title"), bar = document.getElementById("bar");
 // title and bar are centred as one block; the bar sits below the descenders (barGapEm under the line box), whatever the font
-const fontPx = Math.min(CONFIG.w * TOKENS.fontPct, CONFIG.h * 0.3), barH = Math.max(4, CONFIG.h*TOKENS.barHPct), blockH = fontPx * (1 + TOKENS.barGapEm) + barH, titleTop = (CONFIG.h - blockH) / 2;
-title.style.fontSize = fontPx + "px"; title.style.top = titleTop + "px";
-Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:titleTop + fontPx*(1 + TOKENS.barGapEm)+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:barH+"px" });
-const letters = [...CONFIG.text].map(ch => { const s=document.createElement("span"); s.textContent=ch; title.appendChild(s); return s; });
+// a long headline arrives as two lines (scaffold breaks it); LH is the line height for two lines (one line keeps line-height 1)
+const nLines = CONFIG.text.split("\n").length, LH = nLines > 1 ? 1.12 : 1, textH = nLines * LH - (LH - 1);
+const fontPx = Math.min(CONFIG.w * TOKENS.fontPct, CONFIG.h * 0.3 / textH), barH = Math.max(4, CONFIG.h*TOKENS.barHPct), blockH = fontPx * (textH + TOKENS.barGapEm) + barH, titleTop = (CONFIG.h - blockH) / 2;
+title.style.fontSize = fontPx + "px"; title.style.top = titleTop + "px"; if (nLines > 1) title.style.lineHeight = LH;
+Object.assign(bar.style, { left:CONFIG.w*(1-TOKENS.barWPct)/2+"px", top:titleTop + fontPx*(textH + TOKENS.barGapEm)+"px", width:CONFIG.w*TOKENS.barWPct+"px", height:barH+"px" });
+const letters = [...CONFIG.text].map(ch => { if (ch === "\n") { title.appendChild(document.createElement("br")); return null; } const s=document.createElement("span"); s.textContent=ch; title.appendChild(s); return s; }).filter(Boolean);
 
 function renderFrame(f){
   const n = letters.length, rise = CONFIG.h * TOKENS.rise;

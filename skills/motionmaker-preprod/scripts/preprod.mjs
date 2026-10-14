@@ -5,19 +5,23 @@
 //   node preprod.mjs approve  <project> <gate> --file <what they saw> --words "<their exact words>"
 //   node preprod.mjs changes  <project> <gate> --words "<what they asked to change>" [--file <what they saw>]
 //   node preprod.mjs require  <project> <gate> on|off [--why "..."]        add or drop a gate for this piece (recorded)
+//   node preprod.mjs scenes   <project> <N>                                 the number of scenes, once it is known (adjusts the gates it implies)
 //   node preprod.mjs status   <project>
 //   node preprod.mjs check    <project> build|deliver                      exit 1 until the required gates are approved and still current
 //   node preprod.mjs board    <project>                                    preprod/board.html: everything shown so far, in order, with the verdicts
 //
 // Gates, in order: understanding (BRIEF-BACK.md), worlds (what is in the picture), style (mood board / directions), feel (motion), script
-// (SCRIPT.md), storyboard (storyboard.png), animatic (animatic.mp4), first-shot (the first scene built for real). "build" needs every
+// (SCRIPT.md), voice (a line in the chosen voice; required once a voice-over is chosen), storyboard (storyboard.png), animatic (animatic.mp4),
+// first-shot (the first scene built for real). Script, voice, storyboard, animatic and first-shot approvals also bind STORYBOARD.json. "build" needs every
 // required gate before first-shot; "deliver" needs all of them.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 
-const GATES = ["understanding", "worlds", "style", "feel", "script", "storyboard", "animatic", "first-shot"];
-const WHAT = { understanding: "the brief-back: what will be made, in plain words", worlds: "what is in the picture", style: "the look (mood board, variants, directions)", feel: "how it moves", script: "the exact on-screen words and timing", storyboard: "a real frame of every scene", animatic: "the timing, as a video", "first-shot": "the first scene, built for real" };
+const GATES = ["understanding", "worlds", "style", "feel", "script", "voice", "storyboard", "animatic", "first-shot"];
+// approvals of these gates also bind STORYBOARD.json: changing a scene's words or timing after the yes makes the yes stale
+const BOUND = new Set(["script", "voice", "storyboard", "animatic", "first-shot"]);
+const WHAT = { understanding: "the brief-back: what will be made, in plain words", worlds: "what is in the picture", style: "the look (mood board, variants, directions)", feel: "how it moves", script: "the exact on-screen words and timing", voice: "the voice-over: the voice chosen and a line of the script in it", storyboard: "a real frame of every scene", animatic: "the timing, as a video", "first-shot": "the first scene, built for real" };
 const LEVELS = {
   quick: { about: "you decide most things; two approvals", gates: ["understanding", "style"] },
   guided: { about: "the recommended middle: look, motion, words and scenes approved before the build", gates: ["understanding", "style", "feel", "script", "storyboard"] },
@@ -29,16 +33,20 @@ if (!cmd || !proj) die("usage: preprod.mjs init|approve|changes|require|status|c
 const dir = path.resolve(proj), pdir = path.join(dir, "preprod"), F = path.join(pdir, "PREPROD.json");
 const sha = f => createHash("sha256").update(readFileSync(f)).digest("hex").slice(0, 16);
 const now = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
-const load = () => { if (!existsSync(F)) die(`no pre-production record in ${dir}: run  preprod.mjs init ${proj} --level guided`); return JSON.parse(readFileSync(F, "utf8")); };
+const load = () => { if (!existsSync(F)) die(`no pre-production record in ${dir}: run  preprod.mjs init ${proj} --level guided`);
+  const d = JSON.parse(readFileSync(F, "utf8")); for (const k of GATES) d.gates[k] ??= { required: false, status: "pending", history: [] }; return d; };  // records from older versions lack newer gates
 const save = d => { mkdirSync(pdir, { recursive: true }); writeFileSync(F, JSON.stringify(d, null, 1)); };
 const rel = f => path.relative(dir, path.resolve(f));
 // a gate's state: approved and still the same file / approved but the file changed since / changes asked / waiting
 function state(g) {
   if (g.status !== "approved") return g.status;
   if (!g.artifact) return "approved";
-  const f = path.join(dir, g.artifact);
-  if (!existsSync(f)) return "stale: the approved file is gone";
-  return sha(f) === g.sha ? "approved" : "stale: changed after approval";
+  for (const b of [{ artifact: g.artifact, sha: g.sha }, ...(g.also || [])]) {
+    const f = path.join(dir, b.artifact);
+    if (!existsSync(f)) return `stale: ${b.artifact} is gone`;
+    if (sha(f) !== b.sha) return `stale: ${b.artifact} changed after approval`;
+  }
+  return "approved";
 }
 
 if (cmd === "init") {
@@ -56,13 +64,24 @@ else if (cmd === "approve" || cmd === "changes") {
   const file = opt("--file");
   if (cmd === "approve" && !file) die(`--file <what the user saw> is required: the approval is bound to that exact file`);
   if (file && !existsSync(file)) die(`file not found: ${file}`);
-  const entry = { at: now(), status: cmd === "approve" ? "approved" : "changes", words, ...(file ? { artifact: rel(file), sha: sha(file) } : {}) };
-  g.history.push(entry); g.status = entry.status; if (file) { g.artifact = entry.artifact; g.sha = entry.sha; }
+  // a storyboard with a scene nobody has seen cannot be approved (storyboard.mjs marks it NOT SHOWN)
+  const sbmd = file && path.join(path.dirname(path.resolve(file)), "STORYBOARD.md");
+  if (cmd === "approve" && name === "storyboard" && sbmd && existsSync(sbmd) && /NOT SHOWN/.test(readFileSync(sbmd, "utf8"))) die(`refused: ${readFileSync(sbmd, "utf8").match(/NOT SHOWN.*/)[0]} Sketch those scenes, re-render the storyboard and show it again.`);
+  const sbFile = path.join(dir, "STORYBOARD.json"), also = BOUND.has(name) && existsSync(sbFile) && path.resolve(file || "") !== sbFile ? [{ artifact: "STORYBOARD.json", sha: sha(sbFile) }] : [];
+  const entry = { at: now(), status: cmd === "approve" ? "approved" : "changes", words, ...(file ? { artifact: rel(file), sha: sha(file) } : {}), ...(also.length ? { also } : {}) };
+  g.history.push(entry); g.status = entry.status; if (file) { g.artifact = entry.artifact; g.sha = entry.sha; } g.also = also;
   save(d); console.log(`${name}: ${entry.status}${file ? ` (${entry.artifact} ${entry.sha})` : ""}\n  "${words}"`);
 }
 else if (cmd === "require") {
   const d = load(), name = rest[0], on = rest[1]; if (!d.gates[name] || !["on", "off"].includes(on)) die("require <gate> on|off [--why ...]");
   d.gates[name].required = on === "on"; d.gates[name].history.push({ at: now(), status: `required ${on}`, words: opt("--why", "") }); save(d); console.log(`${name}: required ${on}`);
+}
+else if (cmd === "scenes") {
+  const d = load(), n = +rest[0]; if (!(n >= 1)) die("scenes <project> <N>");
+  d.scenes = n;
+  if (d.level !== "hands-on") { d.gates.storyboard.required = n > 1 || d.level === "hands-on"; if (d.level === "guided") d.gates.animatic.required = n > 1; }
+  d.gates.storyboard.history.push({ at: now(), status: `scenes ${n}`, words: "" }); save(d);
+  console.log(`${n} scene(s); required: ${GATES.filter(k => d.gates[k].required).join(", ")}`);
 }
 else if (cmd === "status" || cmd === "check") {
   const d = load(), upto = cmd === "check" && rest[0] === "build" ? GATES.indexOf("first-shot") : GATES.length;

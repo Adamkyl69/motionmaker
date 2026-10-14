@@ -1,6 +1,6 @@
 // The last door before a film is handed over. Refuses (exit 2) when something is red; otherwise writes DELIVERY.md whose facts are sealed with a hash.
 //
-//   node deliver.mjs <film.mp4> --dir <project> [--allow-blue-purple "reason"] [--override-review "reason"] [--override-provenance "reason"] [--override-preprod "reason"]
+//   node deliver.mjs <film.mp4> --dir <project> [--allow-blue-purple "reason"] [--override-review "reason"] [--override-provenance "reason"] [--override-preprod "reason"] [--non-commercial "stated use"]
 //   node deliver.mjs --verify <project>/DELIVERY.md        has anyone edited the facts, or swapped the film, since delivery?
 //
 // Red = film-gate RED; no independent review of THIS film (review/NN-review.md containing "Film: <first 12 of its sha256>"); the latest review
@@ -40,7 +40,10 @@ else { reviewVerdict = (readFileSync(path.join(rd, latest), "utf8").match(/^Verd
 // 3. licence ledger
 let ledger = "no third-party assets folder";
 if (existsSync(path.join(dir, "assets"))) { const r = spawnSync("node", [path.join(HERE, "../../motionmaker-assets/scripts/ledger.mjs"), "check", "--dir", dir], { encoding: "utf8" });
-  ledger = r.status === 0 ? "PASS" : "FAIL"; if (r.status !== 0) red.push("licence ledger fails: run ledger.mjs check --dir " + dir); }
+  ledger = r.status === 0 ? "PASS" : "FAIL"; if (r.status !== 0) red.push("licence ledger fails: run ledger.mjs check --dir " + dir);
+  // non-commercial material (an ElevenLabs free-plan voice, ...): only with a stated non-commercial use, recorded in the facts
+  if (/NON-COMMERCIAL ONLY/.test(r.stdout || "")) { ledger = "PASS (non-commercial use only)";
+    if (opt("--non-commercial")) yellow.push(`non-commercial material; stated use: ${opt("--non-commercial")}`); else red.push('the piece contains non-commercial-only material (see ledger.mjs check): deliver with --non-commercial "<where it will be shared, e.g. school project, personal channel without ads>", or replace it'); } }
 const credits = existsSync(path.join(dir, "assets")) ? spawnSync("node", [path.join(HERE, "../../motionmaker-assets/scripts/ledger.mjs"), "credits", "--dir", dir], { encoding: "utf8" }).stdout.trim().split("\n").filter(l => l.startsWith("REQUIRED")) : [];
 // 3b. provenance of an imported OpenMontage film (motionmaker-montage): unknown or non-commercial material blocks; attribution needs go to the credits
 const provFile = path.join(dir, "montage", "PROVENANCE.json"); let provenance = null;

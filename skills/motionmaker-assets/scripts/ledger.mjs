@@ -1,14 +1,14 @@
 // The asset ledger: every third-party illustration, animation or file in a piece is recorded with where it came from and under what licence.
 // `check` fails (exit 1) if anything in assets/ is unrecorded, has an unknown licence, or needs a credit that has not been written down.
 //
-//   node ledger.mjs add <file> --source <page url> --creator "<name>" --license <id> [--attribution "credit text"] [--kind lottie|rive|svg|illustration|other] [--notes "..."] [--dir <project dir>]
+//   node ledger.mjs add <file> --source <page url> --creator "<name>" --license <id> [--attribution "credit text"] [--kind lottie|rive|svg|illustration|voice|other] [--notes "..."] [--dir <project dir>]
 //   node ledger.mjs check [--dir <project dir>]      verify the ledger covers assets/ and the licences allow shipping; prints required credits
 //   node ledger.mjs credits [--dir <project dir>]    the credit lines to put in the video end card / post description
 //   node ledger.mjs report [--dir <project dir>]     write assets/ASSETS.md (a table you can hand to the client)
 //   node ledger.mjs licenses                         the licences Motionmaker knows, with the date each was checked
 //   node ledger.mjs sidecar <figure.svg.json> --dir <d>   add a kit.mjs figure (Open Peeps / Humaaans) from its sidecar file
 //
-// Licence ids: CC0-1.0, LOTTIEFILES-SIMPLE, UNDRAW, CC-BY-4.0, MIT, USER-OWNED, PAID-LICENSED, UNKNOWN. These are summaries, not legal advice; confirm on the asset's own page.
+// Licence ids: CC0-1.0, LOTTIEFILES-SIMPLE, UNDRAW, CC-BY-4.0, MIT, ELEVENLABS-PAID, ELEVENLABS-FREE, USER-OWNED, PAID-LICENSED, UNKNOWN. These are summaries, not legal advice; confirm on the asset's own page.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync, copyFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
@@ -50,13 +50,16 @@ function check() {
     if (needsCredit(a.license) && !a.attribution) problems.push(`${a.file}: ${L.name} requires attribution but none is recorded`);
     if (a.license === "PAID-LICENSED" && !a.notes) problems.push(`${a.file}: PAID-LICENSED needs --notes with the licence name/plan and the terms URL`);
     if (L.derivatives === "same-terms" && a.sha256 && existsSync(p) && sha(p) !== a.sha256) notes.push(`${a.file}: modified copy of a ${L.name} file: the modified version keeps the same terms`);
+    if (L.commercial === false) notes.push(`${a.file}: ${L.name}: NON-COMMERCIAL ONLY (${(L.restrictions || []).join("; ")})`);
     if (a.license === "UNDRAW") notes.push(`${a.file}: unDraw terms: no redistributing the source file in packs; our rendered video is fine; no AI/ML training use`);
     if (a.license === "LOTTIEFILES-SIMPLE") notes.push(`${a.file}: LottieFiles terms: keep the licence terms with the file if you share it; attribution not required but encouraged`);
   }
   console.log(`ledger: ${d.assets.length} asset(s) in ${assets}`); notes.forEach(n => console.log("note  " + n));
   const credits = creditLines(d); if (credits.length) { console.log("\nREQUIRED CREDITS (put these in the end card or the post):"); credits.filter(c => c.required).forEach(c => console.log("  " + c.text)); const opt = credits.filter(c => !c.required); if (opt.length) { console.log("optional credits:"); opt.forEach(c => console.log("  " + c.text)); } }
   if (problems.length) { console.log(""); problems.forEach(x => console.log("FAIL  " + x)); console.log(`\n${problems.length} problem(s): do not ship until fixed.`); process.exit(1); }
-  console.log("\nPASS  every asset is recorded with a known licence that allows shipping."); console.log("(Licence summaries were checked on " + LIC.checkedOn + "; confirm on each asset's own page. Not legal advice.)");
+  const nonCommercial = d.assets.filter(a => LIC.licenses[a.license]?.commercial === false).map(a => a.file);
+  if (nonCommercial.length) console.log(`\nPASS FOR NON-COMMERCIAL USE ONLY: ${nonCommercial.join(", ")} may not be used commercially (no client work, ads or monetised channels).`);
+  else console.log("\nPASS  every asset is recorded with a known licence that allows shipping."); console.log("(Licence summaries were checked on " + LIC.checkedOn + "; confirm on each asset's own page. Not legal advice.)");
 }
 function creditLines(d) { return d.assets.filter(a => a.attribution || needsCredit(a.license) || (LIC.licenses[a.license]?.attribution === "optional")).map(a => ({ required: needsCredit(a.license), text: a.attribution || `${a.file} by ${a.creator || "?"} (${a.source})` })); }
 function report() {

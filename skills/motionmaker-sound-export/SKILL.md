@@ -1,6 +1,6 @@
 ---
 name: motionmaker-sound-export
-description: Add synthesized sound (Web Audio API, no samples, frame-synced) and export animations to MP4/GIF for X with correct limits, sizes, loudness and loop handling. Use when the user wants sound, a GIF/MP4, or to post an animation.
+description: Add synthesized sound (Web Audio API, no samples, frame-synced), music on a beat grid and a voice-over (placed on the scenes, captions, ducking, loudness; from an ElevenLabs connector or the user's recording), and export animations to MP4/GIF with correct limits, sizes, loudness and loop handling. Use when the user wants sound, music, narration, captions, a GIF/MP4, or to post an animation.
 ---
 
 # Sound and export
@@ -11,6 +11,15 @@ description: Add synthesized sound (Web Audio API, no samples, frame-synced) and
 - Mix music + SFX, normalize to **-14 LUFS**, peaks <= **-1 dBTP**. Keep energy above ~60 Hz (phone speakers play nothing below). Make hits clearly over the bed (several dB, not 0.5-1.6).
 - Known traps: Web Audio gain nodes start at full volume (ramp from 0); a compressor adds ~6 ms delay; limiter can squash the final hit; codecs add ~16 ms padding at the seam (trim/compensate); beat times from `n*60/BPM`, rounded per beat.
 - Check: `ffmpeg -i out.mp4 -af loudnorm=print_format=summary -f null -`.
+
+## Voice-over (narration)
+`scripts/voice.mjs` works on audio files from any source: an ElevenLabs connector or MCP server, the user's own recording, OpenMontage's Piper. It never calls a paid service itself. The flow, consent and licence steps are in `motionmaker-preprod` section 4b.
+- `voice.mjs lines STORYBOARD.json`: every scene's `say` line, its characters (what text-to-speech bills) and speaking time against the scene (`--wps 2.2` for kids).
+- `voice.mjs voices voices.json --n 4`: a free audition page from a saved voice search (each voice's public sample).
+- `voice.mjs place STORYBOARD.json --dir voice [--retime]`: `voice/scene-<n>.mp3|wav` on their scenes (0.25 s after the scene starts, 0.35 s before it ends); `--retime` lengthens a scene that the real recording does not fit; writes `track.wav`, `cues.json`, `captions.srt` and `.vtt` (balanced chunks of at most 42 characters).
+- `voice.mjs mix --voice voice/track.wav --bed sound.wav --out mix.wav [--duck 10] [--lufs -14]`: the bed goes down exactly `--duck` dB while the voice speaks (from cues.json, 0.15 s in, 0.3 s out), then two-pass loudness normalisation and a peak limiter. Measured: a 45 Hz test bed at -15.3 dB between lines and -25.9 to -27.6 dB under them; the mix at -14.5 LUFS, -1.5 dBTP.
+- `CAPTIONS=voice/captions.srt export.sh ...` burns the captions into the MP4 (muted feeds, young viewers); for YouTube upload the .srt as a caption track instead.
+- Licence: record `track.wav` in the ledger (`ELEVENLABS-PAID`, `ELEVENLABS-FREE` = non-commercial only with "elevenlabs.io" in the title, or `USER-OWNED`).
 
 ## Music on a beat grid
 - `scripts/beat.mjs grid --bpm 120 --fps 30 --secs 8`: beat and bar frames; warns when beats fall between frames and lists whole-frame tempos for that fps, and when a loop is not a whole number of bars.
