@@ -1,0 +1,11 @@
+{
+  "_about": "The official Blender build this skill is tested with (4.5 LTS), pinned by sha256 taken from https://download.blender.org/release/Blender4.5/blender-4.5.14.sha256 on 2026-10-14. Blender is GPL; it is never bundled here, only downloaded on the user's yes.",
+  "version": "4.5.14",
+  "base": "https://download.blender.org/release/Blender4.5/",
+  "files": {
+    "linux-x64": { "name": "blender-4.5.14-linux-x64.tar.xz", "sha256": "9ba871ff2ecd36526b77432745980b7e6664ecd0c7ca11c48849073dcfe06da3", "mb": 378, "unpackedGb": 1.2 },
+    "win32-x64": { "name": "blender-4.5.14-windows-x64.zip", "sha256": "b9533d2397ac1984db4466fb23a7a4649391cca93f6e84209f9bcc60d071c8b9", "mb": 399, "unpackedGb": 1.3 },
+    "darwin-arm64": { "name": "blender-4.5.14-macos-arm64.dmg", "sha256": "65134d9b07b20e2fa8d3c9e44f6f44ffb5c9774dd521b95f50387310241ca170", "mb": 312, "manual": true },
+    "darwin-x64": { "name": "blender-4.5.14-macos-x64.dmg", "sha256": "613e73339e97bd113adeeb28d9155beeacf2df7119ee4dbd6bdce234843645f6", "mb": 340, "manual": true }
+  }
+}

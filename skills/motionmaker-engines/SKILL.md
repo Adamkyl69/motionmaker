@@ -7,7 +7,7 @@ description: Choose the animation engine and supporting repositories (Three.js, 
 
 Name the engine in the prompt or the model picks for you ("A Remotion composition, 1920x1080, 30 fps, 450 frames").
 
-Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/data-driven video -> Remotion. Think in web pages + GSAP -> HyperFrames. Anything 3D -> Three.js. Motion inside a product (not a video) -> Motion or GSAP/Rive.
+Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/data-driven video -> Remotion. Think in web pages + GSAP -> HyperFrames. Anything 3D -> Three.js (stylised, fast), or Blender when it must look photoreal (slow). Motion inside a product (not a video) -> Motion or GSAP/Rive.
 
 | Need | Use | Repo | Notes |
 |---|---|---|---|
@@ -26,6 +26,7 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | Maps, globes, routes | d3-geo + world-atlas | d3/d3, topojson/world-atlas | offline Natural Earth shapes; `map-scene` |
 | Hand-drawn marks | Rough.js | rough-stuff/rough | fixed seed; `annotate-scene` |
 | Icons | Lucide, Tabler, Phosphor, Material Symbols | lucide-icons/lucide etc. | `icons.mjs`, `icon-features` |
+| Photoreal 3D: real materials, light, glass, product turntables | Blender (separate download, GPL) | blender/blender | `motionmaker-blender`: CPU Cycles, fixed seed, `check` proves repeatable on one machine; tens of minutes to hours per clip |
 | Explain a mechanism as a working object | Anatomy | wheresryan22/anatomy | MIT skill, separate install; filmed by `film-realtime.mjs` via motionmaker-anatomy |
 | Film any real-time web animation | film-realtime.mjs | (ours) | virtual clock, scripted input, CPU raster; `--check` proves two films identical |
 | Ready-made animated vectors | lottie-web | airbnb/lottie-web | `lottie-scene` via motionmaker-assets; goToAndStop is frame-exact |

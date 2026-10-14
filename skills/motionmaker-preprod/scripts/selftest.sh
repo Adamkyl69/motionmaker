@@ -8,6 +8,12 @@ fail(){ echo "FAIL preprod: $1"; exit 1; }
 node "$HERE/moodboard.mjs" "Hello" --looks swiss-minimal,night-cinema --styles none --size 240x240 --out mb >/dev/null 2>&1 || fail "moodboard round 1"
 [ -f mb/moodboard.png ] && [ "$(node -e 'console.log(require("./mb/moodboard.json").tiles.length)')" = 2 ] || fail "moodboard tiles"
 node "$HERE/moodboard.mjs" "Hello" --vary 1 --from mb/moodboard.json --size 240x240 --out mb2 >/dev/null 2>&1 && [ -f mb2/moodboard.png ] || fail "moodboard round 2"
+# the animation-style board: moving samples (three frames per drawn tile + a playing video), cards for what needs another tool, what is never offered
+node "$HERE/moodboard.mjs" "Hello" --worlds --size 240x180 --out worlds >/dev/null 2>&1 || fail "worlds board"
+[ -s worlds/moodboard.png ] && [ -s worlds/animation-styles.mp4 ] && [ -s worlds/animation-styles.gif ] || fail "worlds board has no moving sample"
+node -e 'const j=require("./worlds/moodboard.json"),t=j.tiles,fs=require("fs");const m=t.filter(x=>x.motion),c=t.filter(x=>x.card);
+ if(m.length<3||m.some(x=>!fs.existsSync("worlds/tile-"+x.n+"-m3.png")))process.exit(1);
+ if(c.map(x=>x.card.route).sort().join()!=="anatomy,blender,montage"||!j.notOffered.length)process.exit(2)' || fail "worlds board: moving tiles, cards or the not-offered list are missing"
 node "$HERE/feel.mjs" "Hello" --size 240x136 --secs 2 --out feel >/dev/null 2>&1 && [ -s feel/feel.mp4 ] && [ -s feel/feel.png ] || fail "feel"
 cat > STORYBOARD.json <<'J'
 { "title": "Selftest", "size": "320x320", "fps": 24, "look": "editorial-calm", "feel": "calm",
@@ -23,9 +29,10 @@ P=. ; PP="node $HERE/preprod.mjs"
 printf "# Brief-back\nHello\n" > BRIEF-BACK.md
 $PP init $P --level guided --scenes 2 >/dev/null || fail "init"
 $PP check $P build >/dev/null 2>&1 && fail "check passed with nothing approved"
+out=$($PP check $P build 2>&1); case "$out" in *"worlds (pending"*) ;; *) fail "the animation-style gate is not required at the guided level";; esac
 $PP approve $P understanding --file BRIEF-BACK.md --words "yes" >/dev/null 2>&1 && fail "a brief-back without a Format line was approved"
 printf "# Brief-back\nHello\nFormat: Instagram Reels - 9:16, 1080x1920\n" > BRIEF-BACK.md
-for g in understanding:BRIEF-BACK.md style:mb/moodboard.png feel:feel/feel.mp4 script:SCRIPT.md storyboard:storyboard/storyboard.png animatic:animatic/animatic.mp4; do
+for g in understanding:BRIEF-BACK.md worlds:worlds/moodboard.png style:mb/moodboard.png feel:feel/feel.mp4 script:SCRIPT.md storyboard:storyboard/storyboard.png animatic:animatic/animatic.mp4; do
   $PP approve $P ${g%%:*} --file ${g#*:} --words "yes" >/dev/null || fail "approve ${g%%:*}"; done
 $PP check $P build >/dev/null || fail "check refused after every approval"
 echo " " >> SCRIPT.md; out=$($PP check $P build 2>&1); case "$out" in *"script (stale"*) ;; *) fail "an edited approved file did not go stale";; esac

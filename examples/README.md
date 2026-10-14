@@ -20,6 +20,8 @@ These are test renders with placeholder content, not finished work. Your own out
 - `web-export-demo.png`: the 20 s launch clip exported as code (`export-web.mjs`) and playing live in its `demo.html` through the TypeScript player, with pause and a frame scrubber; frames through the player are pixel-identical to the rendered video.
 - `anatomy-raptor-live-web.png`: Anatomy's Raptor engine example (MIT, by Ryan, github.com/wheresryan22/anatomy) exported live for a web page with `anatomy.mjs web` and running inside the player: assembled, taken apart by the scripted hover, reassembled, then firing after the scripted click. Visitors can do all of this themselves.
 - `preprod-moodboard.png`: round 1 of the pre-production mood board: one headline in every look, two fitting art styles, and (tile 11) the colours of a reference picture, made readable.
-- `preprod-worlds.png`: the "what is in the picture" board: eleven kinds of picture on example content, in one look.
+- `preprod-worlds.png`: the animation-style board ("what kind of animation"): 15 options, each with three frames of how it moves; the last three are cards for Anatomy, Blender and real footage / AI video, and what is never offered is printed under it.
+- `preprod-animation-styles.mp4`: the same options playing at once (the video the user is told to open).
+- `blender-turntable-frame.png`: one frame of the Blender turntable (Cycles on the CPU, 540x540, 128 samples, 23 s for this frame on 4 cores).
 - `preprod-feel.png`: the four motion feels (calm, snappy, bouncy, dramatic) as a filmstrip of each entrance; the 2x2 video is what the user watches.
 - `preprod-storyboard.png`: a storyboard for a kids' planets video: real frames from the templates (the two-line fun fact sized for young readers) and a SKETCH for the scene drawn in code.

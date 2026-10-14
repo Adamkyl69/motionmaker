@@ -10,7 +10,7 @@
 //   node preprod.mjs check    <project> build|deliver                      exit 1 until the required gates are approved and still current
 //   node preprod.mjs board    <project>                                    preprod/board.html: everything shown so far, in order, with the verdicts
 //
-// Gates, in order: understanding (BRIEF-BACK.md), worlds (what is in the picture), style (mood board / directions), feel (motion), script
+// Gates, in order: understanding (BRIEF-BACK.md), worlds (what kind of animation, shown moving), style (mood board / directions), feel (motion), script
 // (SCRIPT.md), voice (a line in the chosen voice; required once a voice-over is chosen), storyboard (storyboard.png), animatic (animatic.mp4),
 // first-shot (the first scene built for real). Script, voice, storyboard, animatic and first-shot approvals also bind STORYBOARD.json. "build" needs every
 // required gate before first-shot; "deliver" needs all of them.
@@ -21,10 +21,10 @@ import path from "node:path";
 const GATES = ["understanding", "worlds", "style", "feel", "script", "voice", "storyboard", "animatic", "first-shot"];
 // approvals of these gates also bind STORYBOARD.json: changing a scene's words or timing after the yes makes the yes stale
 const BOUND = new Set(["script", "voice", "storyboard", "animatic", "first-shot"]);
-const WHAT = { understanding: "the brief-back: what will be made, in plain words", worlds: "what is in the picture", style: "the look (mood board, variants, directions)", feel: "how it moves", script: "the exact on-screen words and timing", voice: "the voice-over: the voice chosen and a line of the script in it", storyboard: "a real frame of every scene", animatic: "the timing, as a video", "first-shot": "the first scene, built for real" };
+const WHAT = { understanding: "the brief-back: what will be made, in plain words", worlds: "what kind of animation (the styles shown moving)", style: "the look (mood board, variants, directions)", feel: "how it moves", script: "the exact on-screen words and timing", voice: "the voice-over: the voice chosen and a line of the script in it", storyboard: "a real frame of every scene", animatic: "the timing, as a video", "first-shot": "the first scene, built for real" };
 const LEVELS = {
   quick: { about: "you decide most things; two approvals", gates: ["understanding", "style"] },
-  guided: { about: "the recommended middle: look, motion, words and scenes approved before the build", gates: ["understanding", "style", "feel", "script", "storyboard"] },
+  guided: { about: "the recommended middle: animation style, look, motion, words and scenes approved before the build", gates: ["understanding", "worlds", "style", "feel", "script", "storyboard"] },
   "hands-on": { about: "every gate, including the animatic and the first built scene", gates: GATES },
 };
 const [cmd, proj, ...rest] = process.argv.slice(2), opt = (k, d) => { const i = rest.indexOf(k); return i > -1 && rest[i + 1] !== undefined ? rest[i + 1] : d; };
