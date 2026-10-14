@@ -2,6 +2,14 @@
 
 All notable changes. Dates are UTC.
 
+## 1.3.2 (2026-10-14): Windows fixes from a real Windows install
+A user's Windows machine had hand-patched three scripts; `update --force` replaced them and the diff showed what Windows needs. Fixed for every script, not only those three:
+- `import()` of a file path (Node on Windows rejects "C:\..."): `directions.mjs`, `styles.mjs`, `inspect-asset.mjs` now import file URLs.
+- ffmpeg `drawtext` with no font file (Windows builds have no default font): a shared `platform.mjs` finds one (Arial or Segoe UI on Windows, Arial or Helvetica on macOS, fontconfig on Linux; `MOTIONMAKER_FONT` overrides), used by `directions.mjs`, `styles.mjs`, `review-pack.mjs`, `feel.mjs`, `storyboard.mjs`, and the same logic in `around.sh` and `analyze-reference.sh`. Burned-in captions point libass at the Windows fonts folder.
+- `sweep.mjs` used `/tmp` (none on Windows): `os.tmpdir()`. `export.sh` used GNU-only `stat -c` (fails on macOS): `wc -c`.
+- **Backups no longer go inside the skills folder.** Claude Code loads every folder there that has a SKILL.md, so `<name>.bak-*` showed up as duplicate skills. Backups now go to `motionmaker-backups/` next to it (`~/.claude/motionmaker-backups`), and `install`/`update` move any old `.bak-*` folders there.
+- `portability.mjs` (in `smoke.sh`, 26 checks) fails if a path `import()` or a font-less `drawtext` comes back.
+
 ## 1.3.1 (2026-10-14): voice-over verified with a real ElevenLabs generation
 - One plain yes covers credits, plan and licence; after it, the voice is generated without further asking (again only when a run would cost clearly more than agreed). The user may give a **voice ID** directly (Voice Library, their own or designed voices): no audition needed. The audition page shows every voice's ID.
 - `voice.mjs get "<url>" --scene <n>`: downloads a generated take and checks it is audio (an expired link fails with a clear message). Verified live: a flow run's `content_url` is an MP3 valid for 2 hours; 55 credits ($0.011) for a 55-character line on eleven_v4; 3.55 s, mono 44.1 kHz, about -24 LUFS before the mix.

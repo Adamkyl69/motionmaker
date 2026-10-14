@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, readdirSync
 import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { ffFont } from "../../motionmaker-build/scripts/platform.mjs";   // a real font file for drawtext (Windows ffmpeg has no default)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), SK = path.resolve(HERE, "../..");
 const [cmd, file, ...rest] = process.argv.slice(2), opt = (k, d) => { const i = rest.indexOf(k); return i > -1 && rest[i + 1] !== undefined ? rest[i + 1] : d; };
@@ -142,8 +143,8 @@ async function animatic(out) {
     const label = `${s.n} ${(s.purpose || "").toUpperCase()}`.replace(/[':\\]/g, ""), fade = 0.25;
     const vf = [`scale=${aw}:${ah}:force_original_aspect_ratio=decrease,pad=${aw}:${ah}:(ow-iw)/2:(oh-ih)/2:color=0xDDDDDD`, `fps=${afps}`,
       ...(s.n > 1 && (timed[s.n - 2].transition === "fade") ? [`fade=t=in:st=0:d=${fade}:color=${bgOf(timed[s.n - 2])}`] : []), ...(s.transition === "fade" && s.n < timed.length ? [`fade=t=out:st=${(s.secs - fade).toFixed(3)}:d=${fade}:color=${bgOf(s)}`] : []),
-      `drawbox=x=0:y=0:w=iw:h=${fsz + 12}:color=black@0.6:t=fill`, `drawtext=text='${label}':x=8:y=6:fontsize=${fsz}:fontcolor=white`,
-      `drawtext=text='%{pts\\:hms\\:${s.start.toFixed(3)}}':x=w-tw-8:y=6:fontsize=${fsz}:fontcolor=white`];
+      `drawbox=x=0:y=0:w=iw:h=${fsz + 12}:color=black@0.6:t=fill`, `drawtext=${ffFont()}text='${label}':x=8:y=6:fontsize=${fsz}:fontcolor=white`,
+      `drawtext=${ffFont()}text='%{pts\\:hms\\:${s.start.toFixed(3)}}':x=w-tw-8:y=6:fontsize=${fsz}:fontcolor=white`];
     const clip = path.join(clips, `c${s.n}.mp4`);
     let input;
     if (motion && (s.template || "title-loop") !== "custom") {
@@ -156,7 +157,7 @@ async function animatic(out) {
     }
     if (!input) {
       const still = path.join(out, `scene-${s.n}.png`);
-      if (!existsSync(still)) execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "lavfi", "-i", `color=c=0xEEEEEE:s=${aw}x${ah}`, "-frames:v", "1", "-vf", `drawtext=text='${(s.visual || "custom scene").replace(/[':\\]/g, "").slice(0, 60)}':x=(w-tw)/2:y=(h-th)/2:fontsize=${fsz}:fontcolor=0x444444`, still]);
+      if (!existsSync(still)) execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "lavfi", "-i", `color=c=0xEEEEEE:s=${aw}x${ah}`, "-frames:v", "1", "-vf", `drawtext=${ffFont()}text='${(s.visual || "custom scene").replace(/[':\\]/g, "").slice(0, 60)}':x=(w-tw)/2:y=(h-th)/2:fontsize=${fsz}:fontcolor=0x444444`, still]);
       input = ["-loop", "1", "-framerate", String(afps), "-t", String(s.secs), "-i", still];
     }
     execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...input, "-t", String(s.secs), "-vf", vf.join(","), "-pix_fmt", "yuv420p", "-c:v", "libx264", "-crf", "23", "-r", String(afps), clip]);

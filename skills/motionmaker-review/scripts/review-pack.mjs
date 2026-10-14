@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ffFont } from "../../motionmaker-build/scripts/platform.mjs";   // a real font file for drawtext (Windows ffmpeg has no default)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), argv = process.argv.slice(2), film = argv[0], opt = (k, d) => { const i = argv.indexOf(k); return i > -1 && argv[i + 1] !== undefined ? argv[i + 1] : d; };
 if (!film || !existsSync(film)) { console.error('usage: review-pack.mjs <film.mp4> --dir <project> [--intent "..."] [--platform "..."]'); process.exit(1); }
@@ -25,7 +26,7 @@ const gj = path.join(pack, "film-gate.json"); run("node", [path.join(HERE, "film
 const every = dur <= 40 ? 0.5 : 1, tiles = Math.ceil(dur / every), perSheet = 24, sheets = Math.ceil(tiles / perSheet), tw = 320;
 for (let s = 0; s < sheets; s++) {
   const t0 = s * perSheet * every, t1 = Math.min(dur, (s + 1) * perSheet * every);
-  run("ffmpeg", ["-v", "error", "-y", "-ss", String(t0), "-t", String(t1 - t0), "-i", film, "-vf", `fps=${1 / every},scale=${tw}:-2,pad=iw:ih+24:0:24:color=0x222222,drawtext=text='%{pts\\:hms\\:${t0}}':x=6:y=4:fontsize=16:fontcolor=white,tile=6x4:padding=4:color=0x222222`, "-frames:v", "1", path.join(pack, `sheet-${String(s + 1).padStart(2, "0")}.png`)]);
+  run("ffmpeg", ["-v", "error", "-y", "-ss", String(t0), "-t", String(t1 - t0), "-i", film, "-vf", `fps=${1 / every},scale=${tw}:-2,pad=iw:ih+24:0:24:color=0x222222,drawtext=${ffFont()}text='%{pts\\:hms\\:${t0}}':x=6:y=4:fontsize=16:fontcolor=white,tile=6x4:padding=4:color=0x222222`, "-frames:v", "1", path.join(pack, `sheet-${String(s + 1).padStart(2, "0")}.png`)]);
 }
 // key frames: 8 evenly spaced + just after every detected cut (max 12)
 const times = new Set(Array.from({ length: 8 }, (_, i) => +((i + 0.5) * dur / 8).toFixed(2)));

@@ -12,6 +12,8 @@ run() { local name=$1 secs=$2 size=$3; shift 3
   if [ $rc -ne 0 ]; then echo "FAIL $name (scaffold exit $rc): $(echo "$out" | tail -1)"; fail=$((fail+1)); return; fi
   local w=${size%x*}; local fps=30
   if node "$CHK" "out/$name/anim.html" "$secs" "$fps" --size "$size" > "out/$name.check.txt" 2>&1; then echo "PASS $name"; pass=$((pass+1)); else echo "FAIL $name: $(grep FAIL "out/$name.check.txt" | head -2 | tr '\n' ' ')"; fail=$((fail+1)); fi; }
+# Windows portability guard (import() of paths, drawtext/subtitles fonts): static, runs everywhere
+if node "$SK/motionmaker-build/scripts/portability.mjs" "$SK" >/dev/null; then echo "PASS portability (Windows: import paths, fonts)"; pass=$((pass+1)); else echo "FAIL portability: $(node "$SK/motionmaker-build/scripts/portability.mjs" "$SK" | head -2 | tr '\n' ' ')"; fail=$((fail+1)); fi
 printf 'export function hello(name: string) {\n  return `Hello ${name}`;\n}\n' > sample.ts
 [ -f rec.mp4 ] || ffmpeg -loglevel error -y -f lavfi -i "testsrc=size=1280x800:rate=30:duration=4" -pix_fmt yuv420p rec.mp4
 run title-loop 4 960x540        env LOOK=swiss-minimal bash "$S" title-loop "Ship faster" 960 540 30 4 - - - out

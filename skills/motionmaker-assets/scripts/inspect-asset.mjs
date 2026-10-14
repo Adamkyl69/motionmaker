@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, statSync, mkdtempSync, copyFileSync, exist
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const argv = process.argv.slice(2), file = argv.find(a => !a.startsWith("--")), asJson = argv.includes("--json"), allowUnsafe = argv.includes("--allow-unsafe");
 if (!file) { console.error("usage: inspect-asset.mjs <file.json|file.svg|file.riv> [--json] [--allow-unsafe]"); process.exit(1); }
@@ -65,7 +65,7 @@ async function riv() {
   const req = createRequire(import.meta.url); let pkg = null;
   for (const r of [process.env.MOTIONMAKER_KITS && path.join(process.env.MOTIONMAKER_KITS, "node_modules"), path.join(os.homedir(), ".cache/motionmaker/kits/node_modules"), path.join(process.cwd(), "node_modules")].filter(Boolean)) if (existsSync(path.join(r, "@rive-app/canvas/rive.js"))) { pkg = path.join(r, "@rive-app/canvas"); break; }
   if (!pkg) { W("could not inspect: the Rive runtime is not installed (run: node kit.mjs setup, or npm i @rive-app/canvas)"); return; }
-  const { launch, serve } = await import(path.join(HERE, "../../motionmaker-build/scripts/browser.mjs"));
+  const { launch, serve } = await import(pathToFileURL(path.join(HERE, "../../motionmaker-build/scripts/browser.mjs")).href);   // a file URL: Windows paths are not import specifiers
   const tmp = mkdtempSync(path.join(os.tmpdir(), "mm-rive-")); copyFileSync(path.join(pkg, "rive.js"), path.join(tmp, "rive.js")); copyFileSync(path.join(pkg, "rive.wasm"), path.join(tmp, "rive.wasm")); copyFileSync(file, path.join(tmp, "a.riv"));
   writeFileSync(path.join(tmp, "i.html"), `<!doctype html><canvas id=c width=200 height=200></canvas><script src="rive.js"></script><script>rive.RuntimeLoader.setWasmUrl("./rive.wasm");
     window.load = (artboard, anims) => new Promise((res, rej) => { const r = new rive.Rive({ src: "a.riv", canvas: document.getElementById("c"), artboard, animations: anims, autoplay: false, onLoad() { r.stopRendering(); res(r); }, onLoadError: e => rej(String(e)) }); });</script>`);

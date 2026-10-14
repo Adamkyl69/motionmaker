@@ -3,6 +3,12 @@
 # 1) reports dimensions / fps / duration / frame count with ffprobe  2) extracts an overview at 2 images per second (960 px wide)
 # 3) builds a numbered contact sheet of the overview for a first look.  Next: around.sh for consecutive frames at key events.
 set -euo pipefail
+# a real font file for drawtext: Windows (and many macOS) ffmpeg builds have no default font. MOTIONMAKER_FONT overrides; Linux uses fontconfig.
+FF=""; case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*) W=$(cygpath -m "${WINDIR:-C:\Windows}" 2>/dev/null || echo "C:/Windows"); for f in arial.ttf segoeui.ttf calibri.ttf; do [ -f "$W/Fonts/$f" ] && { FF="fontfile='${W/:/\\:}/Fonts/$f':"; break; }; done;;
+  Darwin) for f in /System/Library/Fonts/Supplemental/Arial.ttf /Library/Fonts/Arial.ttf /System/Library/Fonts/Helvetica.ttc; do [ -f "$f" ] && { FF="fontfile='$f':"; break; }; done;;
+esac
+[ -n "${MOTIONMAKER_FONT:-}" ] && { MF=${MOTIONMAKER_FONT//\\//}; FF="fontfile='${MF/:/\\:}':"; }
 V=${1:?video}; O=${2:-reference-analysis}; mkdir -p "$O/overview"
 J=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,avg_frame_rate,nb_frames,duration,codec_name -show_entries format=duration -of json "$V")
 echo "$J" > "$O/probe.json"
@@ -13,6 +19,6 @@ console.log(`dimensions: ${s.width}x${s.height}\nframe rate: ${s.r_frame_rate} (
 ffmpeg -loglevel error -y -i "$V" -vf "fps=2,scale=960:-2" -q:v 3 "$O/overview/ov-%04d.jpg"
 N=$(ls "$O/overview" | wc -l); echo "overview: $N images at 2/s (image k is at t=(k-1)/2 s) -> $O/overview"
 COLS=6; ROWS=$(( (N + COLS - 1) / COLS ))
-ffmpeg -loglevel error -y -framerate 1 -i "$O/overview/ov-%04d.jpg" -vf "scale=320:-2,drawtext=text='%{n}':x=4:y=4:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6,tile=${COLS}x${ROWS}" -frames:v 1 -update 1 "$O/overview-sheet.jpg" 2>/dev/null || \
+ffmpeg -loglevel error -y -framerate 1 -i "$O/overview/ov-%04d.jpg" -vf "scale=320:-2,drawtext=${FF}text='%{n}':x=4:y=4:fontsize=18:fontcolor=white:box=1:boxcolor=black@0.6,tile=${COLS}x${ROWS}" -frames:v 1 -update 1 "$O/overview-sheet.jpg" 2>/dev/null || \
 ffmpeg -loglevel error -y -framerate 1 -i "$O/overview/ov-%04d.jpg" -vf "scale=320:-2,tile=${COLS}x${ROWS}" -frames:v 1 -update 1 "$O/overview-sheet.jpg"
 echo "$O/overview-sheet.jpg (tile index k = overview image k+1; time = k/2 s)"

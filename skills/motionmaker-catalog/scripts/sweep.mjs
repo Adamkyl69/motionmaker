@@ -36,8 +36,8 @@ for (const it of items) {
     // Revisiting a time can differ for two very different reasons: sub-pixel noise (harmless) or timeline state that accumulates as it plays
     // forward (visible: doubled text, stale layers). Measure it. Order-dependent effects are correct only when rendered ONCE, IN ORDER, on a fresh page.
     if (!A.equals(B)) {
-      writeFileSync("/tmp/_sweep-a.png", A); writeFileSync("/tmp/_sweep-b.png", B);
-      const m = spawnSync("ffmpeg", ["-hide_banner", "-i", "/tmp/_sweep-a.png", "-i", "/tmp/_sweep-b.png", "-lavfi", "psnr", "-f", "null", "-"], { encoding: "utf8" }).stderr.match(/average:([\d.]+|inf)/);
+      const ta = path.join(os.tmpdir(), "_sweep-a.png"), tb = path.join(os.tmpdir(), "_sweep-b.png"); writeFileSync(ta, A); writeFileSync(tb, B);   // os.tmpdir(): there is no /tmp on Windows
+      const m = spawnSync("ffmpeg", ["-hide_banner", "-i", ta, "-i", tb, "-lavfi", "psnr", "-f", "null", "-"], { encoding: "utf8" }).stderr.match(/average:([\d.]+|inf)/);
       r.psnr = m ? +m[1] : null;
       if (r.psnr !== null && r.psnr >= 50) r.notes = [`revisit differs by noise only (${r.psnr.toFixed(0)} dB)`];
       else { r.orderDependent = true; r.problems.push(`ORDER-DEPENDENT: revisiting a time looks different (${r.psnr ? r.psnr.toFixed(0) + " dB" : "?"}); render once, in order, fresh page; never re-render single frames`); }

@@ -10,7 +10,7 @@
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { contrast } from "./palette.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), SK = path.resolve(HERE, "../.."), LOOKS = JSON.parse(readFileSync(path.join(HERE, "../looks/looks.json"), "utf8")).looks;
@@ -36,7 +36,8 @@ function pick() {
 const chosen = pick(); for (const k of chosen) if (!LOOKS[k]) { console.error(`unknown look '${k}'. Available: ${Object.keys(LOOKS).join(", ")}`); process.exit(2); }
 mkdirSync(out, { recursive: true });
 
-const { openAnim } = await import(path.join(SK, "motionmaker-build/scripts/browser.mjs"));
+const { openAnim } = await import(pathToFileURL(path.join(SK, "motionmaker-build/scripts/browser.mjs")).href);   // a file URL: Windows paths are not import specifiers
+const { ffFont } = await import(pathToFileURL(path.join(SK, "motionmaker-build/scripts/platform.mjs")).href);
 const tiles = [], meta = [];
 for (const [i, k] of chosen.entries()) {
   const dir = path.join(out, k);
@@ -46,7 +47,7 @@ for (const [i, k] of chosen.entries()) {
   if (errors.length) console.error(`${k}: page errors: ${errors.join("; ")}`);
   const L = LOOKS[k], letter = "ABCDEFGH"[i];
   const label = `${letter}  ${L.name}`;
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", path.join(dir, "hero.png"), "-vf", `drawbox=x=0:y=0:w=iw:h=34:color=black@0.55:t=fill,drawtext=text='${label}':x=12:y=8:fontsize=18:fontcolor=white`, path.join(dir, "tile.png")]);
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", path.join(dir, "hero.png"), "-vf", `drawbox=x=0:y=0:w=iw:h=34:color=black@0.55:t=fill,drawtext=${ffFont()}text='${label}':x=12:y=8:fontsize=18:fontcolor=white`, path.join(dir, "tile.png")]);
   tiles.push(path.join(dir, "tile.png"));
   const warnings = []; if (accent !== "-") { const k = contrast(L.bg, accent); if (k < 3) warnings.push(`brand accent ${accent} on this look's background ${L.bg} is only ${k.toFixed(2)}:1 (needs 3:1 for shapes, 4.5:1 for text): use a lighter tint of the brand colour, or a light look`); }
   meta.push({ option: letter, look: k, name: L.name, feel: L.feel, good_for: L.good_for, bg: L.bg, fg: L.fg, accent: accent === "-" ? L.accent : accent, font: L.font, weight: L.weight, motion: L.motion, warnings });

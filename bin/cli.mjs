@@ -10,7 +10,8 @@
 //
 // Targets: --global = $CLAUDE_CONFIG_DIR/skills or ~/.claude/skills (default); --project = ./.claude/skills; --dir <path>.
 // Safety: installs only the skill folders shipped here; refuses to overwrite a folder it did not install (or that you edited)
-// unless --force, and then renames the old one to <name>.bak-<timestamp> instead of deleting it. --dry-run changes nothing.
+// unless --force, and then moves the old one to motionmaker-backups/<name>-<timestamp> NEXT TO the skills folder (never inside it: Claude
+// Code loads every folder there that has a SKILL.md, so a backup inside showed up as a duplicate skill). --dry-run changes nothing.
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, renameSync, readdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -36,18 +37,30 @@ const walk = (dir, base = dir) => readdirSync(dir, { withFileTypes: true }).flat
 const shippedSkills = () => readdirSync(SRC, { withFileTypes: true }).filter(e => e.isDirectory() && existsSync(path.join(SRC, e.name, "SKILL.md"))).map(e => e.name).sort();
 const readManifest = dir => { try { return JSON.parse(readFileSync(path.join(dir, MANIFEST), "utf8")); } catch { return null; } };
 const ts = () => new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+// backups live next to the skills folder (~/.claude/motionmaker-backups), not in it
+const backupRoot = dir => path.join(path.dirname(dir), "motionmaker-backups");
+const backup = (dir, name) => { const to = path.join(backupRoot(dir), `${name}-${ts()}`); mkdirSync(backupRoot(dir), { recursive: true }); renameSync(path.join(dir, name), to); return to; };
+// versions up to 1.3.1 left <name>.bak-<timestamp> folders INSIDE the skills folder (loaded as duplicate skills): move them out
+function relocateOldBackups(dir, names) {
+  if (!existsSync(dir)) return;
+  for (const e of readdirSync(dir)) { const m = e.match(/^(.+)\.bak-(\d{14})$/); if (!m || !names.includes(m[1])) continue;
+    const to = path.join(backupRoot(dir), `${m[1]}-${m[2]}`);
+    say(`  > old backup ${e} ${dry ? "would move" : "moved"} to ${to} (inside the skills folder it was loaded as a duplicate skill)`);
+    if (!dry) { mkdirSync(backupRoot(dir), { recursive: true }); renameSync(path.join(dir, e), to); } }
+}
 const modified = (dir, m, name) => (m?.files?.[name] ? Object.entries(m.files[name]).filter(([f, h]) => !existsSync(path.join(dir, name, f)) || sha(path.join(dir, name, f)) !== h).map(([f]) => f) : null);
 
 function install(update) {
   const dir = targetDir(), skills = shippedSkills(), old = readManifest(dir);
   if (!skills.length) die(`no skills found in ${SRC}`);
   say(`${update ? "Updating" : "Installing"} ${skills.length} skills (v${PKG.version}) -> ${dir}${dry ? "   [dry run]" : ""}`);
+  relocateOldBackups(dir, skills);
   const files = {}, plan = [];
   for (const name of skills) {
     const dest = path.join(dir, name), exists = existsSync(dest), ours = !!old?.skills?.includes(name), edits = ours ? modified(dir, old, name) : null;
     let action = "install";
-    if (exists && !ours) action = force ? "replace (backup)" : "SKIP: exists and was not installed by motionmaker (use --force to replace, the old one is kept as a backup)";
-    else if (exists && ours && edits?.length) action = force ? `replace (backup; ${edits.length} edited file(s))` : `SKIP: ${edits.length} file(s) were edited since install, e.g. ${edits[0]} (use --force; the old folder is kept as a backup)`;
+    if (exists && !ours) action = force ? "replace (backup)" : "SKIP: exists and was not installed by motionmaker (use --force to replace; the old one is moved to motionmaker-backups next to the skills folder)";
+    else if (exists && ours && edits?.length) action = force ? `replace (backup; ${edits.length} edited file(s))` : `SKIP: ${edits.length} file(s) were edited since install, e.g. ${edits[0]} (use --force; the old folder is moved to motionmaker-backups next to the skills folder)`;
     else if (exists && ours) action = "update";
     plan.push({ name, dest, action });
     say(`  ${action.startsWith("SKIP") ? "!" : "+"} ${name.padEnd(22)} ${action}`);
@@ -57,7 +70,7 @@ function install(update) {
   const installed = [];
   for (const p of plan) {
     if (p.action.startsWith("SKIP")) { if (old?.files?.[p.name]) files[p.name] = old.files[p.name], installed.push(p.name); continue; }
-    if (existsSync(p.dest) && p.action.includes("backup")) renameSync(p.dest, `${p.dest}.bak-${ts()}`);
+    if (existsSync(p.dest) && p.action.includes("backup")) say(`  > ${p.name}: the old folder is kept at ${backup(dir, p.name)}`);
     else if (existsSync(p.dest)) rmSync(p.dest, { recursive: true, force: true });
     cpSync(path.join(SRC, p.name), p.dest, { recursive: true, preserveTimestamps: true });
     files[p.name] = Object.fromEntries(walk(p.dest).map(f => [f, sha(path.join(p.dest, f))])); installed.push(p.name);
@@ -72,12 +85,13 @@ function uninstall() {
   const dir = targetDir(), m = readManifest(dir);
   if (!m) die(`nothing to uninstall: no ${MANIFEST} in ${dir}`);
   say(`Removing ${m.skills.length} skills installed by motionmaker v${m.version} from ${dir}${dry ? "   [dry run]" : ""}`);
+  relocateOldBackups(dir, m.skills);
   for (const name of m.skills) {
     const edits = modified(dir, m, name);
     if (!existsSync(path.join(dir, name))) { say(`  - ${name}: already gone`); continue; }
     if (edits?.length && !force) { say(`  ! ${name}: ${edits.length} file(s) edited since install (e.g. ${edits[0]}); kept. Use --force to move it to a backup and remove.`); continue; }
     say(`  - ${name}${edits?.length ? " (edited: moved to backup)" : ""}`);
-    if (!dry) { if (edits?.length) renameSync(path.join(dir, name), path.join(dir, `${name}.bak-${ts()}`)); else rmSync(path.join(dir, name), { recursive: true, force: true }); }
+    if (!dry) { if (edits?.length) say(`    kept at ${backup(dir, name)}`); else rmSync(path.join(dir, name), { recursive: true, force: true }); }
   }
   if (!dry) { const left = m.skills.filter(n => existsSync(path.join(dir, n))); if (left.length) writeFileSync(path.join(dir, MANIFEST), JSON.stringify({ ...m, skills: left }, null, 1)); else rmSync(path.join(dir, MANIFEST), { force: true }); }
   say(dry ? "\n(dry run: nothing was changed)" : "\nDone.");

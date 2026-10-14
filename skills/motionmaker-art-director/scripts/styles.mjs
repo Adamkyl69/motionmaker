@@ -8,7 +8,7 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), SK = path.resolve(HERE, "../.."), S = JSON.parse(readFileSync(path.join(HERE, "../styles/styles.json"), "utf8")).styles;
 const a = process.argv.slice(2), cmd = a[0], opt = (k, d) => { const i = a.indexOf(k); return i > -1 && a[i + 1] !== undefined ? a[i + 1] : d; };
@@ -21,14 +21,14 @@ if (cmd !== "frames" || !a[1]) { console.error('usage: styles.mjs list | suggest
 const text = a[1], ids = (opt("--styles") || "bauhaus,van-gogh,seurat").split(",").map(s => s.trim()), [W, H] = opt("--size", "540x540").split("x").map(Number), out = path.resolve(opt("--out", "ad/styles"));
 for (const k of ids) if (!S[k]) { console.error(`unknown style '${k}'. Have: ${Object.keys(S).join(", ")}`); process.exit(2); }
 mkdirSync(out, { recursive: true }); const FPS = 24, SECS = 6, POSTER = Math.round(FPS * SECS * 0.6);
-const { openAnim } = await import(path.join(SK, "motionmaker-build/scripts/browser.mjs")); const tiles = [], meta = [];
+const { openAnim } = await import(pathToFileURL(path.join(SK, "motionmaker-build/scripts/browser.mjs")).href); const { ffFont } = await import(pathToFileURL(path.join(SK, "motionmaker-build/scripts/platform.mjs")).href); const tiles = [], meta = [];
 for (const [i, k] of ids.entries()) {
   execFileSync("bash", [path.join(SK, "motionmaker/scripts/scaffold.sh"), k, text, String(W), String(H), String(FPS), String(SECS), "-", "-", "-", out], { env: { ...process.env, TEMPLATE: "style-scene", STYLE: k }, stdio: ["ignore", "ignore", "inherit"] });
   const dir = path.join(out, k), { page, errors, close } = await openAnim(path.join(dir, "anim.html"), W, H);
   await page.evaluate(f => window.renderFrame(f), POSTER); await page.screenshot({ path: path.join(dir, "poster.png") }); await close();
   if (errors.length) console.error(`${k}: page errors: ${errors.join("; ")}`);
   const s = S[k], label = `${"ABCD"[i]}  ${s.name}  ${"*".repeat(s.rating)}`.replace(/'/g, "");
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", path.join(dir, "poster.png"), "-vf", `pad=iw:ih+34:0:34:color=0x111111,drawtext=text='${label}':x=12:y=8:fontsize=18:fontcolor=white`, path.join(dir, "tile.png")]);
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", path.join(dir, "poster.png"), "-vf", `pad=iw:ih+34:0:34:color=0x111111,drawtext=${ffFont()}text='${label}':x=12:y=8:fontsize=18:fontcolor=white`, path.join(dir, "tile.png")]);
   tiles.push(path.join(dir, "tile.png")); meta.push({ option: "ABCD"[i], style: k, name: s.name, rating: s.rating, era: s.era, goodFor: s.goodFor, card: `motionmaker-art-director/styles/${k}.md` });
 }
 execFileSync("ffmpeg", ["-loglevel", "error", "-y", ...tiles.flatMap(t => ["-i", t]), ...(tiles.length > 1 ? ["-filter_complex", `${tiles.map((_, i) => `[${i}]`).join("")}hstack=inputs=${tiles.length}`] : []), path.join(out, "styles.png")]);

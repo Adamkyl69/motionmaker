@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ffFont } from "../../motionmaker-build/scripts/platform.mjs";   // a real font file for drawtext (Windows ffmpeg has no default)
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), SK = path.resolve(HERE, "../..");
 const a = process.argv.slice(2), opt = (k, d) => { const i = a.indexOf(k); return i > -1 && a[i + 1] !== undefined ? a[i + 1] : d; };
@@ -32,7 +33,7 @@ const run = (cmd, args, env = {}) => execFileSync(cmd, args, { env: { ...process
 // a caption strip ABOVE the picture (never painted over it)
 // (the strip height keeps the total even: H.264 needs even sizes)
 const strip = size => size + 14 + ((H + size + 14) % 2);
-const label = (t, size) => `pad=iw:ih+${strip(size)}:0:${strip(size)}:color=0x222222,drawtext=text='${t.replace(/[':\\]/g, "")}':x=10:y=7:fontsize=${size}:fontcolor=white`;
+const label = (t, size) => `pad=iw:ih+${strip(size)}:0:${strip(size)}:color=0x222222,drawtext=${ffFont()}text='${t.replace(/[':\\]/g, "")}':x=10:y=7:fontsize=${size}:fontcolor=white`;
 const even = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
 for (const [i, f] of FEELS.entries()) {
   run("bash", [path.join(SK, "motionmaker/scripts/scaffold.sh"), f.id, text, String(W), String(H), String(fps), String(secs), ...colours, work], { FEEL: f.id, LOOK: look });

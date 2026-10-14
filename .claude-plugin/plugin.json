@@ -1,7 +1,7 @@
 {
   "name": "motionmaker",
   "description": "Make frame-exact motion graphics with Claude: one /motionmaker command that works like a studio: pre-production first (describe what you picture, a brief-back to confirm, numbered mood boards and motion-feel videos to choose from, script, storyboard and animatic, approvals recorded in your words), voice-over via an ElevenLabs connector or your own recording, an art director, a frame-locked brief, renders, reviews, adds synthesized sound and exports MP4/GIF. Includes reference-video analysis, a motion-technique catalog matcher, illustration and animation assets (Open Peeps, Humaaans, LottieFiles, Rive) with a licence ledger, optional libraries (bundled fonts per look, code reveals, equations, globe maps, hand-drawn marks, icon sets, frame-exact footage), art styles (Bauhaus, Van Gogh, Constructivism, Seurat, Matisse, ukiyo-e), beat-grid music, a finished-film gate with an independent reviewer and sealed delivery, an OpenMontage handoff for footage and AI-video work, Anatomy machine explainers filmed frame-exactly (any real-time web page can be filmed), sixteen templates and verification tools.",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "author": {
     "name": "Adamkyl69"
   },

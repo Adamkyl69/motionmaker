@@ -12,11 +12,14 @@ DA=$(ABS "$D"); NA=$(ABS "$NAME"); IN=(-framerate "$FPS" -i "$DA/f%04d.png"); AO
 VF="pad=ceil(iw/2)*2:ceil(ih/2)*2"
 if [ -n "${CAPTIONS:-}" ]; then
   cp "$CAPTIONS" "$NA.captions.srt"
-  VF="$VF,subtitles=$(basename "$NA").captions.srt:force_style='FontSize=20,Outline=2,Shadow=0,BorderStyle=1,MarginV=28'"
+  # libass finds no fonts on many Windows ffmpeg builds: point it at the Windows fonts folder (drive colon escaped, as for drawtext)
+  FD=""; case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) W=$(cygpath -m "${WINDIR:-C:\Windows}" 2>/dev/null || echo "C:/Windows"); FD=":fontsdir='${W/:/\\:}/Fonts'";; esac
+  VF="$VF,subtitles=$(basename "$NA").captions.srt$FD:force_style='Fontname=Arial,FontSize=20,Outline=2,Shadow=0,BorderStyle=1,MarginV=28'"
 fi
 ( cd "$(dirname "$NA")" && ffmpeg -loglevel error -y "${IN[@]}" -vf "$VF" -c:v libx264 -profile:v high -pix_fmt yuv420p ${AO[@]+"${AO[@]}"} -movflags +faststart "$NA.mp4" )
 ffmpeg -loglevel error -y -framerate "$FPS" -i "$D/f%04d.png" -vf "split[a][b];[a]palettegen=stats_mode=full[p];[b][p]paletteuse=dither=bayer:bayer_scale=3" -loop 0 "$NAME.gif"
 N=$(ls "$D"/f*.png | wc -l)
 [ "$N" -gt 350 ] && echo "WARNING: $N frames > 350 (X GIF cap)"
-SZ=$(stat -c %s "$NAME.gif"); [ "$SZ" -gt 15728640 ] && echo "WARNING: GIF > 15 MB (X cap)"
+SZ=$(wc -c < "$NAME.gif" | tr -d " ");   # (stat -c is GNU only; macOS has BSD stat)
+ [ "$SZ" -gt 15728640 ] && echo "WARNING: GIF > 15 MB (X cap)"
 echo "$NAME.mp4 $NAME.gif ($N frames)"
