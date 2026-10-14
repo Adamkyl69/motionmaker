@@ -2,6 +2,13 @@
 
 All notable changes. Dates are UTC.
 
+## 1.1.0 (2026-10-14): animations as code for websites and React apps
+- **`export-web.mjs`** (motionmaker-build): any finished piece ships as code: a deploy folder (the page plus exactly the files it loads, found by drawing every frame in the sandboxed browser), `motion-player.ts` / `.js` (no dependencies: `mountMotion`, `<motion-clip>`), `Motion.tsx` / `.jsx` (React 18/19, Next.js client component), `demo.html` and a README. Frame n on the page is frame n of the video; it pauses off screen and in background tabs, shows a poster frame for reduced motion, and works across origins. `--check` compares sample frames pixel for pixel with the renderer and tests play, pause, loop, end and reduced motion.
+- **Live export** (`--live`) for real-time pages: a pausable clock injected as the page's first script, a crop to the card, a scripted tour (same actions as `film-realtime.mjs`) that ends at the visitor's first real touch.
+- **`anatomy.mjs web`**: Anatomy figures live on a website, the visitor takes them apart; carries the Anatomy credit and its MIT notice.
+- `smoke.sh` runs both exports (24 checks).
+- Fixed while testing: player file names that clash on case-insensitive file systems (`motion.ts` vs `Motion.tsx`; now `motion-player.ts`), React's explicit `undefined` props overriding defaults, a frame scheduler that doubled every frame, Chrome's own pointer moves after scrolling counted as the visitor, and a misleading sandbox warning in every host page's console.
+
 ## 1.0.0 (2026-10-13)
 First stable release: thirteen skills, sixteen templates, tested end to end on Linux (see "What was tested" in the README).
 

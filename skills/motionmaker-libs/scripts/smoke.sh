@@ -29,6 +29,10 @@ run icon-features 4 960x540     env LOOK=playful-pop TEMPLATE=icon-features ICON
 for st in bauhaus van-gogh constructivism seurat matisse ukiyo-e; do run style-$st 4 960x540 env TEMPLATE=style-scene STYLE=$st bash "$S" style-$st "Made by hand" 960 540 30 4 - - - out; done
 printf '[{"t":0.8,"do":"move","selector":"#card","from":[0.2,0.5],"to":[0.8,0.4],"dur":0.8},{"t":2,"do":"leave"}]' > fx-actions.json
 if node "$SK/motionmaker-build/scripts/film-realtime.mjs" "$SK/motionmaker-build/scripts/fixtures/realtime-demo.html" 2.5 30 --size 800x480 --clip "#card" --actions fx-actions.json --out out/film-realtime/frames --check 2>&1 | grep -q "^PASS"; then echo "PASS film-realtime (virtual clock, repeatable)"; pass=$((pass+1)); else echo "FAIL film-realtime (two films differ or the page errored)"; fail=$((fail+1)); fi
+# code export: a finished piece played live by the web player (frames must equal the renderer's), and a real-time page exported live
+EW="$SK/motionmaker-build/scripts/export-web.mjs"
+if [ -f out/title-loop/anim.html ] && node "$EW" out/title-loop/anim.html --out out/web-export --check 2>&1 | grep -q "^PASS  web export"; then echo "PASS web-export (TypeScript/React player, frame-exact)"; pass=$((pass+1)); else echo "FAIL web-export (run: node $EW out/title-loop/anim.html --check)"; fail=$((fail+1)); fi
+if node "$EW" "$SK/motionmaker-build/scripts/fixtures/realtime-demo.html" --live --clip "#card" --viewport 800x480 --actions fx-actions.json --out out/web-live --check 2>&1 | grep -q "^PASS  live web export"; then echo "PASS web-live (real-time page: pause, tour, reduced motion)"; pass=$((pass+1)); else echo "FAIL web-live (run: node $EW <fixture> --live --clip '#card' --check)"; fail=$((fail+1)); fi
 if node "$SK/motionmaker-assets/scripts/kit.mjs" peep --hair ShortVolumed --face Cute --body Shirt --out peep.svg >/dev/null 2>&1; then
   run illustration-scene 4 960x540 env LOOK=night-cinema TEMPLATE=illustration-scene ASSET=peep.svg bash "$S" illustration-scene "Meet us" 960 540 30 4 - - - out
 else echo "SKIP illustration-scene (run: node $SK/motionmaker-assets/scripts/kit.mjs setup)"; skip=$((skip+1)); fi

@@ -1,6 +1,6 @@
 ---
 name: motionmaker-anatomy
-description: Explain a technical idea as a working machine, on video. Uses Anatomy (github.com/wheresryan22/anatomy, MIT, installed separately), which builds interactive isometric figures where the object's working IS the concept (a cache becomes a pin-tumbler lock, a rate limiter a token bucket), then films the figure frame-exactly with Motionmaker (virtual clock, scripted hover/drag/clicks, CPU-rasterised so two films are identical), and runs our film QA. Use when the user wants an explainer of how something works (software, hardware, science), a "show the mechanism" shot, an exploded view, or mentions Anatomy.
+description: Explain a technical idea as a working machine, on video or live on a website. Uses Anatomy (github.com/wheresryan22/anatomy, MIT, installed separately), which builds interactive isometric figures where the object's working IS the concept (a cache becomes a pin-tumbler lock, a rate limiter a token bucket), then films the figure frame-exactly with Motionmaker (virtual clock, scripted hover/drag/clicks, CPU-rasterised so two films are identical), and runs our film QA; or exports the figure live for a website or React app (the visitor takes it apart; a scripted tour until they touch it). Use when the user wants an explainer of how something works (software, hardware, science), a "show the mechanism" shot, an exploded view, or mentions Anatomy.
 ---
 
 # Anatomy figures on film
@@ -28,6 +28,14 @@ node $AN film <figure.html> --secs 9 --fps 24 --frame 1080x1080 \
 - Shots: `hover <sel> x,y @t`, `move <sel> x0,y0>x1,y1 @t+dur` (a glide, one pointer event per frame), `click <sel> @t`, `key <Key> @t`, `leave @t`. No shots = the figure's idle tour.
 - It films the card (`.iso-plate`), scales it to `--frame` on the page colour, hides "hover to..." hints (they address a reader, not a viewer; `--keep-hint` keeps them), and `--check` films twice and requires identical frames.
 - Then the usual path: `export.sh` (MP4/GIF), `film-gate.mjs`, `review-pack.mjs` + an independent reviewer, `deliver.mjs`. Sound and a title/end card: our templates and `montage.mjs finish` (it joins any clips).
+
+## On a website or in a React app (live, not filmed)
+The figure is already a working machine, so on a web page it can stay one: `node $AN web <figure.html> [--shots "<same shot list>"] [--repeat <secs>] [--out <dir>] --check`.
+- Visitors hover, drag and use the keys themselves; the "hover to..." hint stays (on a page the visitor is the reader; `--hide-hint` removes it).
+- `--shots` plays the tour live (same grammar as `film`) until the visitor's first real touch; then the figure is theirs. `--repeat <secs>` restarts it.
+- The same player as every code export (`motion-player.ts`, `Motion.tsx`, `<motion-clip>`): it shows only the card, pauses the figure's own clock off screen and in background tabs, and for reduced motion holds still until touched.
+- Credit and licence: the export carries "Figure built with Anatomy by Ryan (MIT)" in the page and copies Anatomy's LICENSE as `NOTICE-LICENSE` (MIT asks for its notice to travel with copies of its code). Keep both.
+- Tested with Anatomy's dial indicator and Raptor (WebGL plume) examples: the tour drives the figure (the dial's readout follows the scripted pointer), and the Raptor fires inside the player at the same cost as the page on its own. Heavy WebGL figures need a real GPU to be smooth; on a software renderer the Raptor's plume runs at about 1.3 frames per second, in or out of the player.
 
 ## How the filming works (so you can debug it)
 `motionmaker-build/scripts/film-realtime.mjs` (general: any real-time web page, not only Anatomy):
