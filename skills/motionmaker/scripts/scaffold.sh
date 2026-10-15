@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene|cel-scene] [SCENE=<preset|file>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene|cel-scene|three-model] [SCENE=<preset|file>] [MODEL=<gltf> HDRI=<hdr>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -170,6 +170,16 @@ cp "$SK/motionmaker-build/scripts/tokens.js" "$D/tokens.js"
 if [ "$TPL" = three-product ]; then
   P=$(find_pkg three) || { echo "three not found: run  npm i three@0.160.0  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
   mkdir -p "$D/vendor/addons/environments"; cp "$P/build/three.module.min.js" "$D/vendor/"; cp "$P/examples/jsm/environments/RoomEnvironment.js" "$D/vendor/addons/environments/"
+fi
+if [ "$TPL" = three-model ]; then   # MODEL=<file.gltf|.glb> (its folder is copied: .bin, textures), HDRI=<file.hdr> optional
+  MODEL=${MODEL:?"three-model needs MODEL=<file.gltf or .glb> (e.g. from motionmaker-assets/scripts/polyhaven.mjs get <id>)"}
+  case "$MODEL" in *.gltf|*.glb) ;; *) echo "MODEL must be a .gltf or .glb file" >&2; exit 6;; esac; [ -f "$MODEL" ] || { echo "no such model: $MODEL" >&2; exit 6; }
+  P=$(find_pkg three) || { echo "three not found: run  npm i three@0.160.0  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
+  mkdir -p "$D/vendor/addons/environments" "$D/vendor/addons/loaders" "$D/vendor/addons/utils" "$D/model"; cp "$P/build/three.module.min.js" "$D/vendor/"
+  cp "$P/examples/jsm/environments/RoomEnvironment.js" "$D/vendor/addons/environments/"; cp "$P/examples/jsm/loaders/GLTFLoader.js" "$P/examples/jsm/loaders/RGBELoader.js" "$D/vendor/addons/loaders/"; cp "$P/examples/jsm/utils/BufferGeometryUtils.js" "$D/vendor/addons/utils/"
+  cp -R "$(dirname "$MODEL")/." "$D/model/"; MF=$(basename "$MODEL"); HD=false
+  if [ -n "${HDRI:-}" ]; then case "$HDRI" in *.hdr) ;; *) echo "HDRI must be a .hdr file" >&2; exit 6;; esac; [ -f "$HDRI" ] || { echo "no such HDRI: $HDRI" >&2; exit 6; }; cp "$HDRI" "$D/env.hdr"; HD=true; fi
+  node -e 'const f=process.argv[1],fs=require("fs");fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("__MODELFILE__",process.argv[2]).replace("__HDRI__",process.argv[3]))' "$D/anim.html" "$MF" "$HD"
 fi
 if [ "$TPL" = gsap-kinetic ]; then
   P=$(find_pkg gsap) || { echo "gsap not found: run  npm i gsap@3.12.5  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }

@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a real 3D MODEL in the browser (Three.js r160): a glTF (e.g. from Poly Haven via motionmaker-assets/scripts/polyhaven.mjs) on a
+     turntable, lit by an HDRI when one is given (reflections and light; the background stays the flat brand colour) or by a built-in studio,
+     with a soft contact shadow. The model is fitted to the frame from its bounding box. Fast (seconds, not Blender's minutes), stylised light.
+     Frame-exact: the model turns exactly once over the clip (a seamless loop); renderFrame(f) is a pure function of f.
+     Needs ./vendor (three, GLTFLoader, RGBELoader: scaffold.sh copies them), ./model/ (the glTF and its files) and optionally ./env.hdr. -->
+<style>html,body{margin:0;background:__BG__}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js","three/addons/":"./vendor/addons/"}}</script>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const CONFIG = { w:__W__, h:__H__, fps:__FPS__, frames:__N__, bg:"__BG__", model:"model/__MODELFILE__", hdri:__HDRI__, turns:1, elevation:0.32, fov:30, fill:0.78 };
+const N = CONFIG.frames;
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(CONFIG.w, CONFIG.h, false); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(CONFIG.bg);
+const pm = new THREE.PMREMGenerator(renderer), cam = new THREE.PerspectiveCamera(CONFIG.fov, CONFIG.w / CONFIG.h, 0.05, 200);
+const key = new THREE.DirectionalLight(0xffffff, CONFIG.hdri ? 1.2 : 2.4); key.position.set(-3, 6, 4); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8; key.shadow.bias = -0.0004; Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); scene.add(key);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.25 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const turn = new THREE.Group(); scene.add(turn);
+let dist = 6, lookY = 1;
+async function load() {
+  scene.environment = CONFIG.hdri ? pm.fromEquirectangular(await new RGBELoader().loadAsync("env.hdr")).texture : pm.fromScene(new RoomEnvironment(), 0.04).texture;
+  const g = await new GLTFLoader().loadAsync(CONFIG.model), m = g.scene;
+  m.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } });
+  const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3()), k = 2 / Math.max(size.x, size.y, size.z);
+  m.scale.setScalar(k); m.position.set(-c.x * k, -box.min.y * k, -c.z * k); turn.add(m);
+  const h = size.y * k, r = Math.hypot(size.x, size.z) * k / 2, fov = CONFIG.fov * Math.PI / 180, aspect = CONFIG.w / CONFIG.h;
+  lookY = h * 0.5; dist = Math.max((h / 2) / Math.tan(fov / 2), r / (Math.tan(fov / 2) * aspect)) / CONFIG.fill + r;   // frame the whole model, portrait or landscape
+}
+function renderFrame(f) {
+  turn.rotation.y = 2 * Math.PI * CONFIG.turns * (f / N);                       // exactly one turn over the clip: the last frame flows into the first
+  const e = CONFIG.elevation, breathe = 1 - 0.03 * (0.5 - 0.5 * Math.cos(2 * Math.PI * f / N));
+  cam.position.set(0, lookY + Math.sin(e) * dist * breathe, Math.cos(e) * dist * breathe); cam.lookAt(0, lookY, 0);
+  renderer.render(scene, cam);
+}
+window.renderFrame = renderFrame;
+window.ready = load().then(() => renderFrame(0));
+const q = new URLSearchParams(location.search).get("t");
+window.ready.then(() => { if (q !== null) renderFrame(Math.round(parseFloat(q) * CONFIG.fps)); else { let s = null; (function L(ts) { s ??= ts; renderFrame(Math.floor((ts - s) / 1000 * CONFIG.fps) % N); requestAnimationFrame(L); })(0); } });  // live preview only
+</script>

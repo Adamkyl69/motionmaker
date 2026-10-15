@@ -2,6 +2,12 @@
 
 All notable changes. Dates are UTC.
 
+## 1.7.0 (2026-10-15): Poly Haven 3D assets
+- `motionmaker-assets/scripts/polyhaven.mjs`: Poly Haven's free API (no key, commercial use allowed, checked 2026-10-15): 521 glTF models, 997 HDRIs, 869 PBR materials, all CC0. `search` (names, tags, categories; listing cached a day), `categories`, `sheet` (numbered thumbnails to show before choosing), `get` (every file checked against Poly Haven's md5, paths kept inside the asset folder, a ledger entry crediting the authors and Poly Haven as their API asks). Sends a unique User-Agent as the API requires.
+- New template `three-model`: a glTF model on a turntable in the browser, fitted to the frame from its bounding box (portrait or landscape), HDRI reflections with the flat brand background, a contact shadow; seconds to render, frame-exact, a seamless loop. A generated test box ships for the smoke test.
+- Blender: `init turntable --hdri <.hdr>` lights the scene from an HDRI (the camera still sees the brand colour) and `--floor <material folder>` puts a PBR material on the floor. Tested with a Poly Haven lantern, studio HDRI and mud-and-leaves material.
+- `smoke.sh`: three-model with the test box, and the Poly Haven id guard (39 checks; no network calls in the smoke test).
+
 ## 1.6.0 (2026-10-15): 2D cel animation
 - **`motionmaker-cel`** (new, 17 skills) and the `cel-scene` template: the look of traditional 2D cel animation, frame-exact. A kit (`cel.js`) for inked shapes whose line boils per drawing (seeded), cel shading (flat colour, a hard shadow band away from the light, a highlight on the lit edge), drawings held on twos or threes while camera moves run on ones, painted backgrounds drawn once and panned, light cones and glows, straight and radial speed lines, smears, impact frames, decaying camera shake, cel smoke, flames redrawn per drawing, and display lettering with an ink outline and an overshoot pop.
 - Presets: night-drive (a roadster past townhouses at night, with its own vertical framing), impact (a product slam), launch (a rocket in billowing smoke). `cel.mjs list | new | check` (the scene contract: no clock, no unseeded random, no network or dynamic code).

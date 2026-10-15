@@ -25,6 +25,13 @@ sc.view_settings.view_transform = "Standard"; sc.view_settings.look = "None"   #
 
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True
 bg = w.node_tree.nodes["Background"]; bg.inputs[0].default_value = srgb(cfg["bg"]); bg.inputs[1].default_value = 0.9
+if cfg.get("hdri"):   # light (and reflections) from the HDRI; the camera still sees the flat brand background
+    nt = w.node_tree; env = nt.nodes.new("ShaderNodeTexEnvironment"); env.image = bpy.data.images.load(cfg["hdri"])
+    mp = nt.nodes.new("ShaderNodeMapping"); tc = nt.nodes.new("ShaderNodeTexCoord"); mp.inputs["Rotation"].default_value[2] = math.radians(cfg.get("hdriRotation", 0))
+    nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"]); nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
+    light_bg = nt.nodes.new("ShaderNodeBackground"); light_bg.inputs[1].default_value = cfg.get("hdriStrength", 1.0); nt.links.new(env.outputs["Color"], light_bg.inputs["Color"])
+    lp = nt.nodes.new("ShaderNodeLightPath"); mx = nt.nodes.new("ShaderNodeMixShader"); out = nt.nodes["World Output"]
+    nt.links.new(lp.outputs["Is Camera Ray"], mx.inputs[0]); nt.links.new(light_bg.outputs[0], mx.inputs[1]); nt.links.new(bg.outputs[0], mx.inputs[2]); nt.links.new(mx.outputs[0], out.inputs["Surface"])
 
 def material(name, colour, rough, metal=0.0, coat=0.0):
     m = bpy.data.materials.new(name); m.use_nodes = True; p = m.node_tree.nodes["Principled BSDF"]
@@ -34,7 +41,22 @@ def material(name, colour, rough, metal=0.0, coat=0.0):
 
 # the floor
 bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 0, 0)); floor = bpy.context.object
-floor.data.materials.append(material("floor", cfg["floor"], 0.55))
+if cfg.get("floorMaterial"):   # a PBR material folder (diffuse, normal (GL), roughness), e.g. from polyhaven.mjs get <texture id>
+    fm = bpy.data.materials.new("floorpbr"); fm.use_nodes = True; nt = fm.node_tree; bsdf = nt.nodes["Principled BSDF"]; d = cfg["floorMaterial"]
+    tc = nt.nodes.new("ShaderNodeTexCoord"); mp = nt.nodes.new("ShaderNodeMapping"); s_ = cfg.get("floorScale", 4); mp.inputs["Scale"].default_value = (s_ * 15, s_ * 15, 1); nt.links.new(tc.outputs["UV"], mp.inputs["Vector"])
+    def tex(name, colour=True):
+        for ext in (".jpg", ".png"):
+            f = os.path.join(d, name + ext)
+            if os.path.exists(f):
+                n = nt.nodes.new("ShaderNodeTexImage"); n.image = bpy.data.images.load(f); n.image.colorspace_settings.name = "sRGB" if colour else "Non-Color"; nt.links.new(mp.outputs["Vector"], n.inputs["Vector"]); return n
+    t = tex("diffuse"); nt.links.new(t.outputs["Color"], bsdf.inputs["Base Color"])
+    r = tex("roughness", False)
+    if r: nt.links.new(r.outputs["Color"], bsdf.inputs["Roughness"])
+    nm = tex("normal", False)
+    if nm: nmap = nt.nodes.new("ShaderNodeNormalMap"); nt.links.new(nm.outputs["Color"], nmap.inputs["Color"]); nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+    floor.data.materials.append(fm)
+else:
+    floor.data.materials.append(material("floor", cfg["floor"], 0.55))
 
 # the hero
 hero = []
@@ -83,7 +105,8 @@ def area(name, loc, energy, sizeM, colour=(1, 1, 1)):
     o = bpy.data.objects.new(name, d); sc.collection.objects.link(o); o.location = loc
     t = o.constraints.new("TRACK_TO"); tgt = bpy.data.objects.new(name + "_t", None); sc.collection.objects.link(tgt); tgt.location = (0, 0, height * 0.45)
     t.target = tgt; t.track_axis = "TRACK_NEGATIVE_Z"; t.up_axis = "UP_Y"
-area("key", (5, -5, 7), 420, 5); area("fill", (-6, -3, 3), 220, 6, (0.9, 0.95, 1)); area("rim", (-1, 6, 5), 420, 3)
+k_ = 0.35 if cfg.get("hdri") else 1.0   # with an HDRI the rig only shapes the light; the HDRI does most of the work
+area("key", (5, -5, 7), 420 * k_, 5); area("fill", (-6, -3, 3), 220 * k_, 6, (0.9, 0.95, 1)); area("rim", (-1, 6, 5), 420 * k_, 3)
 
 # the camera on a pivot that turns once over the frames (linear, so the loop has no hitch)
 pivot = bpy.data.objects.new("pivot", None); sc.collection.objects.link(pivot); pivot.location = (0, 0, 0)

@@ -3,7 +3,7 @@
 //   node blender.mjs where                                         is Blender available (yours, or the one we set up), which version
 //   node blender.mjs setup --yes                                   download the pinned official build, verify its sha256, unpack under ~/.motionmaker/blender (macOS: see the message)
 //   node blender.mjs init turntable --out DIR [--size 1080x1080] [--secs 6] [--fps 24] [--bg "#hex"] [--object "#hex"] [--accent "#hex"] [--model file.glb]
-//                                                                  write scene.py + config.json to start from (edit them, or write your own scene.py)
+//                                   [--hdri file.hdr] [--floor <material dir>]   light from an HDRI (e.g. Poly Haven), a floor in a PBR material + config.json to start from (edit them, or write your own scene.py)
 //   node blender.mjs render DIR [--frames 1-24] [--samples 64] [--mp4 out.mp4]   render DIR/scene.py on the CPU (Cycles), PNG frames in DIR/frames, optional MP4
 //   node blender.mjs check DIR [--frames 1,12]                    render the same frames twice and compare the pixels: identical on this machine?
 //
@@ -60,9 +60,12 @@ if (cmd === "init") {
   const kind = argv[1]; if (kind !== "turntable") die("init turntable --out DIR [...]   (turntable: an object on a floor, the camera circling it; for anything else write your own scene.py)");
   const out = path.resolve(opt("--out", "")); if (!opt("--out")) die("--out DIR is required");
   const [W, H] = opt("--size", "1080x1080").split("x").map(Number), fps = +opt("--fps", 24), secs = +opt("--secs", 6), model = opt("--model");
+  const hdri = opt("--hdri"), floorMat = opt("--floor");
+  if (hdri && (!/\.(hdr|exr)$/i.test(hdri) || !existsSync(hdri))) die(`--hdri must be an existing .hdr or .exr file: ${hdri}`);
+  if (floorMat && !existsSync(path.join(floorMat, "diffuse.jpg")) && !existsSync(path.join(floorMat, "diffuse.png"))) die(`--floor must be a material folder with diffuse.jpg (from polyhaven.mjs get <texture id>): ${floorMat}`);
   if (model) { if (!/\.(glb|gltf|obj|stl|ply)$/i.test(model)) die(`model must be glb, gltf, obj, stl or ply (a .blend or .fbx can carry scripts); got ${model}`); if (!existsSync(model)) die(`no such file: ${model}`); }
   mkdirSync(out, { recursive: true }); copyFileSync(path.join(SKILL, "scripts/scenes/turntable.py"), path.join(out, "scene.py"));
-  const cfg = { width: W, height: H, fps, frames: Math.round(fps * secs), samples: 128, seed: 7, denoise: false, bg: opt("--bg", "#EEE9E1"), floor: opt("--bg", "#EEE9E1"), object: opt("--object", "#1C1C1C"), accent: opt("--accent", "#D4472B"), model: model ? path.resolve(model) : null, elevation: 28, distance: 9, loop: true };
+  const cfg = { width: W, height: H, fps, frames: Math.round(fps * secs), samples: 128, seed: 7, denoise: false, bg: opt("--bg", "#EEE9E1"), floor: opt("--bg", "#EEE9E1"), object: opt("--object", "#1C1C1C"), accent: opt("--accent", "#D4472B"), model: model ? path.resolve(model) : null, hdri: hdri ? path.resolve(hdri) : null, hdriStrength: 1.0, hdriRotation: 0, floorMaterial: floorMat ? path.resolve(floorMat) : null, floorScale: 2, elevation: 28, distance: 9, loop: true };
   writeFileSync(path.join(out, "config.json"), JSON.stringify(cfg, null, 2));
   console.log(`${out}/scene.py and config.json (${cfg.frames} frames, ${W}x${H}, ${fps} fps). Edit config.json (colours, samples, camera) or scene.py, then: node blender.mjs render ${out}${model ? `\nthe model ${path.basename(model)} needs a licence-ledger entry (motionmaker-assets/scripts/ledger.mjs add ...)` : ""}`); process.exit(0);
 }

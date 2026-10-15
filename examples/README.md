@@ -29,3 +29,4 @@ These are test renders with placeholder content, not finished work. Your own out
 - `flat-presets.png`: the five flat design presets (coast, alpine before and after its whip pan, city, night, shapes).
 - `cel-night-drive-960x540-24fps-6s.mp4`: the 2D cel night-drive preset (inked, cel-shaded car on twos, painted facade panning on ones, light cones, lettering).
 - `cel-presets.png`: the three cel presets (night drive, impact during the smear and after the hit, launch at ignition and in the climb).
+- `polyhaven-lantern.png`: a Poly Haven lantern (CC0) lit by a Poly Haven studio HDRI: left in the browser with `three-model` (seconds), right in Blender on a Poly Haven mud-and-leaves floor (29 s for this frame at 540x540).
