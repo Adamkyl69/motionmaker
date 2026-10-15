@@ -2,6 +2,9 @@
 
 All notable changes. Dates are UTC.
 
+## 1.9.1 (2026-10-15): 3D works with no install
+- A user's run skipped every 3D style ("three not found") because Three.js was only installed on request (`setup --3d`). Three.js r160 (MIT, 848 KB: the minified build plus RoomEnvironment, GLTFLoader, RGBELoader, BufferGeometryUtils, unmodified, with its licence) now ships in `skills/motionmaker/vendor/three`; the scaffold uses it when no three is installed (an installed copy still takes priority). `three-style`, `three-product` and `three-model` were checked in an empty folder with nothing installed. `setup --3d` now only adds GSAP.
+
 ## 1.9.0 (2026-10-15): art styles and the style wheel
 - **The style wheel** (`motionmaker-preprod/scripts/stylewheel.mjs`): onboarding's first visual question. A numbered colour wheel of 18 art styles, each segment a real sample rendered by the real template, centred on its subject; a style that needs another tool says so. `stylewheel.json` maps each number to how it is built. Gate `worlds` on the wheel.
 - **Six 2D styles** on the cel kit: hand-drawn pencil sketch, paper cut-out (stop-motion on threes, drop shadows, paper grain), pixel art (drawn small, snapped to a 16-colour palette, scaled with hard edges), silhouette, whiteboard (a hand draws the strokes in order and writes the words), experimental / abstract. The kit gains pencil lines, paper fills, cut-out shadows, stop-motion jitter, pixel rendering, `drawOn` and a simple poseable figure (walk, wave, point, idle). The earlier presets render byte-identical.

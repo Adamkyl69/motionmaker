@@ -24,7 +24,7 @@ Other commands: `update`, `uninstall`, `list`, `doctor` (checks node, ffmpeg, Ch
 
 **Want to test it on your machine? See [TESTING.md](TESTING.md).**
 
-**Then, once per working folder:** `npx github:Adamkyl69/motionmaker setup --3d --browser` (or `npm i playwright` yourself; `three@0.160.0 gsap@3.12.5` only for the 3D and GSAP templates), and make sure `ffmpeg` is on your PATH. `/motionmaker` runs a preflight and tells you what is missing; it never installs anything on its own.
+**Then, once per working folder:** `npx github:Adamkyl69/motionmaker setup --3d --browser` (or `npm i playwright` yourself; `gsap@3.12.5` only for the GSAP template; Three.js for the 3D styles ships with Motionmaker), and make sure `ffmpeg` is on your PATH. `/motionmaker` runs a preflight and tells you what is missing; it never installs anything on its own.
 
 ## Motion skill set (`skills/`)
 Make frame-exact motion graphics with Claude. The method is distilled from public write-ups listed under Credits.
@@ -68,6 +68,7 @@ Linked, not copied; all rights stay with their authors. Their ideas shaped these
 - donald (@donaldjewkes), the one-prompt music-video thread: https://x.com/donaldjewkes/status/2102801274173587569 (how much direction hides behind "one prompt")
 - gongnyang/awesome-ai-motion (MIT; GSAP and bundled fonts keep their own licences): https://github.com/gongnyang/awesome-ai-motion, used by `motionmaker-catalog`; not bundled, cloned on demand.
 - Pablo Stanley, Open Peeps, Humaaans, Open Doodles (CC0): https://www.openpeeps.com/ , https://www.humaaans.com/ , https://www.opendoodles.com/ ; wrapper packages `react-peeps` (Emre Cakir, MIT) and `humaaans` (jktzes, MIT), installed on request by `kit.mjs setup`, not bundled. LottieFiles public animations (LottieFiles Simple License), Rive community files (CC BY: credit required), unDraw (unDraw licence), `lottie-web` and `@rive-app/canvas` (MIT). Licence summaries in `skills/motionmaker-assets/licenses.json` were checked 2026-10-12 against each source; they are not legal advice.
+- Three.js by mrdoob and contributors (MIT): https://github.com/mrdoob/three.js; r160 build and four example modules (RoomEnvironment, GLTFLoader, RGBELoader, BufferGeometryUtils) ship unmodified in `skills/motionmaker/vendor/three` with their licence, so 3D styles work with no install.
 - Anatomy by Ryan / wheresryan22 (MIT): https://github.com/wheresryan22/anatomy, installed by our installer next to the skills at a pinned commit (its own folder, its MIT licence kept), used by `motionmaker-anatomy`; its examples were used for testing only, nothing copied or bundled.
 - huashu-art-motion by alchaincyf (MIT): https://github.com/alchaincyf/huashu-art-motion, the inspiration for the finished-film gate, the independent reviewer, the sealed delivery note, style cards with motif loops and the beat-grid analysis; independent implementations, nothing copied. Its own showcase assets are not MIT and are not used.
 - OpenMontage by calesthio (AGPLv3): https://github.com/calesthio/OpenMontage, used only as a separate install by `motionmaker-montage`; no code copied or bundled.
@@ -75,4 +76,4 @@ Linked, not copied; all rights stay with their authors. Their ideas shaped these
 - Libraries named in `motionmaker-engines` (Three.js, GSAP, Remotion, HyperFrames, Motion, Fabric.js, Rive, deck.gl, cobe, canvas-confetti, twgl.js, ffmpeg.wasm): check each one's licence before you depend on it. Remotion has a company-size licence rule.
 
 ## Status
-Version 1.9.0 (changes in [CHANGELOG.md](CHANGELOG.md)). See "What was tested" above for what is verified and what is not: Linux only so far, macOS and Windows untested, OpenMontage bridge tested against a real OpenMontage install and project files (a full multi-stage agent production not yet run). No licence file has been added yet: that is the owner's decision.
+Version 1.9.1 (changes in [CHANGELOG.md](CHANGELOG.md)). See "What was tested" above for what is verified and what is not: Linux only so far, macOS and Windows untested, OpenMontage bridge tested against a real OpenMontage install and project files (a full multi-stage agent production not yet run). No licence file has been added yet: that is the owner's decision.

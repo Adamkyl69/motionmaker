@@ -1,0 +1,1 @@
+{ "name": "three", "version": "0.160.0", "license": "MIT", "note": "Only the files Motionmaker templates use, unmodified from the three@0.160.0 npm package (github.com/mrdoob/three.js). Shipped so 3D styles work with no install; an installed three in your working folder takes priority." }

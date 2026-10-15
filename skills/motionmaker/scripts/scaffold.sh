@@ -12,7 +12,7 @@ SLUG=${1:?slug}; TEXT=${2:?text}; W=${3:?w}; H=${4:?h}; FPS=${5:?fps}; SECS=${6:
 TPL=${TEMPLATE:-title-loop}
 HERE="$(cd "$(dirname "$0")/.." && pwd)"; SK="$(cd "$HERE/.." && pwd)"
 D="$OUT/$SLUG"
-find_pkg(){ for r in "${MOTION_VENDOR_SRC:-}" "$PWD/node_modules" "$D/node_modules" "$(dirname "$OUT")/node_modules" "${MOTIONMAKER_KITS:-$HOME/.cache/motionmaker/kits}/node_modules"; do [ -n "$r" ] && [ -d "$r/$1" ] && { echo "$r/$1"; return; }; done; return 1; }
+find_pkg(){ for r in "${MOTION_VENDOR_SRC:-}" "$PWD/node_modules" "$D/node_modules" "$(dirname "$OUT")/node_modules" "${MOTIONMAKER_KITS:-$HOME/.cache/motionmaker/kits}/node_modules" "$HERE/vendor"; do [ -n "$r" ] && [ -d "$r/$1" ] && { echo "$r/$1"; return; }; done; return 1; }   # last: the copies shipped with Motionmaker (three r160, MIT)
 FONT="'Helvetica Neue', Helvetica, Arial, sans-serif"; WEIGHT=800; TRACK=-0.04; INF=14; STAGGER=2; GW=0.52
 [ "$TPL" = logo-reveal ] && TRACK=-0.03
 if [ -n "${LOOK:-}" ]; then

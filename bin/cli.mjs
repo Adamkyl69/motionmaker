@@ -140,7 +140,7 @@ function install(update) {
   }
   const skipped = plan.filter(p => p.action.startsWith("SKIP")).length, wrote = plan.length - skipped;
   say(`\n${update ? "Updated" : "Installed"} ${wrote} of ${skills.length}${skipped ? `; ${skipped} skipped (see above)` : ""}.`);
-  say(`Next:  motionmaker doctor     # check ffmpeg / Chromium / Playwright\n       motionmaker setup      # install Playwright in your working folder (add --3d for three + gsap)\n       then start Claude Code and type /motionmaker`);
+  say(`Next:  motionmaker doctor     # check ffmpeg / Chromium / Playwright\n       motionmaker setup      # install Playwright in your working folder (add --3d for gsap; three ships with Motionmaker)\n       then start Claude Code and type /motionmaker`);
 }
 
 function uninstall() {
@@ -172,7 +172,7 @@ function doctor() {
   row(!!found, "chromium", found || "not found", "run `motionmaker setup --browser` (downloads Playwright's Chromium), or set CHROMIUM=<path to chrome/chromium>");
   const pwOk = hasPkg("playwright");
   row(pwOk, "playwright", pwOk ? `resolvable from ${process.cwd()}` : `not resolvable from ${process.cwd()}`, "cd into your working folder and run `motionmaker setup`");
-  for (const [n, why] of [["three", "3D product-shot template"], ["gsap", "kinetic-type template"]]) { const ok = hasPkg(n); say(`${ok ? "OK   " : "opt  "} ${n.padEnd(12)} ${ok ? "found" : `not found (only for the ${why}; \`motionmaker setup --3d\`)`}`); }
+  for (const [n, why] of [["gsap", "kinetic-type template"]]) { const ok = hasPkg(n); say(`${ok ? "OK   " : "opt  "} ${n.padEnd(12)} ${ok ? "found" : `not found (only for the ${why}; \`motionmaker setup --3d\`)`}`); }
   for (const [label, dir] of [["global", path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude"), "skills")], ["project", path.resolve(".claude", "skills")]]) { const m = readManifest(dir); say(`${m ? "OK   " : "--   "} ${("skills/" + label).padEnd(12)} ${m ? `v${m.version}, ${m.skills.length} skills in ${dir}` : `not installed in ${dir}`}`); }
   say(bad ? `\n${bad} required item(s) missing: rendering needs them; authoring-only mode still works without.` : "\nAll required tools found.");
   process.exit(bad ? 1 : 0);
