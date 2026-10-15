@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene|cel-scene|three-model] [SCENE=<preset|file>] [MODEL=<gltf> HDRI=<hdr>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene|cel-scene|three-model|three-style] [STYLE3D=cgi|toon|glass|clay|lowpoly] [SCENE=<preset|file>] [MODEL=<gltf> HDRI=<hdr>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -167,7 +167,11 @@ sed -e "s/__TEXT__/$ESC/g" -e "s/__W__/$W/g" -e "s/__H__/$H/g" -e "s/__FPS__/$FP
 [ -n "$FONTLINK" ] && node -e 'const f=process.argv[1],fs=require("fs");fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("<meta charset=\"utf-8\">","<meta charset=\"utf-8\">\n<link rel=\"stylesheet\" href=\"fonts/fonts.css\">"))' "$D/anim.html"
 [[ "$TEXT" == *"¶"* ]] && node -e 'const f=process.argv[1],fs=require("fs");let h=fs.readFileSync(f,"utf8");h=h.replace(/<title>([^<]*)<\/title>/,(m,t)=>"<title>"+t.replace(/¶/g," ")+"</title>").replace(/¶/g,"\\n");fs.writeFileSync(f,h)' "$D/anim.html"
 cp "$SK/motionmaker-build/scripts/tokens.js" "$D/tokens.js"
-if [ "$TPL" = three-product ]; then
+if [ "$TPL" = three-style ]; then   # STYLE3D=cgi|toon|glass|clay|lowpoly
+  case "${STYLE3D:-cgi}" in cgi|toon|glass|clay|lowpoly) ;; *) echo "STYLE3D must be cgi | toon | glass | clay | lowpoly" >&2; exit 6;; esac
+  node -e 'const f=process.argv[1],fs=require("fs");fs.writeFileSync(f,fs.readFileSync(f,"utf8").replace("__STYLE3D__",process.argv[2]))' "$D/anim.html" "${STYLE3D:-cgi}"
+fi
+if [ "$TPL" = three-product ] || [ "$TPL" = three-style ]; then
   P=$(find_pkg three) || { echo "three not found: run  npm i three@0.160.0  (or set MOTION_VENDOR_SRC=<node_modules dir>)" >&2; exit 3; }
   mkdir -p "$D/vendor/addons/environments"; cp "$P/build/three.module.min.js" "$D/vendor/"; cp "$P/examples/jsm/environments/RoomEnvironment.js" "$D/vendor/addons/environments/"
 fi

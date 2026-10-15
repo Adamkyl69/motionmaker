@@ -29,6 +29,7 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | 2D cel animation look: ink, cel shading, on twos, smears, impact frames | cel-scene (ours) | - | `motionmaker-cel`: presets, scene.js with the kit, frame-exact; not hand-drawn character acting |
 | Flat design motion: layered flat worlds, parallax camera, transitions | flat-scene (ours) | - | `motionmaker-flat`: presets, scene JSON, frame-exact |
 | A real 3D model (glTF) turning in the browser, HDRI-lit | three-model (ours) + Poly Haven | polyhaven.com | `motionmaker-assets/scripts/polyhaven.mjs` finds and downloads CC0 models, HDRIs, materials; `TEMPLATE=three-model MODEL= HDRI=` |
+| Stylised 3D in a look: CGI, toon-shaded, glass / gradient, clay stop-motion, low-poly | three-style (ours) | - | `TEMPLATE=three-style STYLE3D=cgi|toon|glass|clay|lowpoly`: a toy-like character on a set, the look in materials and light; frame-exact |
 | Photoreal 3D: real materials, light, glass, product turntables | Blender (separate download, GPL) | blender/blender | `motionmaker-blender`: CPU Cycles, fixed seed, `check` proves repeatable on one machine; tens of minutes to hours per clip |
 | Explain a mechanism as a working object | Anatomy | wheresryan22/anatomy | MIT skill, separate install; filmed by `film-realtime.mjs` via motionmaker-anatomy |
 | Film any real-time web animation | film-realtime.mjs | (ours) | virtual clock, scripted input, CPU raster; `--check` proves two films identical |

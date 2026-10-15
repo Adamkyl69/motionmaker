@@ -1,6 +1,6 @@
 ---
 name: motionmaker-cel
-description: The look of traditional 2D cel animation, made frame-exact - inked outlines that "boil" slightly from drawing to drawing, cel shading (flat colour, a hard-edged shadow, a thin highlight), drawings held on twos like hand animation at 12 fps while camera pans run on ones, painted backgrounds that loop past, light cones and glows, speed lines, smear frames, squash and stretch, impact frames, camera shake, cel smoke and flame, and comic lettering that lands with overshoot. Presets: a night drive past townhouses, a product impact, a rocket launch. Honest about the limit: shapes are drawn by code, not by an animator's hand, so it does vehicles, objects, effects and graphic shots, not full character acting (that comes from an animator's frames or an AI video route). Use when the user wants 2D animation, cel or cartoon animation, an animated ad, a music-video or TikTok/Reels ad-story look with inked drawings, or picks the 2D cel tile on the animation-style board.
+description: The look of traditional 2D cel animation, made frame-exact - inked outlines that "boil" slightly from drawing to drawing, cel shading (flat colour, a hard-edged shadow, a thin highlight), drawings held on twos like hand animation at 12 fps while camera pans run on ones, painted backgrounds that loop past, light cones and glows, speed lines, smear frames, squash and stretch, impact frames, camera shake, cel smoke and flame, and comic lettering that lands with overshoot. Presets: a night drive past townhouses, a product impact, a rocket launch, and six more styles on the same kit: hand-drawn pencil sketch, paper cut-out (stop-motion on threes), pixel art, silhouette, whiteboard (a hand draws it), experimental / abstract; plus a rotoscope filter for the user's footage. Honest about the limit: shapes are drawn by code, not by an animator's hand, so it does vehicles, objects, effects and graphic shots, not full character acting (that comes from an animator's frames or an AI video route). Use when the user wants 2D animation, cel or cartoon animation, an animated ad, a music-video or TikTok/Reels ad-story look with inked drawings, or picks the 2D cel tile on the animation-style board.
 ---
 
 # 2D cel animation
@@ -25,6 +25,18 @@ Paths: `CL=$MOTIONMAKER_SKILLS/motionmaker-cel/scripts/cel.mjs`; build with `TEM
 A scene is `window.SCENE = { seed, on, ink, inkWidth, boil, light, paper, fx: { vignette, grain }, setup(k), draw(k), shake(k)?, impact(k)? }`. Coordinates are design units, 1000 tall; `k.Wd` is the frame's width in them. Shapes are point lists (`k.circle`, `k.ellipse`, `k.rect`, `k.move` to place, scale and rotate; `smooth: true` rounds them). **Give every shape a fixed `id`** so its boil stays its own. Draw far to near.
 
 **The user's own subject** (their product, their car, their mascot as a simple object): draw it from a reference photo or their logo as a few shapes (silhouette, two or three cel tones, a few detail lines). Keep it to 6-15 shapes: cel design is about simplification. A brand's character or a film's vehicle is someone's property: make an original design with the same energy, never a copy.
+
+## 1b. More styles on the same kit
+| Preset | Style | How the kit makes it |
+|---|---|---|
+| `sketch` | hand-drawn, frame by frame | `line: "pencil"` (three light graphite passes, re-drawn each drawing), strong boil, paper grain, a faint colour wash, blue construction lines |
+| `paper-cutout` | paper cut-out | `ink: false`, `paperFill` (grain in every fill), `drop` (a soft shadow under each piece), `on: 3` + `jitter` (pieces shift a little each drawing, like stop-motion) |
+| `pixel-art` | pixel art | `pixel: 6` (drawn at 1/6 size, snapped to `palette`, scaled up with hard edges) |
+| `silhouette` | silhouette | one dark colour for everything in front of a glowing sky; the figure with `silhouette:` |
+| `whiteboard` | whiteboard | `k.drawOn(points, progress)` draws strokes in order, a hand follows the pen tip, words are written behind it |
+| `abstract` | experimental / abstract | shapes, arcs and lines re-composing themselves on ones |
+**The figure** (`k.figure(x, groundY, height, k.pose.walk(t) / wave(t) / point(t) / idle(t), { skin, shirt, pants, hair, shoe, dir, silhouette })`): a simple poseable person for any of these styles. A puppet with honest poses, not character acting.
+**Rotoscope** (the user's own footage): `node $MOTIONMAKER_SKILLS/motionmaker-cel/scripts/rotoscope.mjs <in.mp4> --out <out.mp4> [--on 2] [--levels 5] [--ink 0.85] [--size WxH]` flattens colour into a few levels, traces ink lines from the picture's edges and holds drawings on twos. A filter, not a person tracing: clean, well-lit footage with one clear subject works best; it is deterministic (same input, same output). `rotoscope-still.mjs` does one frame (previews).
 
 ## 2. Craft rules
 1. **On twos for the subject, ones for the camera.** Everything that is "drawn" (the subject, its effects, the lines) changes every 2 frames; pans and tilts move every frame. Do not mix them inside one object.

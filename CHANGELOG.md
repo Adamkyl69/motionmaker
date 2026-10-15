@@ -2,6 +2,14 @@
 
 All notable changes. Dates are UTC.
 
+## 1.9.0 (2026-10-15): art styles and the style wheel
+- **The style wheel** (`motionmaker-preprod/scripts/stylewheel.mjs`): onboarding's first visual question. A numbered colour wheel of 18 art styles, each segment a real sample rendered by the real template, centred on its subject; a style that needs another tool says so. `stylewheel.json` maps each number to how it is built. Gate `worlds` on the wheel.
+- **Six 2D styles** on the cel kit: hand-drawn pencil sketch, paper cut-out (stop-motion on threes, drop shadows, paper grain), pixel art (drawn small, snapped to a 16-colour palette, scaled with hard edges), silhouette, whiteboard (a hand draws the strokes in order and writes the words), experimental / abstract. The kit gains pencil lines, paper fills, cut-out shadows, stop-motion jitter, pixel rendering, `drawOn` and a simple poseable figure (walk, wave, point, idle). The earlier presets render byte-identical.
+- **Five 3D looks** in a new `three-style` template (`STYLE3D=cgi|toon|glass|clay|lowpoly`): stylised CGI, toon-shaded (stepped light, ink outlines), glass / gradient (transmission, iridescence, a frosted card), stop-motion clay (lumpy, fingerprinted, on threes with jitter), low-poly; a toy-like character of ours on a set; vertical frames fit the set.
+- **Rotoscope** (`motionmaker-cel/scripts/rotoscope.mjs`): the user's footage to traced animation (flat colour levels, ink from edges, on twos); deterministic.
+- Not offered, said plainly: rigged Pixar or anime characters, chibi / kawaii character kits, any living artist's or studio's signature style; whiteboard moved off that list.
+- `smoke.sh`: 54 checks.
+
 ## 1.8.0 (2026-10-15): Anatomy, OpenMontage and Remotion made available
 - **Anatomy comes with the install.** The installer puts Anatomy (by Ryan, MIT) next to the skills at the tested commit 454a0ef, with its licence in its folder; `update` refreshes it when the pin changes, `uninstall` removes it only if Motionmaker installed it, an Anatomy you installed yourself is left alone, `--no-anatomy` skips it. git, or a tarball when there is no git.
 - **OpenMontage: tested live, offered by the installer.** Installed here (`make setup`, no keys, 2 min), its Remotion engine rendered its zero-key demo, and a project made with its own code was imported. Fixed: the asset manifest lives in `checkpoint_assets.json`, which `import` now reads (and `artifacts/asset_manifest.json` still). The installer asks "Also install OpenMontage?" (default no; `--with-openmontage` / `--no-openmontage`), and `motionmaker openmontage [--dir]` installs it any time at the tested commit e45f5b1 into its own folder (AGPLv3: never inside Motionmaker). An offline fixture in the real checkpoint format is in the smoke test.

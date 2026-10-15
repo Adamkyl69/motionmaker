@@ -32,7 +32,7 @@ const prevSize = opt("--vary") && opt("--from") && existsSync(opt("--from")) ? J
 const [W, H] = opt("--size", prevSize || "400x400").split("x").map(Number), FPS = 24, SECS = 6, HOLD = Math.round(FPS * SECS * 0.55);
 const worlds = a.includes("--worlds");
 const out = path.resolve(opt("--out", opt("--vary") ? "preprod/moodboard-2" : worlds ? "preprod/worlds" : "preprod/moodboard")), work = path.join(out, "work");
-const NOT_OFFERED = ["whiteboard hand-writing", "rigged cartoon characters (Pixar or anime style)", "any living artist's or studio's signature style (Ghibli, Kurzgesagt, Vox...)", "photographic realism without footage or Blender"];
+const NOT_OFFERED = ["rigged cartoon characters (Pixar or anime style)", "chibi / kawaii character kits", "any living artist's or studio's signature style (Ghibli, Kurzgesagt, Vox...)", "photographic realism without footage or Blender"];
 const stars = n => "★".repeat(n) + "☆".repeat(3 - n);
 const TYPE = { "editorial-calm": "serif", "night-cinema": "serif", "luxe-black-gold": "serif", "warm-craft": "serif", "swiss-minimal": "sans", "bold-launch": "display", "playful-pop": "rounded", "tech-mono": "mono" };
 
