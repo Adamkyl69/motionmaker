@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene] [SCENE=<preset|file.json>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
+# usage: [FEEL=calm|snappy|bouncy|dramatic] [NO_EXIT=1] [TEMPLATE=title-loop|three-product|logo-reveal|data-chart|gsap-kinetic|product-demo|lottie-scene|rive-scene|illustration-scene|footage-scene|code-reveal|icon-features|equation-scene|map-scene|annotate-scene|style-scene|flat-scene|cel-scene] [SCENE=<preset|file>] [LOOK=<look-name>] [STYLE=<id>] [MARK= KEYWORD= SEED=] [PLACES=.. HIGHLIGHT=..] [TEX=..] [ICONS=set:name,..] [CODE=<file> MODE= FOCUS=] [FOOTAGE=<video> FROM= TO=] [ASSET=<file>] [ARTBOARD=..] [ANIMATION=..] [LOOP=1] \
 #        scaffold.sh <slug> "<text>" <width> <height> <fps> <seconds> <bg> <fg> <accent> [outdir=motion-out]
 # Creates <outdir>/<slug>/{anim.html,tokens.js,RECEIPTS.md[,vendor/...]} from a starter template.
 # LOOK=<name> applies a visual direction from motionmaker-art-director/looks/looks.json (palette, type stack, weight, tracking, entrance timing).
@@ -70,6 +70,12 @@ if [ "$TPL" = flat-scene ]; then   # SCENE=<preset name in motionmaker-flat/pres
   [ -f "$SJF" ] || { echo "unknown flat scene '$SCENE' (presets: $(cd "$SK/motionmaker-flat/presets" 2>/dev/null && ls *.json | sed 's/.json//' | tr '\n' ' '), or a path to a scene .json)" >&2; exit 6; }
   mkdir -p "$D"; cp "$HERE/templates/flat/flat.js" "$D/flat.js"; EXIT=$(( N * 10 + 100 ))
   TEXT="$TEXT" node -e 'const fs=require("fs"),t=process.env.TEXT==="-"?"":process.env.TEXT,j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const s=JSON.stringify(j,null,1).replace(/__TEXT__/g,JSON.stringify(t).slice(1,-1));const imgs=[];(function w(o){if(Array.isArray(o))o.forEach(w);else if(o&&typeof o==="object"){if(o.type==="image"&&o.src)imgs.push(o.src);Object.values(o).forEach(w)}})(j);const path=require("path");for(const src of imgs){if(/^[a-z]+:|^\/\//i.test(src)||src.includes("..")){console.error("image src must be a local file next to the scene (no URLs, no ..): "+src);process.exit(7)}const from=path.resolve(path.dirname(process.argv[1]),src);if(!fs.existsSync(from)){console.error("image not found: "+from);process.exit(7)}fs.mkdirSync(path.dirname(path.join(path.dirname(process.argv[2]),src)),{recursive:true});fs.copyFileSync(from,path.join(path.dirname(process.argv[2]),src))}fs.writeFileSync(process.argv[2],"// The scene: edit this (worlds, layers at depths k, shots with camera moves, words, transitions). Guide: motionmaker-flat/SKILL.md\nwindow.SCENE = "+s+";\n")' "$SJF" "$D/scene.js" || { echo "scene $SJF could not be used (see above)" >&2; exit 6; }
+fi
+if [ "$TPL" = cel-scene ]; then   # SCENE=<preset name in motionmaker-cel/presets | path to a scene .js>; the headline goes to text.js (JSON-escaped)
+  SCENE=${SCENE:-night-drive}; SJF="$SCENE"; [ -f "$SJF" ] || SJF="$SK/motionmaker-cel/presets/$SCENE.js"
+  [ -f "$SJF" ] || { echo "unknown cel scene '$SCENE' (presets: $(cd "$SK/motionmaker-cel/presets" 2>/dev/null && ls *.js | sed 's/.js//' | tr '\n' ' '), or a path to a scene .js)" >&2; exit 6; }
+  mkdir -p "$D"; cp "$HERE/templates/cel/cel.js" "$D/cel.js"; cp "$SJF" "$D/scene.js"; EXIT=$(( N * 10 + 100 ))
+  TEXT="$TEXT" node -e 'const t=process.env.TEXT==="-"?"":process.env.TEXT;require("fs").writeFileSync(process.argv[1],"window.CEL_TEXT = "+JSON.stringify(t)+";\n")' "$D/text.js"
 fi
 if [ "$TPL" = annotate-scene ]; then
   P=$(find_pkg roughjs) || { echo "roughjs not found: run  node $SK/motionmaker-libs/scripts/lib.mjs setup sketch" >&2; exit 3; }

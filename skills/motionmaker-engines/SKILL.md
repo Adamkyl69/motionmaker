@@ -26,6 +26,7 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | Maps, globes, routes | d3-geo + world-atlas | d3/d3, topojson/world-atlas | offline Natural Earth shapes; `map-scene` |
 | Hand-drawn marks | Rough.js | rough-stuff/rough | fixed seed; `annotate-scene` |
 | Icons | Lucide, Tabler, Phosphor, Material Symbols | lucide-icons/lucide etc. | `icons.mjs`, `icon-features` |
+| 2D cel animation look: ink, cel shading, on twos, smears, impact frames | cel-scene (ours) | - | `motionmaker-cel`: presets, scene.js with the kit, frame-exact; not hand-drawn character acting |
 | Flat design motion: layered flat worlds, parallax camera, transitions | flat-scene (ours) | - | `motionmaker-flat`: presets, scene JSON, frame-exact |
 | Photoreal 3D: real materials, light, glass, product turntables | Blender (separate download, GPL) | blender/blender | `motionmaker-blender`: CPU Cycles, fixed seed, `check` proves repeatable on one machine; tens of minutes to hours per clip |
 | Explain a mechanism as a working object | Anatomy | wheresryan22/anatomy | MIT skill, separate install; filmed by `film-realtime.mjs` via motionmaker-anatomy |

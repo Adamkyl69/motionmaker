@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>__TEXT__</title>
+<!-- Starter: a CEL ANIMATION scene (the look of traditional 2D animation). cel/cel.js is the kit (ink that boils, cel shading, drawings on twos,
+     painted backgrounds, speed lines, smears, impact frames, smoke); scene.js (from motionmaker-cel/presets/ or your own) draws the shot with it.
+     Frame-exact: everything random is seeded by the drawing number; renderFrame(f) is a pure function of f. Guide: motionmaker-cel/SKILL.md. -->
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="__W__" height="__H__"></canvas>
+<script src="text.js"></script>
+<script src="cel.js"></script>
+<script src="scene.js"></script>
+<script>
+const CONFIG = { w:__W__, h:__H__, fps:__FPS__, frames:__N__ };
+const ctx = document.getElementById("c").getContext("2d");
+let draw = null;
+window.ready = document.fonts.ready.then(() => { draw = CEL.run(ctx, { W: CONFIG.w, H: CONFIG.h, fps: CONFIG.fps, secs: CONFIG.frames / CONFIG.fps }, window.SCENE); renderFrame(0); });
+function renderFrame(f) { if (draw) draw(f); }
+window.renderFrame = renderFrame;
+const q = new URLSearchParams(location.search).get("t");
+if (q !== null) window.ready.then(() => renderFrame(Math.round(parseFloat(q) * CONFIG.fps)));
+else window.ready.then(() => { let s = null; (function L(ts) { s ??= ts; renderFrame(Math.floor((ts - s) / 1000 * CONFIG.fps) % CONFIG.frames); requestAnimationFrame(L); })(0); }); // live preview only
+</script>
