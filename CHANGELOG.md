@@ -2,6 +2,13 @@
 
 All notable changes. Dates are UTC.
 
+## 1.8.0 (2026-10-15): Anatomy, OpenMontage and Remotion made available
+- **Anatomy comes with the install.** The installer puts Anatomy (by Ryan, MIT) next to the skills at the tested commit 454a0ef, with its licence in its folder; `update` refreshes it when the pin changes, `uninstall` removes it only if Motionmaker installed it, an Anatomy you installed yourself is left alone, `--no-anatomy` skips it. git, or a tarball when there is no git.
+- **OpenMontage: tested live, offered by the installer.** Installed here (`make setup`, no keys, 2 min), its Remotion engine rendered its zero-key demo, and a project made with its own code was imported. Fixed: the asset manifest lives in `checkpoint_assets.json`, which `import` now reads (and `artifacts/asset_manifest.json` still). The installer asks "Also install OpenMontage?" (default no; `--with-openmontage` / `--no-openmontage`), and `motionmaker openmontage [--dir]` installs it any time at the tested commit e45f5b1 into its own folder (AGPLv3: never inside Motionmaker). An offline fixture in the real checkpoint format is in the smoke test.
+- **`motionmaker-remotion`** (new, 18 skills): a pinned Remotion 4.0.484 + React 18 project from the brief (`init`), installed only with `--yes` after the licence question (free for individuals, companies up to 3 employees, non-profits, evaluation; others a Company License; checked 2026-10-15), rendered with Remotion's CLI on the machine's Chromium (no browser download), a PNG sequence named for our review tools, and `check` (no clock, unseeded random, timers or network in `src/`; one frame rendered twice, pixels equal). Measured: 3 s 1080x1080 in 20 s; check PASS.
+- HyperFrames: confirmed (npm `hyperframes`, inside OpenMontage); no separate bridge, since our templates already render HTML + GSAP frame-exactly.
+- `smoke.sh`: 41 checks.
+
 ## 1.7.0 (2026-10-15): Poly Haven 3D assets
 - `motionmaker-assets/scripts/polyhaven.mjs`: Poly Haven's free API (no key, commercial use allowed, checked 2026-10-15): 521 glTF models, 997 HDRIs, 869 PBR materials, all CC0. `search` (names, tags, categories; listing cached a day), `categories`, `sheet` (numbered thumbnails to show before choosing), `get` (every file checked against Poly Haven's md5, paths kept inside the asset folder, a ledger entry crediting the authors and Poly Haven as their API asks). Sends a unique User-Agent as the API requires.
 - New template `three-model`: a glTF model on a turntable in the browser, fitted to the frame from its bounding box (portrait or landscape), HDRI reflections with the flat brand background, a contact shadow; seconds to render, frame-exact, a seamless loop. A generated test box ships for the smoke test.

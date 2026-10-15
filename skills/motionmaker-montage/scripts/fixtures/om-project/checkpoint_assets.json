@@ -1,0 +1,61 @@
+{
+ "version": "1.0",
+ "project_id": "om-project",
+ "pipeline_type": "animated-explainer",
+ "stage": "assets",
+ "status": "completed",
+ "timestamp": "2026-10-15T15:38:52.221652+00:00",
+ "checkpoint_policy": "guided",
+ "human_approval_required": true,
+ "human_approved": true,
+ "artifacts": {
+  "asset_manifest": {
+   "version": "1.0",
+   "total_cost_usd": 0.0,
+   "assets": [
+    {
+     "id": "scene-cards",
+     "type": "animation",
+     "path": "renders/final.mp4",
+     "source_tool": "remotion_compose",
+     "scene_id": "all",
+     "provider": "remotion",
+     "license": "generated (own composition)",
+     "cost_usd": 0
+    },
+    {
+     "id": "stock-01",
+     "type": "video",
+     "path": "assets/video/stock-01.mp4",
+     "source_tool": "pexels_video",
+     "scene_id": "s2",
+     "provider": "pexels",
+     "license": "Pexels License",
+     "original_url": "https://www.pexels.com/video/000000/",
+     "cost_usd": 0
+    },
+    {
+     "id": "wiki-01",
+     "type": "image",
+     "path": "assets/images/wiki-01.jpg",
+     "source_tool": "wikimedia",
+     "scene_id": "s3",
+     "provider": "wikimedia",
+     "license": "CC BY-SA 4.0",
+     "original_url": "https://commons.wikimedia.org/wiki/File:Example.jpg",
+     "cost_usd": 0
+    },
+    {
+     "id": "music-01",
+     "type": "music",
+     "path": "assets/music/bed.mp3",
+     "source_tool": "music_library",
+     "scene_id": "all",
+     "provider": "freemusicarchive",
+     "license": "CC BY-NC 4.0",
+     "cost_usd": 0
+    }
+   ]
+  }
+ }
+}

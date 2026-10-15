@@ -1,6 +1,6 @@
 ---
 name: motionmaker-anatomy
-description: Explain a technical idea as a working machine, on video or live on a website. Uses Anatomy (github.com/wheresryan22/anatomy, MIT, installed separately), which builds interactive isometric figures where the object's working IS the concept (a cache becomes a pin-tumbler lock, a rate limiter a token bucket), then films the figure frame-exactly with Motionmaker (virtual clock, scripted hover/drag/clicks, CPU-rasterised so two films are identical), and runs our film QA; or exports the figure live for a website or React app (the visitor takes it apart; a scripted tour until they touch it). Use when the user wants an explainer of how something works (software, hardware, science), a "show the mechanism" shot, an exploded view, or mentions Anatomy.
+description: Explain a technical idea as a working machine, on video or live on a website. Uses Anatomy (github.com/wheresryan22/anatomy, MIT; the Motionmaker installer installs it alongside at a tested commit), which builds interactive isometric figures where the object's working IS the concept (a cache becomes a pin-tumbler lock, a rate limiter a token bucket), then films the figure frame-exactly with Motionmaker (virtual clock, scripted hover/drag/clicks, CPU-rasterised so two films are identical), and runs our film QA; or exports the figure live for a website or React app (the visitor takes it apart; a scripted tour until they touch it). Use when the user wants an explainer of how something works (software, hardware, science), a "show the mechanism" shot, an exploded view, or mentions Anatomy.
 ---
 
 # Anatomy figures on film
@@ -14,7 +14,7 @@ Route here when the request is "explain how X works" and a mechanism would expla
 - People are not drawn; it is objects and mechanisms.
 
 ## 2. Install (the user's choice)
-`node $AN where` finds it. If missing: `npx skills add wheresryan22/anatomy -g -a claude-code` (Anatomy's own installer) or `node $AN install` (git clone at a pinned commit next to the Motionmaker skills). It has no dependencies and needs Node 20.10+ and Chrome/Chromium for its checks. Start a new session after installing so `/anatomy` is loaded.
+`node $AN where` finds it. The Motionmaker installer installs it next to the skills at the tested commit (454a0ef, with its MIT licence; `--no-anatomy` skips it). If missing: `npx skills add wheresryan22/anatomy -g -a claude-code` (Anatomy's own installer) or `node $AN install` (git clone at a pinned commit next to the Motionmaker skills). It has no dependencies and needs Node 20.10+ and Chrome/Chromium for its checks. Start a new session after installing so `/anatomy` is loaded.
 
 ## 3. Build the figure with Anatomy
 Hand over with the art director's one message as the concept: run `/anatomy <the concept>, for a <N>-second video` and follow Anatomy's own workflow and checks (its SKILL.md governs the drawing). Ask it to keep motion calm and to give the figure an idle tour or clear pointer/key interactions, because that is what the film shows. Its example pages (`examples/*/*-light.html`) are good test subjects; they are Anatomy's work, not ours to publish.

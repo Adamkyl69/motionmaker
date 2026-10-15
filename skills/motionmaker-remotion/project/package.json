@@ -1,0 +1,8 @@
+{
+  "name": "motionmaker-remotion-piece",
+  "private": true,
+  "description": "A Remotion composition started by Motionmaker. Remotion is free for individuals, companies with up to 3 employees and non-profits; others need a Remotion Company License (remotion.dev/license).",
+  "scripts": { "studio": "remotion studio", "render": "remotion render Main out/video.mp4 --props=props.json" },
+  "dependencies": { "@remotion/cli": "4.0.484", "react": "18.3.1", "react-dom": "18.3.1", "remotion": "4.0.484" },
+  "devDependencies": { "@types/react": "18.3.12", "typescript": "5.6.3" }
+}

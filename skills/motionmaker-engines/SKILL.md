@@ -33,8 +33,8 @@ Rule of thumb: one idea under 10 s -> plain HTML/CSS/canvas. Series/template/dat
 | Explain a mechanism as a working object | Anatomy | wheresryan22/anatomy | MIT skill, separate install; filmed by `film-realtime.mjs` via motionmaker-anatomy |
 | Film any real-time web animation | film-realtime.mjs | (ours) | virtual clock, scripted input, CPU raster; `--check` proves two films identical |
 | Ready-made animated vectors | lottie-web | airbnb/lottie-web | `lottie-scene` via motionmaker-assets; goToAndStop is frame-exact |
-| Video as React components | Remotion | remotion-dev/remotion | free for individuals and companies up to 3 staff; official Agent Skills |
-| Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes | Apache 2.0, CLI renders MP4 (verify repo URL) |
+| Video as React components | Remotion | remotion-dev/remotion | `motionmaker-remotion` (tested 4.0.484): licence question first (free for individuals, up to 3 employees, non-profits; else a Company License), install on yes, render + frame-exact check |
+| Video from HTML + GSAP | HyperFrames | heygen-com/hyperframes (npm `hyperframes`) | ships inside OpenMontage (its `make setup` installs it); no Motionmaker bridge: our own templates already render HTML + GSAP frame-exactly (`gsap-kinetic`) |
 | Web timelines, kinetic type | GSAP | greensock/GSAP | free incl. SplitText, MorphSVG, DrawSVG, ScrollTrigger |
 | In-browser stitching/transcode | ffmpeg.wasm | ffmpegwasm/ffmpeg.wasm | native ffmpeg preferred in cloud/CLI |
 

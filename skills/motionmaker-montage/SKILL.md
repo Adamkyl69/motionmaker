@@ -9,7 +9,7 @@ Motionmaker draws motion graphics in code (frame-exact, free to render). Some re
 
 ## 1. Route (onboarding)
 `node $MT route "<the user's request>"` says which side should make it and why. If it is OpenMontage, tell the user in plain words BEFORE anything else:
-- It is a **separate install** that they run themselves (`git clone https://github.com/calesthio/OpenMontage && cd OpenMontage && make setup && make preflight`): Python 3.10+, Node 18+ (HyperFrames needs 22+), ffmpeg; optional GPU stack.
+- It is a **separate install** (it must stay one: AGPLv3). The Motionmaker installer asks during install (default no), or later: `npx --yes github:Adamkyl69/motionmaker@main openmontage` (clones the tested commit e45f5b1 into ~/OpenMontage, creates its Python env, installs its Remotion composer and free Piper voice; 2 to 6 minutes). Or by hand: `git clone https://github.com/calesthio/OpenMontage && cd OpenMontage && make setup`. Needs Python 3.10+, Node 18+, ffmpeg, git. Works with no keys (Piper narration, Archive.org / NASA / Wikimedia footage, Remotion); keys for paid AI video, avatars or premium voices go in its own `.env`, which Motionmaker never reads.
 - **Licence: AGPLv3.** Using it is fine; Motionmaker never copies its code. If they modify it and offer it as a network service, AGPL obligations apply.
 - **Cost:** free paths exist (Piper voice, Archive.org/NASA/Wikimedia, Pexels/Pixabay with free keys, Remotion); real generated motion needs paid models (OpenMontage's own docs quote e.g. Veo about $0.40 per second, Kling about $0.07 per second). Its defaults: $10 cap, approval for any action over $0.50.
 - **Data:** prompts, scripts, images and voice text go to the providers whose keys they configure; research uses live web search.
@@ -30,6 +30,6 @@ Then ask (AskUserQuestion): **Go with OpenMontage** | **Do it as motion graphics
 3. The usual quality path, unchanged: `film-gate.mjs`, `review-pack.mjs` + an independent reviewer, `deliver.mjs` (which also blocks on RED provenance).
 
 ## Limits (say them)
-- This bridge was tested against OpenMontage's documented project layout and manifest schema with a mock project, not with a live OpenMontage run (installing it here was not possible). The first real run is the real test: if its folders differ, `import` says what is missing.
+- Tested 2026-10-15 against a real OpenMontage (commit e45f5b1) installed here: `make setup` worked with no keys (2 min); its Remotion engine rendered its zero-key demo (30 s film, 3 min); a project made with its own `init_project` and `write_checkpoint` (schema-validated, approval-gated) was imported, the licence problems in it were flagged, our end card was joined and the film gate ran. Fixed on that run: OpenMontage keeps the asset manifest inside `checkpoint_assets.json` (artifacts.asset_manifest), not only in `artifacts/`; `import` reads both. Not yet run: a complete agent production through all stages (research to publish), which needs a person to approve each stage.
 - Quality and cost of generated footage depend on the providers the user pays for; Motionmaker cannot preview it before the OpenMontage run.
 - Provenance is only as good as what the OpenMontage run recorded in its manifest.

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 // motionmaker: install and manage the Motionmaker skills for Claude Code.
 //
-//   npx github:Adamkyl69/motionmaker install [--global | --project | --dir <skills-dir>] [--force] [--dry-run]
+//   npx github:Adamkyl69/motionmaker install [--global | --project | --dir <skills-dir>] [--force] [--dry-run] [--no-anatomy]
+//                                   also installs the Anatomy skill (by Ryan, MIT) at a pinned, tested commit; --no-anatomy skips it;
+//                                   asks whether to install OpenMontage too (default no; --with-openmontage / --no-openmontage answer it)
+//   motionmaker openmontage [--dir <path>]         install OpenMontage (AGPLv3, separate program) at a tested commit, default ~/OpenMontage
 //   motionmaker update      [same target flags]     re-copy from this package (keeps backups of anything you edited)
 //   motionmaker uninstall   [same target flags]     remove what this tool installed (and only that)
 //   motionmaker doctor                              check node, ffmpeg, Chromium, Playwright (never installs)
@@ -12,7 +15,7 @@
 // Safety: installs only the skill folders shipped here; refuses to overwrite a folder it did not install (or that you edited)
 // unless --force, and then moves the old one to motionmaker-backups/<name>-<timestamp> NEXT TO the skills folder (never inside it: Claude
 // Code loads every folder there that has a SKILL.md, so a backup inside showed up as a duplicate skill). --dry-run changes nothing.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, renameSync, readdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, rmSync, renameSync, readdirSync, statSync, readSync as require_fs_readSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
@@ -50,6 +53,58 @@ function relocateOldBackups(dir, names) {
 }
 const modified = (dir, m, name) => (m?.files?.[name] ? Object.entries(m.files[name]).filter(([f, h]) => !existsSync(path.join(dir, name, f)) || sha(path.join(dir, name, f)) !== h).map(([f]) => f) : null);
 
+// Companions: other people's skills Motionmaker installs next to its own, at a pinned, tested version, with their licence kept in the folder.
+// Anatomy (by Ryan, MIT): explain-how-it-works figures that motionmaker-anatomy films and exports. Skipped with --no-anatomy, or when you already
+// have an anatomy folder that Motionmaker did not install (yours is left alone). Removed by uninstall only if Motionmaker installed it.
+const COMPANIONS = { anatomy: { repo: "https://github.com/wheresryan22/anatomy", commit: "454a0ef801b6d9b905f08309d094491c7085b3dd", license: /MIT License/, by: "Ryan (wheresryan22), MIT", flag: "--no-anatomy" } };
+function companions(dir, old, update) {
+  const out = {};
+  for (const [name, c] of Object.entries(COMPANIONS)) {
+    const dest = path.join(dir, name), prev = old?.companions?.[name];
+    if (has(c.flag)) { say(`  - ${name.padEnd(22)} skipped (${c.flag})`); if (prev) out[name] = prev; continue; }
+    if (existsSync(dest) && !prev) { say(`  = ${name.padEnd(22)} you already have one (not installed by motionmaker): left as it is`); continue; }
+    if (existsSync(dest) && prev?.commit === c.commit) { say(`  = ${name.padEnd(22)} up to date (${c.commit.slice(0, 7)}, ${c.by})`); out[name] = prev; continue; }
+    say(`  + ${name.padEnd(22)} ${prev ? "update" : "install"}: ${c.repo} at ${c.commit.slice(0, 7)} (${c.by})`);
+    if (dry) continue;
+    const tmp = path.join(os.tmpdir(), `mm-${name}-${process.pid}`); rmSync(tmp, { recursive: true, force: true });
+    let ok = spawnSync("git", ["clone", "--quiet", c.repo, tmp], { stdio: "ignore" }).status === 0 && spawnSync("git", ["-C", tmp, "checkout", "--quiet", c.commit], { stdio: "ignore" }).status === 0;
+    if (ok) rmSync(path.join(tmp, ".git"), { recursive: true, force: true });
+    else {   // no git: the same commit as a tarball (curl and tar ship with Windows 10+, macOS and Linux)
+      rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true }); const tgz = tmp + ".tgz";
+      ok = spawnSync("curl", ["-sSL", "--fail", "-o", tgz, `${c.repo.replace("github.com", "codeload.github.com")}/tar.gz/${c.commit}`], { stdio: "ignore" }).status === 0 && spawnSync("tar", ["-xzf", tgz, "-C", tmp, "--strip-components=1"], { stdio: "ignore" }).status === 0; rmSync(tgz, { force: true }); }
+    const lic = ["LICENSE", "LICENSE.md"].map(f => path.join(tmp, f)).find(existsSync);
+    if (!ok || !existsSync(path.join(tmp, "SKILL.md")) || !lic || !c.license.test(readFileSync(lic, "utf8"))) { rmSync(tmp, { recursive: true, force: true }); warn(`  ! ${name}: could not fetch ${c.repo} (no network, or the download did not look right). Motionmaker works without it; try again later with  motionmaker update`); if (prev) out[name] = prev; continue; }
+    if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+    cpSync(tmp, dest, { recursive: true }); rmSync(tmp, { recursive: true, force: true });
+    out[name] = { commit: c.commit, repo: c.repo, by: c.by };
+  }
+  return out;
+}
+
+// OpenMontage (github.com/calesthio/OpenMontage, AGPLv3): the footage / AI-video / avatar studio motionmaker-montage hands work to. It is a separate
+// program with its own setup and must stay one (its licence would otherwise cover Motionmaker), so it is cloned into its own folder, never into the
+// skills folder, at a pinned commit tested with our bridge. Asked during install (default no), or: motionmaker openmontage [--dir <path>].
+const OM = { repo: "https://github.com/calesthio/OpenMontage", commit: "e45f5b1", dir: path.join(os.homedir(), "OpenMontage") };
+function openmontage(target) {
+  const dir = path.resolve(target || opt("--dir", OM.dir)), win = process.platform === "win32", py = win ? "py" : "python3", pyArgs = win ? ["-3"] : [];
+  const pv = run(py, [...pyArgs, "-c", "import sys;print('%d.%d'%sys.version_info[:2])"]), nv = run("node", ["-v"]);
+  const missing = [!pv || +pv.split(".")[1] < 10 && pv.startsWith("3.") ? "Python 3.10+" : null, !nv ? "Node.js 18+" : null, !run("ffmpeg", ["-version"]) ? "FFmpeg" : null, !run("git", ["--version"]) ? "git" : null].filter(Boolean);
+  if (missing.length) { warn(`OpenMontage needs ${missing.join(", ")}: install them, then run  motionmaker openmontage`); return false; }
+  say(`OpenMontage (AGPLv3, a separate program) -> ${dir}  [${OM.commit}, 2 to 6 minutes, several hundred MB of Python and Node packages]`);
+  if (dry) return true;
+  if (!existsSync(path.join(dir, "AGENT_GUIDE.md"))) {
+    if (spawnSync("git", ["clone", "--quiet", OM.repo, dir], { stdio: "inherit" }).status !== 0) { warn("git clone failed"); return false; }
+    spawnSync("git", ["-C", dir, "checkout", "--quiet", OM.commit], { stdio: "inherit" });
+  } else say("  already cloned: keeping it (your projects and .env are untouched)");
+  const vpy = win ? path.join(dir, ".venv", "Scripts", "python.exe") : path.join(dir, ".venv", "bin", "python");
+  const steps = [[py, [...pyArgs, "-m", "venv", ".venv"], dir], [vpy, ["-m", "pip", "install", "-q", "-r", "requirements.txt"], dir], ["npm", ["install", "--no-fund", "--no-audit"], path.join(dir, "remotion-composer")], [vpy, ["-m", "pip", "install", "-q", "piper-tts"], dir]];
+  for (const [c, a, cwd] of steps) { if (c === py && existsSync(vpy)) continue; say(`  $ ${path.basename(c)} ${a.join(" ")}`); const r = spawnSync(c, a, { cwd, stdio: "inherit", shell: win }); if (r.status !== 0) { warn(`  step failed (${c} ${a.join(" ")}): fix it and run  motionmaker openmontage  again`); return false; } }
+  if (!existsSync(path.join(dir, ".env"))) cpSync(path.join(dir, ".env.example"), path.join(dir, ".env"));
+  say(`\nOpenMontage is ready in ${dir}. It works with no keys (free narration, open archives, Remotion); add keys for paid AI video or avatars in ${path.join(dir, ".env")} (Motionmaker never reads that file).\nCheck: node <skills>/motionmaker-montage/scripts/montage.mjs check ${dir}`);
+  return true;
+}
+const askYesNo = q => { if (!process.stdin.isTTY || has("--yes") || dry) return null; process.stdout.write(q); const b = Buffer.alloc(16); let n = 0; try { n = require_fs_readSync(0, b, 0, 16, null); } catch { return null; } return /^y/i.test(b.toString("utf8", 0, n).trim()); };
+
 function install(update) {
   const dir = targetDir(), skills = shippedSkills(), old = readManifest(dir);
   if (!skills.length) die(`no skills found in ${SRC}`);
@@ -65,7 +120,7 @@ function install(update) {
     plan.push({ name, dest, action });
     say(`  ${action.startsWith("SKIP") ? "!" : "+"} ${name.padEnd(22)} ${action}`);
   }
-  if (dry) { say("\n(dry run: nothing was changed)"); return; }
+  if (dry) { say("\nCompanions:"); companions(dir, old, update); say("\n(dry run: nothing was changed)"); return; }
   mkdirSync(dir, { recursive: true });
   const installed = [];
   for (const p of plan) {
@@ -75,7 +130,14 @@ function install(update) {
     cpSync(path.join(SRC, p.name), p.dest, { recursive: true, preserveTimestamps: true });
     files[p.name] = Object.fromEntries(walk(p.dest).map(f => [f, sha(path.join(p.dest, f))])); installed.push(p.name);
   }
-  writeFileSync(path.join(dir, MANIFEST), JSON.stringify({ tool: "motionmaker", version: PKG.version, installedAt: new Date().toISOString(), skills: installed, files }, null, 1));
+  say("\nCompanions (other people's skills Motionmaker uses, pinned and tested; licences kept in their folders):");
+  const comp = companions(dir, old, update);
+  writeFileSync(path.join(dir, MANIFEST), JSON.stringify({ tool: "motionmaker", version: PKG.version, installedAt: new Date().toISOString(), skills: installed, files, companions: comp }, null, 1));
+  if (!update && has("--with-openmontage")) openmontage();
+  else if (!update && !has("--no-openmontage") && !existsSync(path.join(OM.dir, "AGENT_GUIDE.md"))) {
+    const yes = askYesNo(`\nAlso install OpenMontage for real footage, AI video, avatars and dubbing? It is a separate program (AGPLv3, 2 to 6 minutes, needs Python 3.10+ and Node), installed in ${OM.dir}. [y/N] `);
+    if (yes) openmontage(); else say("OpenMontage: not installed (any time:  motionmaker openmontage).");
+  }
   const skipped = plan.filter(p => p.action.startsWith("SKIP")).length, wrote = plan.length - skipped;
   say(`\n${update ? "Updated" : "Installed"} ${wrote} of ${skills.length}${skipped ? `; ${skipped} skipped (see above)` : ""}.`);
   say(`Next:  motionmaker doctor     # check ffmpeg / Chromium / Playwright\n       motionmaker setup      # install Playwright in your working folder (add --3d for three + gsap)\n       then start Claude Code and type /motionmaker`);
@@ -93,6 +155,7 @@ function uninstall() {
     say(`  - ${name}${edits?.length ? " (edited: moved to backup)" : ""}`);
     if (!dry) { if (edits?.length) say(`    kept at ${backup(dir, name)}`); else rmSync(path.join(dir, name), { recursive: true, force: true }); }
   }
+  for (const name of Object.keys(m.companions || {})) { if (!existsSync(path.join(dir, name))) continue; say(`  - ${name} (companion installed by motionmaker)`); if (!dry) rmSync(path.join(dir, name), { recursive: true, force: true }); }
   if (!dry) { const left = m.skills.filter(n => existsSync(path.join(dir, n))); if (left.length) writeFileSync(path.join(dir, MANIFEST), JSON.stringify({ ...m, skills: left }, null, 1)); else rmSync(path.join(dir, MANIFEST), { force: true }); }
   say(dry ? "\n(dry run: nothing was changed)" : "\nDone.");
 }
@@ -142,6 +205,6 @@ function list() {
     const m = readManifest(dir); say(m ? `${label}: ${dir}\n  v${m.version} installed ${m.installedAt}\n  ${m.skills.join(", ")}` : `${label}: not installed (${dir})`);
   }
 }
-const help = () => say(`motionmaker v${PKG.version}: install the Motionmaker skills for Claude Code\n\nCommands:\n  install    [--global|--project|--dir <path>] [--force] [--dry-run]   copy the skills (default target: ~/.claude/skills)\n  update     [same flags]                                             re-copy from this package\n  uninstall  [same flags]                                             remove only what this tool installed\n  doctor                                                              check node / ffmpeg / Chromium / Playwright\n  setup [dir] [--3d] [--browser] [--libs [groups]] [--dry-run]         npm-install Playwright (+ three, gsap) in a working folder; --libs adds fonts (default) or the named groups: fonts code math maps sketch icons all\n  list                                                                show installed locations\n\nAfter installing, start Claude Code and type /motionmaker.`);
+const help = () => say(`motionmaker v${PKG.version}: install the Motionmaker skills for Claude Code\n\nCommands:\n  install    [--global|--project|--dir <path>] [--force] [--dry-run] [--no-anatomy] [--with-openmontage|--no-openmontage]\n             copy the skills (default target: ~/.claude/skills), with the Anatomy skill; asks about OpenMontage\n  update     [same flags]                                             re-copy from this package\n  uninstall  [same flags]                                             remove only what this tool installed\n  doctor                                                              check node / ffmpeg / Chromium / Playwright\n  setup [dir] [--3d] [--browser] [--libs [groups]] [--dry-run]         npm-install Playwright (+ three, gsap) in a working folder; --libs adds fonts (default) or the named groups: fonts code math maps sketch icons all\n  openmontage [--dir <path>]                                          install OpenMontage (AGPLv3, separate) at a tested commit (default ~/OpenMontage)\n  list                                                                show installed locations\n\nAfter installing, start Claude Code and type /motionmaker.`);
 
-({ install: () => install(false), update: () => install(true), uninstall, doctor, setup, list, help, "--help": help, "-h": help, version: () => say(PKG.version) }[cmd] || help)();
+({ install: () => install(false), update: () => install(true), openmontage: () => openmontage(), uninstall, doctor, setup, list, help, "--help": help, "-h": help, version: () => say(PKG.version) }[cmd] || help)();

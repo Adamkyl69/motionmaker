@@ -76,13 +76,19 @@ ${ad ? "\n--- art-direction brief ---\n" + ad.slice(0, 6000) : ""}`;
   const proj = argv[1], dir = opt("--dir"); if (!proj || !dir) die("import <openmontage>/projects/<id> --dir motion-out/<slug>");
   const film = path.join(proj, "renders", "final.mp4"); if (!existsSync(film)) die(`no ${film}: the OpenMontage run has not rendered yet`);
   const md = path.join(dir, "montage"); mkdirSync(md, { recursive: true }); copyFileSync(film, path.join(md, "final.mp4"));
-  const man = path.join(proj, "artifacts", "asset_manifest.json"), cost = path.join(proj, "artifacts", "cost_log.json"), rows = [], problems = [];
-  if (existsSync(man)) { const m = JSON.parse(readFileSync(man, "utf8")); for (const a of m.assets || []) { const ai = !!a.model, lic = a.license || (ai ? `AI-generated (${a.provider || "?"} / ${a.model})` : "");
+  // OpenMontage keeps the asset manifest inside the assets stage's checkpoint (checkpoint_assets.json -> artifacts.asset_manifest), checked
+  // against its schema when written; older or hand-made runs may also have artifacts/asset_manifest.json. Read whichever exists (checkpoint first).
+  const rows = [], problems = [], readJ = f => { try { return JSON.parse(readFileSync(f, "utf8")); } catch { return null; } };
+  const cps = existsSync(proj) ? readdirSync(proj).filter(f => /^checkpoint_.*\.json$/.test(f)).sort((a, b) => (a === "checkpoint_assets.json" ? -1 : b === "checkpoint_assets.json" ? 1 : 0)) : [];
+  let m = null, manFrom = null; for (const f of cps) { const c = readJ(path.join(proj, f)); if (c?.artifacts?.asset_manifest) { m = c.artifacts.asset_manifest; manFrom = f; break; } }
+  if (!m && existsSync(path.join(proj, "artifacts", "asset_manifest.json"))) { m = readJ(path.join(proj, "artifacts", "asset_manifest.json")); manFrom = "artifacts/asset_manifest.json"; }
+  const cost = [path.join(proj, "artifacts", "cost_log.json"), path.join(proj, "cost_log.json")].find(existsSync), man = m ? true : false;
+  if (m) { for (const a of m.assets || []) { const ai = !!a.model, lic = a.license || (ai ? `AI-generated (${a.provider || "?"} / ${a.model})` : "");
       rows.push({ id: a.id, type: a.type, path: a.path, provider: a.provider || a.source_tool || "?", license: lic || "UNKNOWN", url: a.original_url || "", model: a.model || "", cost: a.cost_usd ?? null });
       if (!lic) problems.push({ level: "RED", text: `${a.id} (${a.path}): no licence recorded` }); if (/non-?commercial|-NC\b|\bNC\b/i.test(lic)) problems.push({ level: "RED", text: `${a.id}: licence "${lic}" forbids commercial use` }); if (/CC[- ]BY/i.test(lic) && !/CC0/i.test(lic)) problems.push({ level: "YELLOW", text: `${a.id}: "${lic}" requires attribution: credit ${a.original_url || a.provider}` }); } }
-  else problems.push({ level: "RED", text: "no artifacts/asset_manifest.json: provenance of the footage, images, voice and music is unknown" });
-  const spent = existsSync(cost) ? JSON.parse(readFileSync(cost, "utf8")) : null;
-  const prov = { source: path.resolve(proj), film: "montage/final.mp4", assets: rows, problems, costUsd: spent?.total_spent_usd ?? spent?.total_usd ?? null, importedOn: new Date().toISOString().slice(0, 10), producedWith: "OpenMontage (AGPLv3, separate install)" };
+  else problems.push({ level: "RED", text: "no asset manifest (checkpoint_assets.json or artifacts/asset_manifest.json): provenance of the footage, images, voice and music is unknown" });
+  const spent = cost ? readJ(cost) : null;
+  const prov = { source: path.resolve(proj), manifestFrom: manFrom, film: "montage/final.mp4", assets: rows, problems, costUsd: spent?.total_spent_usd ?? spent?.total_usd ?? m?.total_cost_usd ?? null, importedOn: new Date().toISOString().slice(0, 10), producedWith: "OpenMontage (AGPLv3, separate install)" };
   writeFileSync(path.join(md, "PROVENANCE.json"), JSON.stringify(prov, null, 1));
   writeFileSync(path.join(md, "PROVENANCE.md"), `# Provenance of the OpenMontage film\n\n| Asset | Type | Provider | Licence | Source |\n|---|---|---|---|---|\n${rows.map(r => `| ${r.id} | ${r.type} | ${r.provider} | ${r.license} | ${r.url || r.model || "-"} |`).join("\n") || "| (none) | | | | |"}\n\n${problems.length ? "## Problems\n" + problems.map(p => `- ${p.level}: ${p.text}`).join("\n") + "\n" : "No licence problems found in the manifest (it is only as good as what the run recorded).\n"}`);
   console.log(`${path.join(md, "final.mp4")}\n${rows.length} assets in the manifest${prov.costUsd !== null ? `, cost $${prov.costUsd}` : ""}; ${problems.length} problem(s)${problems.length ? ":\n  " + problems.map(p => `${p.level}  ${p.text}`).join("\n  ") : ""}\nNext: node montage.mjs finish --film ${path.join(md, "final.mp4")} [--intro ...] --outro <our end card mp4> --out ${path.join(dir, "out", "final.mp4")}, then film-gate, review-pack + independent review, deliver.`);
