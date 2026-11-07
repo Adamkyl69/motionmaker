@@ -2,6 +2,10 @@
 
 All notable changes. Dates are UTC.
 
+## Unreleased: lean mode
+- **Token budget questions** in onboarding (`motionmaker` 1a-bis): fresh session, Lean or Standard, reuse an earlier project's look, review rounds (2 or up to 4), independent reviewer on the final cut only or every cut. Answers go to `motion-out/<slug>/BUDGET.md` and the brief-back's new Budget line.
+- **Lean mode**: same gates, checks and delivery door, less repeated reading. No storyboard frames or animatic for a single shot; round 2 and the three directions only when needed; each image read once; contact sheet first and at most 2 downscaled stills per round; targeted edits to `anim.html` instead of rewrites; short logs; look tests in round 1 and at sign-off; the independent reviewer once on the final cut.
+
 ## 1.9.1 (2026-10-15): 3D works with no install
 - A user's run skipped every 3D style ("three not found") because Three.js was only installed on request (`setup --3d`). Three.js r160 (MIT, 848 KB: the minified build plus RoomEnvironment, GLTFLoader, RGBELoader, BufferGeometryUtils, unmodified, with its licence) now ships in `skills/motionmaker/vendor/three`; the scaffold uses it when no three is installed (an installed copy still takes priority). `three-style`, `three-product` and `three-model` were checked in an empty folder with nothing installed. `setup --3d` now only adds GSAP.
 

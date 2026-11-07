@@ -50,6 +50,7 @@ It feels: <3 words> - and not <anti-words>
 It looks: <colour mood, type, kind of picture> (to be chosen on the mood board)
 Voice: <none / generated voice / your recording>, captions <yes/no>
 It ends: <ending>
+Budget: <lean / standard>, look <new / reused from <project>>, <N> review rounds, independent review <final cut only / every cut> (from BUDGET.md)
 I assumed: <each assumption on its own line, so a wrong one is easy to spot>
 Not included: <what they might expect but will not get: real footage, music they name, ...>
 ```
@@ -112,5 +113,6 @@ Once a voice-over is chosen: `preprod.mjs require motion-out/<slug> voice on --w
 - **Their words, verbatim.** `--words` is what the user said, not your summary. No approval without one; an approval binds to the file they saw (`--file`, plus STORYBOARD.json for scene gates).
 - **Change requests loop back** to the gate they belong to: a new word reopens the script, a new scene reopens the storyboard, a retimed scene reopens the animatic.
 - **Money and data are the user's.** Price paid generations first, generate only after a yes, never retry by calling again, and say what is sent where.
+- **Respect the budget.** When `motion-out/<slug>/BUDGET.md` says lean, follow "Lean mode" in the `motionmaker` skill: no storyboard frames or animatic for a single shot, round 2 and the three directions only when needed, a reused look replaces the style wheel and mood boards with one style frame, and each image is Read once (refer back by path and number). Turn off a gate lean skips with `require <gate> off --why "lean: <reason>"` so the record stays honest.
 - **Respect the level.** Quick does not get a storyboard lecture; Hands-on gets every gate. The user can switch at any time (`init --force` starts the record over; `require <gate> on|off --why` adjusts one gate; `scenes` sets the scene count).
 - Honest limits: boards and storyboard frames are real renders of the templates, so they show what the build can do, not more; a custom scene is a sketch until it is built; stills cannot show motion (point to the feel and animatic videos); voice samples read the provider's text until their own line is generated.

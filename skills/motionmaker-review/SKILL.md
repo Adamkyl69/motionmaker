@@ -9,6 +9,8 @@ description: The render -> look -> fix critique loop for animations: contact she
 
 The first render is a draft. Do 2-4 rounds: render stills -> **Read the images** -> notes with frame numbers -> fix one or two things -> re-render only what changed.
 
+**Lean (`BUDGET.md` says lean):** the number of rounds in BUDGET.md (default 2). Each round Read the contact sheet first, then at most 2 single stills, only frames a note names, downscaled to 768 px wide (`ffmpeg -loglevel error -y -i f.png -vf scale=768:-1 f-768.png`). Fix with targeted Edits to `anim.html` (grep for the code, Read only that range), never a rewrite. Print only the last lines of logs or the FAIL lines of `check.mjs`. Run `check.mjs` once before export, not every round.
+
 1. Stills: frames 0, N/4, N/2, 3N/4, N-1, plus a contact sheet: `scripts/contact-sheet.sh out/frames 8 4 3 out/contact.png`, then Read `out/contact.png`.
 2. Freeze any frame: `anim.html?t=2.5`; screenshot and Read it.
 3. Notes point at frames, not feelings: "frame 84 peaks late, move it 2 frames earlier", "frames 32-64 title wider than the frame". Translate feelings with `../motionmaker-brief/SKILL.md`.
