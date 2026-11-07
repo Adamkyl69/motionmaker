@@ -57,7 +57,7 @@ When `motionmaker-build` scaffolds, use `LOOK=<look> ... scaffold.sh - - -` (for
 ## Step 5: critique every round (you are the toughest reviewer in the room)
 After rendering stills (always include the poster frame, the hero frame and one per shot):
 1. `node $AD/scripts/critique.mjs <stills...>`
-2. `bash $AD/scripts/looktests.sh <poster.png>` then **Read it** (original | grayscale | squint | phone thumbnail).
+2. `bash $AD/scripts/looktests.sh <poster.png>` then **Read it** (original | grayscale | squint | phone thumbnail). Lean (`BUDGET.md`): look tests in round 1 and at sign-off only; in other rounds critique from the contact sheet and the stills the technical review already read, without reading new images.
 3. Walk `craft/critique-checklist.md` sections B to D with the real images in front of you.
 4. If the piece uses borrowed art, also walk the six checks in `motionmaker-assets/craft/illustration.md` (one family, reads small, accent on the hero only, no collisions, no colour drift into the text colour, clarifies rather than decorates).
 Write notes in the AD format: *frame, what you see, why it matters, what to change, what stays fixed* (see the checklist). Give at most 5 notes per round, ordered by what hurts the idea most. Fix hierarchy and legibility first, then consistency, then polish. Remove before you add. Then hand the notes to `motionmaker-review` for the technical loop (`check.mjs`, determinism, seams).
